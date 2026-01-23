@@ -34,12 +34,12 @@ export function MessageBubble({
     >
       {/* Avatar - only show if not grouped */}
       {showAvatar ? (
-        <Avatar className="w-8 h-8 flex-shrink-0">
+        <Avatar className="w-8 h-8 shrink-0">
           <AvatarImage src={sender.avatar} />
           <AvatarFallback>{sender.displayName[0]}</AvatarFallback>
         </Avatar>
       ) : (
-        <div className="w-8 flex-shrink-0" />
+        <div className="w-8 shrink-0" />
       )}
 
       {/* Message Content */}

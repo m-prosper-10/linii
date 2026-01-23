@@ -33,7 +33,7 @@ export function ConversationListItem({
     >
       <div className="flex items-center gap-3">
         {/* Avatar with Online Status */}
-        <div className="relative flex-shrink-0">
+        <div className="relative shrink-0">
           <Avatar className="w-12 h-12 ring-2 ring-transparent transition-all duration-200 hover:ring-primary/20">
             <AvatarImage src={otherUser.avatar} />
             <AvatarFallback>{otherUser.displayName[0]}</AvatarFallback>
@@ -54,12 +54,12 @@ export function ConversationListItem({
                 {otherUser.displayName}
               </span>
               {otherUser.verified && (
-                <svg className="w-4 h-4 text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-4 h-4 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               )}
             </div>
-            <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+            <span className="text-xs text-muted-foreground shrink-0 ml-2">
               {lastMessage.timestamp}
             </span>
           </div>
@@ -74,7 +74,7 @@ export function ConversationListItem({
               {lastMessage.content}
             </p>
             {unreadCount > 0 && (
-              <Badge className="h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground flex-shrink-0 animate-in zoom-in-50">
+              <Badge className="h-5 min-w-5 px-1.5 rounded-full bg-primary text-primary-foreground shrink-0 animate-in zoom-in-50">
                 {unreadCount}
               </Badge>
             )}

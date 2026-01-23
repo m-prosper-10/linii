@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from 'react';
-import { Search, Send, MoreVertical, Phone, Video } from 'lucide-react';
-import { Input } from '@/app/components/ui/input';
-import { Button } from '@/app/components/ui/button';
+import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
+import { EmojiPicker } from '@/app/components/messages/EmojiPicker';
+import { MessageBubble } from '@/app/components/messages/MessageBubble';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
-import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
-import { mockConversations, currentUser } from '@/data/mockData';
 import { cn } from '@/app/components/ui/utils';
+import { currentUser, mockConversations } from '@/data/mockData';
+import { ArrowLeft, MoreVertical, Paperclip, Phone, Search, Send, Video, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 export function MessagesView() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
@@ -16,6 +18,10 @@ export function MessagesView() {
   );
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMobileChat, setShowMobileChat] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedConversation = mockConversations.find(
     (c) => c.id === selectedConversationId
@@ -24,6 +30,13 @@ export function MessagesView() {
   const otherUser = selectedConversation?.participants.find(
     (p) => p.id !== currentUser.id
   );
+
+  // Filter conversations based on search
+  const filteredConversations = mockConversations.filter((conv) => {
+    const otherParticipant = conv.participants.find((p) => p.id !== currentUser.id);
+    return otherParticipant?.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   // Mock messages for the selected conversation
   const messages = selectedConversation ? [
@@ -64,105 +77,168 @@ export function MessagesView() {
     }
   ] : [];
 
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  // Simulate typing indicator
+  useEffect(() => {
+    if (messageInput.length > 0) {
+      setIsTyping(true);
+      const timeout = setTimeout(() => setIsTyping(false), 1000);
+      return () => clearTimeout(timeout);
+    } else {
+      setIsTyping(false);
+    }
+  }, [messageInput]);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (messageInput.trim()) {
       // Handle send message
       setMessageInput('');
+      if (inputRef.current) {
+        inputRef.current.style.height = 'auto';
+      }
     }
   };
 
+  const handleEmojiSelect = (emoji: string) => {
+    setMessageInput((prev) => prev + emoji);
+    inputRef.current?.focus();
+  };
+
+  const handleConversationSelect = (conversationId: string) => {
+    setSelectedConversationId(conversationId);
+    setShowMobileChat(true);
+  };
+
+  const handleBackToList = () => {
+    setShowMobileChat(false);
+  };
+
+  // Auto-resize textarea
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessageInput(e.target.value);
+    e.target.style.height = 'auto';
+    e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+  };
+
+  // Determine if messages should be grouped
+  const shouldGroupMessage = (index: number) => {
+    if (index === 0) return false;
+    return messages[index].sender.id === messages[index - 1].sender.id;
+  };
+
   return (
-    <div className="max-w-4xl mx-auto h-screen flex flex-col md:flex-row">
+    <div className="max-w-full mx-2 h-[calc(100vh-4rem)] flex flex-row">
       {/* Conversations List */}
-      <div className="w-full md:w-80 border-r border-border flex flex-col">
-        <div className="p-4 border-b border-border space-y-4">
+      <div className={cn(
+        "w-full md:w-96 border-r border-border flex flex-col bg-card",
+        showMobileChat && "hidden md:flex"
+      )}>
+        <div className="p-4 border-b border-border space-y-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
           <h2 className="font-semibold text-xl">Messages</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input 
-              placeholder="Search messages..." 
-              className="pl-9 bg-accent/50 border-0"
+              placeholder="Search conversations..." 
+              className="pl-9 bg-accent/50 border-0 focus-visible:ring-1"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         </div>
 
         <ScrollArea className="flex-1">
-          {mockConversations.map((conversation) => {
-            const otherParticipant = conversation.participants.find(
-              (p) => p.id !== currentUser.id
-            );
-            const isSelected = conversation.id === selectedConversationId;
-
-            return (
-              <div
-                key={conversation.id}
-                onClick={() => setSelectedConversationId(conversation.id)}
-                className={cn(
-                  'p-4 cursor-pointer hover:bg-accent/50 transition-colors border-b border-border',
-                  isSelected && 'bg-accent/50'
-                )}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative">
-                    <Avatar className="w-12 h-12">
-                      <AvatarImage src={otherParticipant?.avatar} />
-                      <AvatarFallback>{otherParticipant?.displayName[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-medium truncate">
-                        {otherParticipant?.displayName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {conversation.lastMessage.timestamp}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm text-muted-foreground truncate flex-1">
-                        {conversation.lastMessage.content}
-                      </p>
-                      {conversation.unreadCount > 0 && (
-                        <Badge className="h-5 min-w-5 px-1.5 rounded-full">
-                          {conversation.unreadCount}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {filteredConversations.length > 0 ? (
+            filteredConversations.map((conversation) => {
+              const otherParticipant = conversation.participants.find(
+                (p) => p.id !== currentUser.id
+              );
+              return (
+                <ConversationListItem
+                  key={conversation.id}
+                  otherUser={otherParticipant!}
+                  lastMessage={conversation.lastMessage}
+                  unreadCount={conversation.unreadCount}
+                  isSelected={conversation.id === selectedConversationId}
+                  isOnline={true}
+                  onClick={() => handleConversationSelect(conversation.id)}
+                />
+              );
+            })
+          ) : (
+            <div className="p-8 text-center text-muted-foreground">
+              <p>No conversations found</p>
+            </div>
+          )}
         </ScrollArea>
       </div>
 
       {/* Chat Area */}
       {selectedConversation ? (
-        <div className="flex-1 flex flex-col">
+        <div className={cn(
+          "flex-1 flex flex-col bg-background",
+          !showMobileChat && "hidden md:flex"
+        )}>
           {/* Chat Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="p-4 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-10">
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="md:hidden -ml-2"
+                onClick={handleBackToList}
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <Avatar className="w-10 h-10 ring-2 ring-primary/10">
                 <AvatarImage src={otherUser?.avatar} />
                 <AvatarFallback>{otherUser?.displayName[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium">{otherUser?.displayName}</div>
-                <div className="text-sm text-muted-foreground">Active now</div>
+                <div className="font-medium flex items-center gap-2">
+                  {otherUser?.displayName}
+                  {otherUser?.verified && (
+                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {isTyping ? (
+                    <span className="flex items-center gap-1">
+                      <span className="animate-pulse">typing</span>
+                      <span className="flex gap-0.5">
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </span>
+                    </span>
+                  ) : (
+                    'Active now'
+                  )}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                 <Phone className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                 <Video className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
                 <MoreVertical className="h-5 w-5" />
               </Button>
             </div>
@@ -170,65 +246,97 @@ export function MessagesView() {
 
           {/* Messages */}
           <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4">
-              {messages.map((message) => {
+            <div className="space-y-4 max-w-4xl mx-auto">
+              {messages.map((message, index) => {
                 const isCurrentUser = message.sender.id === currentUser.id;
+                const isGrouped = shouldGroupMessage(index);
                 return (
-                  <div
+                  <MessageBubble
                     key={message.id}
-                    className={cn(
-                      'flex gap-3',
-                      isCurrentUser && 'flex-row-reverse'
-                    )}
-                  >
-                    <Avatar className="w-8 h-8">
-                      <AvatarImage src={message.sender.avatar} />
-                      <AvatarFallback>{message.sender.displayName[0]}</AvatarFallback>
-                    </Avatar>
-                    <div className={cn('flex flex-col gap-1', isCurrentUser && 'items-end')}>
-                      <div
-                        className={cn(
-                          'px-4 py-2 rounded-2xl max-w-md',
-                          isCurrentUser
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-accent'
-                        )}
-                      >
-                        <p>{message.content}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground">
-                        {message.timestamp}
-                        {isCurrentUser && message.read && ' · Read'}
-                      </span>
-                    </div>
-                  </div>
+                    content={message.content}
+                    timestamp={message.timestamp}
+                    sender={message.sender}
+                    isCurrentUser={isCurrentUser}
+                    isRead={message.read}
+                    showAvatar={!isGrouped}
+                    isGrouped={isGrouped}
+                  />
                 );
               })}
+              <div ref={messagesEndRef} />
             </div>
           </ScrollArea>
 
           {/* Message Input */}
-          <div className="p-4 border-t border-border">
-            <form onSubmit={handleSendMessage} className="flex gap-2">
-              <Input
-                placeholder="Type a message..."
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                className="flex-1 bg-accent/50"
-              />
-              <Button type="submit" disabled={!messageInput.trim()}>
-                <Send className="h-5 w-5" />
-              </Button>
+          <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
+            <form onSubmit={handleSendMessage} className="space-y-3">
+              <div className="flex gap-2 items-end">
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm"
+                  className="h-9 w-9 p-0 shrink-0"
+                >
+                  <Paperclip className="h-5 w-5" />
+                </Button>
+                
+                <div className="flex-1 relative">
+                  <textarea
+                    ref={inputRef}
+                    placeholder="Type a message..."
+                    value={messageInput}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage(e);
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 bg-accent/50 border border-border rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[44px] max-h-[120px]"
+                    rows={1}
+                  />
+                </div>
+
+                <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+                
+                <Button 
+                  type="submit" 
+                  disabled={!messageInput.trim()}
+                  className="h-9 w-9 p-0 shrink-0 rounded-full"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* AI Suggestions */}
+              <div className="flex gap-2 flex-wrap">
+                {['👍 Sounds good!', '📅 Let\'s schedule a call', '💡 Great idea!'].map((suggestion, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setMessageInput(suggestion)}
+                    className="px-3 py-1.5 text-xs bg-accent hover:bg-accent/80 rounded-full transition-colors border border-border"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
             </form>
-            <div className="mt-2 text-xs text-muted-foreground">
-              AI-assisted reply suggestions available
-            </div>
           </div>
         </div>
       ) : (
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">
-          <div className="text-center">
-            <p>Select a conversation to start messaging</p>
+        <div className={cn(
+          "flex-1 flex items-center justify-center text-muted-foreground bg-accent/20",
+          !showMobileChat && "hidden md:flex"
+        )}>
+          <div className="text-center space-y-3">
+            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
+              <Send className="h-10 w-10 text-primary" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg text-foreground mb-1">Your Messages</h3>
+              <p className="text-sm">Select a conversation to start messaging</p>
+            </div>
           </div>
         </div>
       )}
