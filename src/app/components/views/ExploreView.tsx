@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from 'react';
-import { Search, TrendingUp, Hash, Users } from 'lucide-react';
-import { Input } from '@/app/components/ui/input';
-import { Button } from '@/app/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { PostCard } from '@/app/components/PostCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
-import { mockPosts, mockUsers, mockTrendingTopics } from '@/data/mockData';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { useApp } from '@/context/AppContext';
+import { mockPosts, mockTrendingTopics, mockUsers } from '@/data/mockData';
+import { Hash, Search, TrendingUp, Users } from 'lucide-react';
+import { useState } from 'react';
 
 export function ExploreView() {
   const { setCurrentView, setSelectedUserId } = useApp();
@@ -74,7 +74,7 @@ export function ExploreView() {
             <div>
               <div className="p-4 border-b border-border">
                 <p className="text-sm text-muted-foreground">
-                  {filteredPosts.length} results for "{searchQuery}"
+                  {filteredPosts.length} results for &ldquo;{searchQuery}&rdquo;
                 </p>
               </div>
               {filteredPosts.map((post) => (
