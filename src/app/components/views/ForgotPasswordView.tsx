@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { ArrowLeft } from 'lucide-react';
-import { useApp } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function ForgotPasswordView() {
-  const { setCurrentView } = useApp();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
@@ -76,7 +76,7 @@ export function ForgotPasswordView() {
           <Button
             variant="ghost"
             className="w-full gap-2"
-            onClick={() => setCurrentView('login')}
+            onClick={() => router.push('/login')}
           >
             <ArrowLeft className="h-4 w-4" />
             Back to sign in

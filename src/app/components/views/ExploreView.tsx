@@ -5,18 +5,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { useApp } from '@/context/AppContext';
 import { mockPosts, mockTrendingTopics, mockUsers } from '@/data/mockData';
 import { Hash, Search, TrendingUp, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export function ExploreView() {
-  const { setCurrentView, setSelectedUserId } = useApp();
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleUserClick = (userId: string) => {
-    setSelectedUserId(userId);
-    setCurrentView('profile');
+    router.push(`/profile/${userId}`);
   };
 
   const filteredPosts = mockPosts.filter(post => 
