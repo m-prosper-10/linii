@@ -1,3 +1,5 @@
+"use client";
+
 import { Search, TrendingUp, UserPlus } from 'lucide-react';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';

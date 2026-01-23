@@ -1,3 +1,5 @@
+"use client";
+
 import { Home, Compass, Mail, Bell, User } from 'lucide-react';
 import { useApp, type View } from '@/context/AppContext';
 import { cn } from '@/app/components/ui/utils';

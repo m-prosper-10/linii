@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { ArrowLeft, Image, Video, MapPin, Smile, Calendar, X } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';

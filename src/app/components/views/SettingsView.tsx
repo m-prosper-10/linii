@@ -1,3 +1,5 @@
+"use client";
+
 import { Moon, Sun, Bell, Lock, Eye, Shield, Smartphone, LogOut } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Switch } from '@/app/components/ui/switch';

@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Search, Send, MoreVertical, Phone, Video } from 'lucide-react';
 import { Input } from '@/app/components/ui/input';

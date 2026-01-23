@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect } from 'react';
 import { AppProvider, useApp } from '@/context/AppContext';
 import { Toaster } from '@/app/components/ui/sonner';

@@ -1,3 +1,5 @@
+"use client";
+
 import { PenSquare } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { useApp } from '@/context/AppContext';

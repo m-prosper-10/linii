@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from 'react';
 import { Heart, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Sparkles } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';

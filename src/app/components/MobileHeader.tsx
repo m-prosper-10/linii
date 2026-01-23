@@ -1,3 +1,5 @@
+"use client";
+
 import { Menu, PenSquare, BarChart3, Settings } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import {

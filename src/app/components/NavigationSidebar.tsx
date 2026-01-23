@@ -1,3 +1,5 @@
+"use client";
+
 import { Home, Compass, Mail, Bell, User, Settings, BarChart3, PenSquare } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
