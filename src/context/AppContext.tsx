@@ -1,24 +1,10 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { currentUser } from '@/data/mockData';
-import type { User } from '@/data/mockData';
+"use client";
 
-export type View = 
-  | 'login' 
-  | 'signup' 
-  | 'forgot-password' 
-  | 'home' 
-  | 'explore' 
-  | 'messages' 
-  | 'notifications' 
-  | 'profile' 
-  | 'settings' 
-  | 'analytics'
-  | 'post-creation'
-  | 'edit-profile';
+import type { User } from '@/data/mockData';
+import { currentUser } from '@/data/mockData';
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
 interface AppContextType {
-  currentView: View;
-  setCurrentView: (view: View) => void;
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
   currentUser: User;
@@ -31,10 +17,18 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [currentView, setCurrentView] = useState<View>('login');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Apply theme to document
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
 
   const toggleTheme = () => {
     setTheme(prev => prev === 'dark' ? 'light' : 'dark');
@@ -43,8 +37,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   return (
     <AppContext.Provider
       value={{
-        currentView,
-        setCurrentView,
         isAuthenticated,
         setIsAuthenticated,
         currentUser,

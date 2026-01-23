@@ -1,50 +1,53 @@
 "use client";
 
-import { Home, Compass, Mail, Bell, User, Settings, BarChart3, PenSquare } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
-import { useApp, type View } from '@/context/AppContext';
+import { Button } from '@/app/components/ui/button';
+import { useApp } from '@/context/AppContext';
+import { BarChart3, Bell, Compass, Home, Mail, PenSquare, Settings, User } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
-type NavView = Extract<View, 'home' | 'explore' | 'messages' | 'notifications' | 'profile' | 'settings' | 'analytics'>;
-
-const navigationItems: { view: NavView; icon: typeof Home; label: string }[] = [
-  { view: 'home', icon: Home, label: 'Home' },
-  { view: 'explore', icon: Compass, label: 'Explore' },
-  { view: 'messages', icon: Mail, label: 'Messages' },
-  { view: 'notifications', icon: Bell, label: 'Notifications' },
-  { view: 'profile', icon: User, label: 'Profile' },
-  { view: 'analytics', icon: BarChart3, label: 'Analytics' },
-  { view: 'settings', icon: Settings, label: 'Settings' },
+const navigationItems = [
+  { href: '/home', icon: Home, label: 'Home' },
+  { href: '/explore', icon: Compass, label: 'Explore' },
+  { href: '/messages', icon: Mail, label: 'Messages' },
+  { href: '/notifications', icon: Bell, label: 'Notifications' },
+  { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+  { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
 export function NavigationSidebar() {
-  const { currentView, setCurrentView, currentUser } = useApp();
+  const { currentUser } = useApp();
+  const pathname = usePathname();
 
   return (
     <div className="sticky top-0 h-screen flex flex-col border-r border-border p-4">
       <div className="mb-8">
-        <div className="flex items-center gap-2 px-3">
+        <Link href="/home" className="flex items-center gap-2 px-3">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold">S</span>
           </div>
           <span className="font-semibold text-lg">Social</span>
-        </div>
+        </Link>
       </div>
 
       <nav className="flex-1 space-y-1">
         {navigationItems.map((item) => {
           const Icon = item.icon;
-          const isActive = currentView === item.view;
+          const isActive = pathname?.startsWith(item.href);
           
           return (
             <Button
-              key={item.view}
+              key={item.href}
               variant={isActive ? 'secondary' : 'ghost'}
               className="w-full justify-start gap-3 px-3"
-              onClick={() => setCurrentView(item.view)}
+              asChild
             >
-              <Icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <Link href={item.href}>
+                <Icon className="h-5 w-5" />
+                <span>{item.label}</span>
+              </Link>
             </Button>
           );
         })}
@@ -52,16 +55,18 @@ export function NavigationSidebar() {
 
       <Button 
         className="w-full mb-4 gap-2"
-        onClick={() => setCurrentView('post-creation')}
+        asChild
       >
-        <PenSquare className="h-5 w-5" />
-        Post
+        <Link href="/post/create">
+          <PenSquare className="h-5 w-5" />
+          Post
+        </Link>
       </Button>
 
       <div className="pt-4 border-t border-border">
-        <div 
+        <Link 
+          href="/profile"
           className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-          onClick={() => setCurrentView('profile')}
         >
           <Avatar className="w-10 h-10">
             <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
@@ -71,7 +76,7 @@ export function NavigationSidebar() {
             <div className="font-medium truncate">{currentUser.displayName}</div>
             <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
           </div>
-        </div>
+        </Link>
       </div>
     </div>
   );

@@ -1,19 +1,20 @@
 "use client";
 
-import { Menu, PenSquare, BarChart3, Settings } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+    SheetTrigger,
 } from '@/app/components/ui/sheet';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { useApp } from '@/context/AppContext';
+import { BarChart3, Menu, PenSquare, Settings } from 'lucide-react';
+import Link from 'next/link';
 
 export function MobileHeader() {
-  const { currentUser, setCurrentView } = useApp();
+  const { currentUser } = useApp();
 
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm md:hidden">
@@ -49,37 +50,43 @@ export function MobileHeader() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3"
-                  onClick={() => setCurrentView('analytics')}
+                  asChild
                 >
-                  <BarChart3 className="h-5 w-5" />
-                  Analytics
+                  <Link href="/analytics">
+                    <BarChart3 className="h-5 w-5" />
+                    Analytics
+                  </Link>
                 </Button>
                 <Button
                   variant="ghost"
                   className="w-full justify-start gap-3"
-                  onClick={() => setCurrentView('settings')}
+                  asChild
                 >
-                  <Settings className="h-5 w-5" />
-                  Settings
+                  <Link href="/settings">
+                    <Settings className="h-5 w-5" />
+                    Settings
+                  </Link>
                 </Button>
               </div>
             </div>
           </SheetContent>
         </Sheet>
 
-        <div className="flex items-center gap-2">
+        <Link href="/home" className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold">S</span>
           </div>
           <span className="font-semibold text-lg">Social</span>
-        </div>
+        </Link>
 
         <Button 
           variant="ghost" 
           size="sm"
-          onClick={() => setCurrentView('post-creation')}
+          asChild
         >
-          <PenSquare className="h-6 w-6" />
+          <Link href="/post/create">
+            <PenSquare className="h-6 w-6" />
+          </Link>
         </Button>
       </div>
     </div>
