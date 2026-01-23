@@ -1,15 +1,17 @@
 "use client";
 
-import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
+import { Checkbox } from '@/app/components/ui/checkbox';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
-import { Checkbox } from '@/app/components/ui/checkbox';
 import { useApp } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function SignupView() {
-  const { setCurrentView, setIsAuthenticated } = useApp();
+  const { setIsAuthenticated } = useApp();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,7 +23,7 @@ export function SignupView() {
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
     setIsAuthenticated(true);
-    setCurrentView('home');
+    router.push('/home');
   };
 
   return (
@@ -162,7 +164,7 @@ export function SignupView() {
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
             <button
-              onClick={() => setCurrentView('login')}
+              onClick={() => router.push('/login')}
               className="text-primary hover:underline font-medium"
             >
               Sign in

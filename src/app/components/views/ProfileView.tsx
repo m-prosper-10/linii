@@ -1,25 +1,27 @@
 "use client";
 
-import { useState } from 'react';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Edit } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
+import { PostCard } from '@/app/components/PostCard';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
+import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { PostCard } from '@/app/components/PostCard';
-import { useApp } from '@/context/AppContext';
-import { mockPosts, mockUsers, currentUser as mockCurrentUser } from '@/data/mockData';
+import { currentUser as mockCurrentUser, mockPosts, mockUsers } from '@/data/mockData';
+import { ArrowLeft, Calendar, Edit, Link as LinkIcon, MapPin } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function ProfileView() {
-  const { setCurrentView, selectedUserId, setSelectedUserId } = useApp();
+  const router = useRouter();
+  const params = useParams();
   const [isFollowing, setIsFollowing] = useState(false);
   
   // Determine which user to show
-  const user = selectedUserId 
-    ? mockUsers.find(u => u.id === selectedUserId) || mockCurrentUser
+  const userId = params?.userId as string;
+  const user = userId 
+    ? mockUsers.find(u => u.id === userId) || mockCurrentUser
     : mockCurrentUser;
   
-  const isOwnProfile = !selectedUserId || user.id === mockCurrentUser.id;
+  const isOwnProfile = !userId || user.id === mockCurrentUser.id;
   
   // Filter posts by user
   const userPosts = mockPosts.filter(post => post.author.id === user.id);
@@ -33,7 +35,7 @@ export function ProfileView() {
           <Button 
             variant="ghost" 
             size="sm"
-            onClick={() => setCurrentView('home')}
+            onClick={() => router.push('/home')}
           >
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -67,7 +69,7 @@ export function ProfileView() {
                 <Button 
                   variant="outline" 
                   className="gap-2"
-                  onClick={() => setCurrentView('edit-profile')}
+                  onClick={() => router.push('/edit-profile')}
                 >
                   <Edit className="h-4 w-4" />
                   Edit profile

@@ -1,18 +1,21 @@
 "use client";
 
-import { Moon, Sun, Bell, Lock, Eye, Shield, Smartphone, LogOut } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { Switch } from '@/app/components/ui/switch';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
+import { Switch } from '@/app/components/ui/switch';
 import { useApp } from '@/context/AppContext';
+import { Bell, Eye, Lock, LogOut, Moon, Shield, Smartphone, Sun } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function SettingsView() {
-  const { theme, toggleTheme, setCurrentView, setIsAuthenticated } = useApp();
+  const { theme, toggleTheme, setIsAuthenticated } = useApp();
+  const router = useRouter();
 
   const handleLogout = () => {
     setIsAuthenticated(false);
-    setCurrentView('login');
+    setIsAuthenticated(false);
+    router.push('/login');
   };
 
   return (
