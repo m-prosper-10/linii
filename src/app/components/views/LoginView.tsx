@@ -1,10 +1,11 @@
-"use client";
+'use client';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
 import { useApp } from '@/context/AppContext';
+import { FacebookIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -21,17 +22,21 @@ export function LoginView() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
+      <div className="max-w-auto w-full space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">S</span>
+          <div className="bg-primary mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl">
+            <span className="text-primary-foreground text-2xl font-bold">
+              S
+            </span>
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Welcome back</h1>
-          <p className="text-muted-foreground">Sign in to your account to continue</p>
+          <h1 className="mb-2 text-3xl font-semibold">Welcome back</h1>
+          <p className="text-muted-foreground">
+            Sign in to your account to continue
+          </p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-8 space-y-6">
+        <div className="bg-card border-border w-auto space-y-6 rounded-xl border p-8">
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -40,7 +45,7 @@ export function LoginView() {
                 type="email"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={e => setEmail(e.target.value)}
                 required
                 className="bg-accent/50"
               />
@@ -52,7 +57,7 @@ export function LoginView() {
                 <button
                   type="button"
                   onClick={() => router.push('/forgot-password')}
-                  className="text-sm text-primary hover:underline"
+                  className="text-primary text-sm hover:underline"
                 >
                   Forgot password?
                 </button>
@@ -62,7 +67,7 @@ export function LoginView() {
                 type="password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 required
                 className="bg-accent/50"
               />
@@ -75,7 +80,7 @@ export function LoginView() {
 
           <div className="relative">
             <Separator />
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-sm text-muted-foreground">
+            <span className="bg-card text-muted-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-sm">
               Or continue with
             </span>
           </div>
@@ -104,18 +109,18 @@ export function LoginView() {
             </Button>
 
             <Button variant="outline" className="gap-2">
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" />
-              </svg>
-              Apple
+              <FacebookIcon />
+              Facebook
             </Button>
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-muted-foreground">Don't have an account? </span>
+            <span className="text-muted-foreground">
+              Don&apos;t have an account?{' '}
+            </span>
             <button
               onClick={() => router.push('/signup')}
-              className="text-primary hover:underline font-medium"
+              className="text-primary font-medium hover:underline"
             >
               Sign up
             </button>

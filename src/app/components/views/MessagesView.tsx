@@ -1,21 +1,35 @@
-"use client";
+'use client';
 
 import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
 import { EmojiPicker } from '@/app/components/messages/EmojiPicker';
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
 import { cn } from '@/app/components/ui/utils';
 import { currentUser, mockConversations } from '@/data/mockData';
-import { ArrowLeft, MoreVertical, Paperclip, Phone, Search, Send, Video, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  MoreVertical,
+  Paperclip,
+  Phone,
+  Search,
+  Send,
+  Verified,
+  Video,
+  X,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 
 export function MessagesView() {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    mockConversations[0]?.id || null
-  );
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(mockConversations[0]?.id || null);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
@@ -24,58 +38,67 @@ export function MessagesView() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const selectedConversation = mockConversations.find(
-    (c) => c.id === selectedConversationId
+    c => c.id === selectedConversationId
   );
 
   const otherUser = selectedConversation?.participants.find(
-    (p) => p.id !== currentUser.id
+    p => p.id !== currentUser.id
   );
 
   // Filter conversations based on search
-  const filteredConversations = mockConversations.filter((conv) => {
-    const otherParticipant = conv.participants.find((p) => p.id !== currentUser.id);
-    return otherParticipant?.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredConversations = mockConversations.filter(conv => {
+    const otherParticipant = conv.participants.find(
+      p => p.id !== currentUser.id
+    );
+    return (
+      otherParticipant?.displayName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
   });
 
   // Mock messages for the selected conversation
-  const messages = selectedConversation ? [
-    {
-      id: '1',
-      sender: otherUser!,
-      content: 'Hey! How are you doing?',
-      timestamp: '10:30 AM',
-      read: true
-    },
-    {
-      id: '2',
-      sender: currentUser,
-      content: 'I\'m doing great! Working on some exciting projects.',
-      timestamp: '10:32 AM',
-      read: true
-    },
-    {
-      id: '3',
-      sender: otherUser!,
-      content: 'That sounds amazing! Would love to hear more about it.',
-      timestamp: '10:35 AM',
-      read: true
-    },
-    {
-      id: '4',
-      sender: currentUser,
-      content: 'Sure! Let me know when you\'re free for a call.',
-      timestamp: '10:37 AM',
-      read: true
-    },
-    {
-      id: '5',
-      sender: otherUser!,
-      content: selectedConversation.lastMessage.content,
-      timestamp: selectedConversation.lastMessage.timestamp,
-      read: selectedConversation.lastMessage.read
-    }
-  ] : [];
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const messages = selectedConversation
+    ? [
+        {
+          id: '1',
+          sender: otherUser!,
+          content: 'Hey! How are you doing?',
+          timestamp: '10:30 AM',
+          read: true,
+        },
+        {
+          id: '2',
+          sender: currentUser,
+          content: "I'm doing great! Working on some exciting projects.",
+          timestamp: '10:32 AM',
+          read: true,
+        },
+        {
+          id: '3',
+          sender: otherUser!,
+          content: 'That sounds amazing! Would love to hear more about it.',
+          timestamp: '10:35 AM',
+          read: true,
+        },
+        {
+          id: '4',
+          sender: currentUser,
+          content: "Sure! Let me know when you're free for a call.",
+          timestamp: '10:37 AM',
+          read: true,
+        },
+        {
+          id: '5',
+          sender: otherUser!,
+          content: selectedConversation.lastMessage.content,
+          timestamp: selectedConversation.lastMessage.timestamp,
+          read: selectedConversation.lastMessage.read,
+        },
+      ]
+    : [];
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -105,7 +128,7 @@ export function MessagesView() {
   };
 
   const handleEmojiSelect = (emoji: string) => {
-    setMessageInput((prev) => prev + emoji);
+    setMessageInput(prev => prev + emoji);
     inputRef.current?.focus();
   };
 
@@ -132,26 +155,28 @@ export function MessagesView() {
   };
 
   return (
-    <div className="max-w-full mx-2 h-[calc(100vh-4rem)] flex flex-row">
+    <div className="mx-2 flex h-[calc(100vh-4rem)] max-w-full flex-row">
       {/* Conversations List */}
-      <div className={cn(
-        "w-full md:w-96 border-r border-border flex flex-col bg-card",
-        showMobileChat && "hidden md:flex"
-      )}>
-        <div className="p-4 border-b border-border space-y-4 bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-          <h2 className="font-semibold text-xl">Messages</h2>
+      <div
+        className={cn(
+          'border-border bg-card flex w-full flex-col border-r md:w-96',
+          showMobileChat && 'hidden md:flex'
+        )}
+      >
+        <div className="border-border bg-card/50 sticky top-0 z-10 space-y-4 border-b p-4 backdrop-blur-sm">
+          <h2 className="text-xl font-semibold">Messages</h2>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input 
-              placeholder="Search conversations..." 
-              className="pl-9 bg-accent/50 border-0 focus-visible:ring-1"
+            <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+            <Input
+              placeholder="Search conversations..."
+              className="bg-accent/50 border-0 pl-9 focus-visible:ring-1"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="text-muted-foreground hover:text-foreground absolute right-3 top-1/2 -translate-y-1/2"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -161,9 +186,9 @@ export function MessagesView() {
 
         <ScrollArea className="flex-1">
           {filteredConversations.length > 0 ? (
-            filteredConversations.map((conversation) => {
+            filteredConversations.map(conversation => {
               const otherParticipant = conversation.participants.find(
-                (p) => p.id !== currentUser.id
+                p => p.id !== currentUser.id
               );
               return (
                 <ConversationListItem
@@ -178,7 +203,7 @@ export function MessagesView() {
               );
             })
           ) : (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="text-muted-foreground p-8 text-center">
               <p>No conversations found</p>
             </div>
           )}
@@ -187,42 +212,53 @@ export function MessagesView() {
 
       {/* Chat Area */}
       {selectedConversation ? (
-        <div className={cn(
-          "flex-1 flex flex-col bg-background",
-          !showMobileChat && "hidden md:flex"
-        )}>
+        <div
+          className={cn(
+            'bg-background flex flex-1 flex-col',
+            !showMobileChat && 'hidden md:flex'
+          )}
+        >
           {/* Chat Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between bg-card/50 backdrop-blur-sm sticky top-0 z-10">
+          <div className="border-border bg-card/50 sticky top-0 z-10 flex items-center justify-between border-b p-4 backdrop-blur-sm">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
-                className="md:hidden -ml-2"
+                className="-ml-2 md:hidden"
                 onClick={handleBackToList}
               >
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <Avatar className="w-10 h-10 ring-2 ring-primary/10">
+              <Avatar className="ring-primary/10 h-10 w-10 ring-2">
                 <AvatarImage src={otherUser?.avatar} />
                 <AvatarFallback>{otherUser?.displayName[0]}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium flex items-center gap-2">
+                <div className="flex items-center gap-2 font-medium">
                   {otherUser?.displayName}
                   {otherUser?.verified && (
-                    <svg className="w-4 h-4 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                      <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                    <Verified
+                      className="h-4 w-4 fill-blue-600"
+                    />
                   )}
                 </div>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-muted-foreground text-sm">
                   {isTyping ? (
                     <span className="flex items-center gap-1">
                       <span className="animate-pulse">typing</span>
                       <span className="flex gap-0.5">
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span
+                          className="bg-muted-foreground h-1 w-1 animate-bounce rounded-full"
+                          style={{ animationDelay: '0ms' }}
+                        />
+                        <span
+                          className="bg-muted-foreground h-1 w-1 animate-bounce rounded-full"
+                          style={{ animationDelay: '150ms' }}
+                        />
+                        <span
+                          className="bg-muted-foreground h-1 w-1 animate-bounce rounded-full"
+                          style={{ animationDelay: '300ms' }}
+                        />
                       </span>
                     </span>
                   ) : (
@@ -246,7 +282,7 @@ export function MessagesView() {
 
           {/* Messages */}
           <ScrollArea className="flex-1 p-4">
-            <div className="space-y-4 max-w-4xl mx-auto">
+            <div className="mx-auto max-w-4xl space-y-4">
               {messages.map((message, index) => {
                 const isCurrentUser = message.sender.id === currentUser.id;
                 const isGrouped = shouldGroupMessage(index);
@@ -268,54 +304,58 @@ export function MessagesView() {
           </ScrollArea>
 
           {/* Message Input */}
-          <div className="p-4 border-t border-border bg-card/50 backdrop-blur-sm">
+          <div className="border-border bg-card/50 border-t p-4 backdrop-blur-sm">
             <form onSubmit={handleSendMessage} className="space-y-3">
-              <div className="flex gap-2 items-end">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
+              <div className="flex items-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0 shrink-0"
+                  className="h-9 w-9 shrink-0 p-0"
                 >
                   <Paperclip className="h-5 w-5" />
                 </Button>
-                
-                <div className="flex-1 relative">
+
+                <div className="relative flex-1">
                   <textarea
                     ref={inputRef}
                     placeholder="Type a message..."
                     value={messageInput}
                     onChange={handleInputChange}
-                    onKeyDown={(e) => {
+                    onKeyDown={e => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
                         handleSendMessage(e);
                       }
                     }}
-                    className="w-full px-4 py-2.5 bg-accent/50 border border-border rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all min-h-[44px] max-h-[120px]"
+                    className="bg-accent/50 border-border focus:ring-primary/20 max-h-[120px] min-h-[44px] w-full resize-none rounded-2xl border px-4 py-2.5 transition-all focus:outline-none focus:ring-2"
                     rows={1}
                   />
                 </div>
 
                 <EmojiPicker onEmojiSelect={handleEmojiSelect} />
-                
-                <Button 
-                  type="submit" 
+
+                <Button
+                  type="submit"
                   disabled={!messageInput.trim()}
-                  className="h-9 w-9 p-0 shrink-0 rounded-full"
+                  className="h-9 w-9 shrink-0 rounded-full p-0"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
 
               {/* AI Suggestions */}
-              <div className="flex gap-2 flex-wrap">
-                {['👍 Sounds good!', '📅 Let\'s schedule a call', '💡 Great idea!'].map((suggestion, i) => (
+              <div className="flex flex-wrap gap-2">
+                {[
+                  '👍 Sounds good!',
+                  "📅 Let's schedule a call",
+                  '💡 Great idea!',
+                ].map((suggestion, i) => (
                   <button
                     key={i}
                     type="button"
                     onClick={() => setMessageInput(suggestion)}
-                    className="px-3 py-1.5 text-xs bg-accent hover:bg-accent/80 rounded-full transition-colors border border-border"
+                    className="bg-accent hover:bg-accent/80 border-border rounded-full border px-3 py-1.5 text-xs transition-colors"
                   >
                     {suggestion}
                   </button>
@@ -325,17 +365,23 @@ export function MessagesView() {
           </div>
         </div>
       ) : (
-        <div className={cn(
-          "flex-1 flex items-center justify-center text-muted-foreground bg-accent/20",
-          !showMobileChat && "hidden md:flex"
-        )}>
-          <div className="text-center space-y-3">
-            <div className="w-20 h-20 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
-              <Send className="h-10 w-10 text-primary" />
+        <div
+          className={cn(
+            'text-muted-foreground bg-accent/20 flex flex-1 items-center justify-center',
+            !showMobileChat && 'hidden md:flex'
+          )}
+        >
+          <div className="space-y-3 text-center">
+            <div className="bg-primary/10 mx-auto flex h-20 w-20 items-center justify-center rounded-full">
+              <Send className="text-primary h-10 w-10" />
             </div>
             <div>
-              <h3 className="font-semibold text-lg text-foreground mb-1">Your Messages</h3>
-              <p className="text-sm">Select a conversation to start messaging</p>
+              <h3 className="text-foreground mb-1 text-lg font-semibold">
+                Your Messages
+              </h3>
+              <p className="text-sm">
+                Select a conversation to start messaging
+              </p>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useApp } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
@@ -17,10 +17,10 @@ export default function RootPage() {
   }, [isAuthenticated, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-pulse flex flex-col items-center gap-4">
-        <div className="w-12 h-12 rounded-full bg-primary/20" />
-        <div className="h-4 w-32 bg-primary/10 rounded" />
+    <div className="bg-background flex min-h-screen items-center justify-center">
+      <div className="flex animate-pulse flex-col items-center gap-4">
+        <div className="bg-primary/20 h-12 w-12 rounded-full" />
+        <div className="bg-primary/10 h-4 w-32 rounded" />
       </div>
     </div>
   );

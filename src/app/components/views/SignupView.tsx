@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { Button } from '@/app/components/ui/button';
 import { Checkbox } from '@/app/components/ui/checkbox';
@@ -17,7 +17,7 @@ export function SignupView() {
     email: '',
     username: '',
     password: '',
-    agreedToTerms: false
+    agreedToTerms: false,
   });
 
   const handleSignup = (e: React.FormEvent) => {
@@ -27,17 +27,19 @@ export function SignupView() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">S</span>
+          <div className="bg-primary mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl">
+            <span className="text-primary-foreground text-2xl font-bold">
+              S
+            </span>
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Create your account</h1>
+          <h1 className="mb-2 text-3xl font-semibold">Create your account</h1>
           <p className="text-muted-foreground">Join the conversation today</p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-8 space-y-6">
+        <div className="bg-card border-border space-y-6 rounded-xl border p-8">
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
@@ -46,7 +48,9 @@ export function SignupView() {
                 type="text"
                 placeholder="Alex Morgan"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
                 className="bg-accent/50"
               />
@@ -59,7 +63,9 @@ export function SignupView() {
                 type="email"
                 placeholder="you@example.com"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 required
                 className="bg-accent/50"
               />
@@ -72,7 +78,9 @@ export function SignupView() {
                 type="text"
                 placeholder="alexmorgan"
                 value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, username: e.target.value })
+                }
                 required
                 className="bg-accent/50"
               />
@@ -85,11 +93,13 @@ export function SignupView() {
                 type="password"
                 placeholder="••••••••"
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={e =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
                 required
                 className="bg-accent/50"
               />
-              <p className="text-xs text-muted-foreground">
+              <p className="text-muted-foreground text-xs">
                 Must be at least 8 characters
               </p>
             </div>
@@ -98,8 +108,11 @@ export function SignupView() {
               <Checkbox
                 id="terms"
                 checked={formData.agreedToTerms}
-                onCheckedChange={(checked) => 
-                  setFormData({ ...formData, agreedToTerms: checked as boolean })
+                onCheckedChange={checked =>
+                  setFormData({
+                    ...formData,
+                    agreedToTerms: checked as boolean,
+                  })
                 }
                 required
               />
@@ -125,7 +138,7 @@ export function SignupView() {
 
           <div className="relative">
             <Separator />
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-2 text-sm text-muted-foreground">
+            <span className="bg-card text-muted-foreground absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 px-2 text-sm">
               Or continue with
             </span>
           </div>
@@ -162,10 +175,12 @@ export function SignupView() {
           </div>
 
           <div className="text-center text-sm">
-            <span className="text-muted-foreground">Already have an account? </span>
+            <span className="text-muted-foreground">
+              Already have an account?{' '}
+            </span>
             <button
               onClick={() => router.push('/login')}
-              className="text-primary hover:underline font-medium"
+              className="text-primary font-medium hover:underline"
             >
               Sign in
             </button>
