@@ -1,21 +1,23 @@
 "use client";
 
-import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
 import { useApp } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function LoginView() {
-  const { setCurrentView, setIsAuthenticated } = useApp();
+  const { setIsAuthenticated } = useApp();
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setIsAuthenticated(true);
-    setCurrentView('home');
+    router.push('/home');
   };
 
   return (
@@ -49,7 +51,7 @@ export function LoginView() {
                 <Label htmlFor="password">Password</Label>
                 <button
                   type="button"
-                  onClick={() => setCurrentView('forgot-password')}
+                  onClick={() => router.push('/forgot-password')}
                   className="text-sm text-primary hover:underline"
                 >
                   Forgot password?
@@ -112,7 +114,7 @@ export function LoginView() {
           <div className="text-center text-sm">
             <span className="text-muted-foreground">Don't have an account? </span>
             <button
-              onClick={() => setCurrentView('signup')}
+              onClick={() => router.push('/signup')}
               className="text-primary hover:underline font-medium"
             >
               Sign up

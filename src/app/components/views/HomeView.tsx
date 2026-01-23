@@ -1,17 +1,16 @@
 "use client";
 
 import { PostCard } from '@/app/components/PostCard';
-import { mockPosts } from '@/data/mockData';
-import { useApp } from '@/context/AppContext';
-import { Sparkles } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
+import { mockPosts } from '@/data/mockData';
+import { Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export function HomeView() {
-  const { setCurrentView, setSelectedUserId } = useApp();
+  const router = useRouter();
 
   const handleUserClick = (userId: string) => {
-    setSelectedUserId(userId);
-    setCurrentView('profile');
+    router.push(`/profile/${userId}`);
   };
 
   return (
@@ -29,7 +28,7 @@ export function HomeView() {
       <div className="border-b border-border p-4">
         <div 
           className="text-muted-foreground cursor-pointer hover:bg-accent/50 p-4 rounded-lg transition-colors"
-          onClick={() => setCurrentView('post-creation')}
+          onClick={() => router.push('/post/create')}
         >
           What's on your mind?
         </div>
