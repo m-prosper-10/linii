@@ -1,8 +1,8 @@
-import { TrendingUp, Users, Heart, MessageCircle, Eye } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { LineChart, Line, BarChart, Bar, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { mockAnalytics } from '@/data/mockData';
 import { PostCard } from '@/app/components/PostCard';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { mockAnalytics } from '@/data/mockData';
+import { Eye, Heart, MessageCircle, TrendingUp, Users } from 'lucide-react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export function AnalyticsView() {
   return (
@@ -89,44 +89,102 @@ export function AnalyticsView() {
           </CardHeader>
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockAnalytics.postPerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <LineChart 
+                data={mockAnalytics.postPerformance}
+                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-1))" stopOpacity={0.5}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-1))" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorEngagement" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-2))" stopOpacity={0.5}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-2))" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorLikes" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--chart-3))" stopOpacity={0.5}/>
+                    <stop offset="95%" stopColor="hsl(var(--chart-3))" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="hsl(var(--border))" 
+                  opacity={0.5}
+                  vertical={false}
+                />
                 <XAxis 
                   dataKey="date" 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
                 />
                 <YAxis 
                   stroke="hsl(var(--muted-foreground))"
                   fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => value.toLocaleString()}
                 />
                 <Tooltip 
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
+                    borderRadius: '12px',
+                    padding: '12px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
                   }}
+                  labelStyle={{
+                    color: 'hsl(var(--foreground))',
+                    fontWeight: 600,
+                    marginBottom: '8px'
+                  }}
+                  itemStyle={{
+                    color: 'hsl(var(--foreground))',
+                    padding: '4px 0'
+                  }}
+                  cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1, strokeDasharray: '5 5' }}
+                />
+                <Legend 
+                  wrapperStyle={{ paddingTop: '20px' }}
+                  iconType="line"
+                  formatter={(value) => <span style={{ color: 'hsl(var(--muted-foreground))', fontSize: '12px' }}>{value}</span>}
                 />
                 <Line 
                   type="monotone" 
                   dataKey="views" 
                   stroke="hsl(var(--chart-1))" 
-                  strokeWidth={2}
+                  strokeWidth={4}
                   name="Views"
+                  dot={{ fill: 'hsl(var(--chart-1))', r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="engagement" 
                   stroke="hsl(var(--chart-2))" 
-                  strokeWidth={2}
+                  strokeWidth={4}
                   name="Engagement"
+                  dot={{ fill: 'hsl(var(--chart-2))', r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="likes" 
                   stroke="hsl(var(--chart-3))" 
-                  strokeWidth={2}
+                  strokeWidth={4}
                   name="Likes"
+                  dot={{ fill: 'hsl(var(--chart-3))', r: 5, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  activeDot={{ r: 7, strokeWidth: 2, stroke: 'hsl(var(--card))' }}
+                  animationDuration={800}
+                  animationEasing="ease-out"
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -145,7 +203,7 @@ export function AnalyticsView() {
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={mockAnalytics.audienceGrowth}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                   <XAxis 
                     dataKey="month" 
                     stroke="hsl(var(--muted-foreground))"
@@ -166,8 +224,9 @@ export function AnalyticsView() {
                     type="monotone" 
                     dataKey="followers" 
                     stroke="hsl(var(--chart-4))" 
+                    strokeWidth={3}
                     fill="hsl(var(--chart-4))" 
-                    fillOpacity={0.3}
+                    fillOpacity={0.4}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -185,7 +244,7 @@ export function AnalyticsView() {
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockAnalytics.postPerformance}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
                   <XAxis 
                     dataKey="date" 
                     stroke="hsl(var(--muted-foreground))"
@@ -205,6 +264,7 @@ export function AnalyticsView() {
                   <Bar 
                     dataKey="engagement" 
                     fill="hsl(var(--chart-5))" 
+                    fillOpacity={0.9}
                     radius={[8, 8, 0, 0]}
                   />
                 </BarChart>

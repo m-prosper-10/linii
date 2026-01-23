@@ -357,18 +357,6 @@ export const mockTrendingTopics: TrendingTopic[] = [
     hashtag: '#DesignThinking',
     posts: 18934,
     category: 'Design'
-  },
-  {
-    id: '4',
-    hashtag: '#StartupLife',
-    posts: 15678,
-    category: 'Business'
-  },
-  {
-    id: '5',
-    hashtag: '#MachineLearning',
-    posts: 34567,
-    category: 'Technology'
   }
 ];
 
