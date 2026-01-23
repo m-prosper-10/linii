@@ -284,6 +284,18 @@ export const mockConversations: Conversation[] = [
       read: false
     },
     unreadCount: 1
+  },
+  {
+    id: '4',
+    participants: [currentUser, mockUsers[3]],
+    lastMessage: {
+      id: 'm4',
+      sender: mockUsers[3],
+      content: 'Great meeting today! Looking forward to our next collaboration.',
+      timestamp: '1d ago',
+      read: true
+    },
+    unreadCount: 0
   }
 ];
 
