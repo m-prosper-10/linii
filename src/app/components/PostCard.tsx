@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from 'react';
-import { Heart, MessageCircle, Repeat2, Bookmark, MoreHorizontal, Sparkles, ChevronDown, ChevronUp, Send } from 'lucide-react';
-import { Button } from '@/app/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
-import { Textarea } from '@/app/components/ui/textarea';
+import { Button } from '@/app/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import type { Post, Comment } from '@/data/mockData';
-import { mockComments, currentUser } from '@/data/mockData';
+import { Textarea } from '@/app/components/ui/textarea';
+import type { Comment, Post } from '@/data/mockData';
+import { currentUser, mockComments } from '@/data/mockData';
+import { Bookmark, Heart, MessageCircle, MoreHorizontal, Repeat2, Send, Sparkles } from 'lucide-react';
+import { useState } from 'react';
 
 interface PostCardProps {
   post: Post;
@@ -126,7 +126,7 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
           </div>
 
           <div className="mb-3">
-            <p className="whitespace-pre-wrap break-words">{post.content}</p>
+            <p className="whitespace-pre-wrap wrap-break-word">{post.content}</p>
             {post.tags && post.tags.length > 0 && (
               <div className="flex gap-2 mt-2 flex-wrap">
                 {post.tags.map((tag) => (
@@ -214,7 +214,7 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
             <div className="mt-4 pt-4 border-t border-border">
               {/* Comment Input */}
               <div className="flex gap-3 mb-4">
-                <Avatar className="w-8 h-8 flex-shrink-0">
+                <Avatar className="w-8 h-8 shrink-0">
                   <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
                   <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
                 </Avatar>
@@ -247,7 +247,7 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
                   comments.map((comment) => (
                     <div key={comment.id} className="flex gap-3">
                       <Avatar 
-                        className="w-8 h-8 flex-shrink-0 cursor-pointer"
+                        className="w-8 h-8 shrink-0 cursor-pointer"
                         onClick={() => onUserClick?.(comment.author.id)}
                       >
                         <AvatarImage src={comment.author.avatar} alt={comment.author.displayName} />
@@ -272,7 +272,7 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
                             <span className="text-muted-foreground text-xs">{comment.timestamp}</span>
                           </div>
                         </div>
-                        <p className="text-sm mb-2 whitespace-pre-wrap break-words">{comment.content}</p>
+                        <p className="text-sm mb-2 whitespace-pre-wrap wrap-break-word">{comment.content}</p>
                         <div className="flex items-center gap-4">
                           <Button
                             variant="ghost"

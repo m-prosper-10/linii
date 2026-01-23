@@ -18,6 +18,7 @@ import { ProfileView } from '@/app/components/views/ProfileView';
 import { SettingsView } from '@/app/components/views/SettingsView';
 import { AnalyticsView } from '@/app/components/views/AnalyticsView';
 import { PostCreationView } from '@/app/components/views/PostCreationView';
+import { EditProfileView } from '@/app/components/views/EditProfileView';
 
 // Layout Components
 import { NavigationSidebar } from '@/app/components/NavigationSidebar';
@@ -75,6 +76,8 @@ function AppContent() {
         return <AnalyticsView />;
       case 'post-creation':
         return <PostCreationView />;
+      case 'edit-profile':
+        return <EditProfileView />;
       default:
         return <HomeView />;
     }
@@ -109,7 +112,7 @@ function AppContent() {
       )}
 
       {/* Floating Action Button for Mobile */}
-      {isAuthenticated && currentView !== 'post-creation' && <FloatingActionButton />}
+      {isAuthenticated && currentView !== 'post-creation' && currentView !== 'edit-profile' && <FloatingActionButton />}
     </div>
   );
 }
