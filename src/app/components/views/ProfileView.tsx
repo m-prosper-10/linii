@@ -64,7 +64,11 @@ export function ProfileView() {
 
             <div className="mt-16">
               {isOwnProfile ? (
-                <Button variant="outline" className="gap-2">
+                <Button 
+                  variant="outline" 
+                  className="gap-2"
+                  onClick={() => setCurrentView('edit-profile')}
+                >
                   <Edit className="h-4 w-4" />
                   Edit profile
                 </Button>
