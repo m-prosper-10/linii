@@ -1,65 +1,122 @@
-import Image from "next/image";
+import { useEffect } from 'react';
+import { AppProvider, useApp } from '@/context/AppContext';
+import { Toaster } from '@/app/components/ui/sonner';
 
-export default function Home() {
+// Authentication Views
+import { LoginView } from '@/app/components/views/LoginView';
+import { SignupView } from '@/app/components/views/SignupView';
+import { ForgotPasswordView } from '@/app/components/views/ForgotPasswordView';
+
+// Main Views
+import { HomeView } from '@/app/components/views/HomeView';
+import { ExploreView } from '@/app/components/views/ExploreView';
+import { MessagesView } from '@/app/components/views/MessagesView';
+import { NotificationsView } from '@/app/components/views/NotificationView';
+import { ProfileView } from '@/app/components/views/ProfileView';
+import { SettingsView } from '@/app/components/views/SettingsView';
+import { AnalyticsView } from '@/app/components/views/AnalyticsView';
+import { PostCreationView } from '@/app/components/views/PostCreationView';
+
+// Layout Components
+import { NavigationSidebar } from '@/app/components/NavigationSidebar';
+import { DiscoverySidebar } from '@/app/components/DiscoverySidebar';
+import { MobileBottomNav } from '@/app/components/MobileBottomNav';
+import { MobileHeader } from '@/app/components/MobileHeader';
+import { FloatingActionButton } from '@/app/components/FloatingActionBar';
+
+function AppContent() {
+  const { currentView, isAuthenticated, theme } = useApp();
+
+  useEffect(() => {
+    // Apply theme to document
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
+  // Render authentication views
+  if (!isAuthenticated) {
+    switch (currentView) {
+      case 'login':
+        return <LoginView />;
+      case 'signup':
+        return <SignupView />;
+      case 'forgot-password':
+        return <ForgotPasswordView />;
+      default:
+        return <LoginView />;
+    }
+  }
+
+  // Determine if we should show the three-column layout
+  const showThreeColumnLayout = ['home', 'explore', 'profile'].includes(currentView);
+  const showMessagesLayout = currentView === 'messages';
+
+  // Render main authenticated views
+  const renderView = () => {
+    switch (currentView) {
+      case 'home':
+        return <HomeView />;
+      case 'explore':
+        return <ExploreView />;
+      case 'messages':
+        return <MessagesView />;
+      case 'notifications':
+        return <NotificationsView />;
+      case 'profile':
+        return <ProfileView />;
+      case 'settings':
+        return <SettingsView />;
+      case 'analytics':
+        return <AnalyticsView />;
+      case 'post-creation':
+        return <PostCreationView />;
+      default:
+        return <HomeView />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="flex min-h-screen bg-background">
+      {/* Left Sidebar - Navigation (Desktop only) */}
+      <div className="w-64 flex-shrink-0 hidden md:block">
+        <NavigationSidebar />
+      </div>
+
+      {/* Main Content Area */}
+      <div className={`flex-1 flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
+        {/* Mobile Header (authenticated only) */}
+        {isAuthenticated && <MobileHeader />}
+        
+        {/* Main Content */}
+        <div className="flex-1 pb-16 md:pb-0">
+          {renderView()}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        {/* Mobile Bottom Navigation (authenticated only) */}
+        {isAuthenticated && <MobileBottomNav />}
+      </div>
+
+      {/* Right Sidebar - Discovery (Desktop only, certain views) */}
+      {showThreeColumnLayout && (
+        <div className="w-80 flex-shrink-0 hidden lg:block">
+          <DiscoverySidebar />
         </div>
-      </main>
+      )}
+
+      {/* Floating Action Button for Mobile */}
+      {isAuthenticated && currentView !== 'post-creation' && <FloatingActionButton />}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <AppProvider>
+      <AppContent />
+      <Toaster position="bottom-right" />
+    </AppProvider>
   );
 }

@@ -1,86 +1,143 @@
 import { useState } from 'react';
-import { Button } from '@/app/components/ui/button';
+import { Search, TrendingUp, Hash, Users } from 'lucide-react';
 import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/app/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
+import { PostCard } from '@/app/components/PostCard';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import { mockPosts, mockUsers, mockTrendingTopics } from '@/data/mockData';
 import { useApp } from '@/context/AppContext';
 
-export function ForgotPasswordView() {
-  const { setCurrentView } = useApp();
-  const [email, setEmail] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+export function ExploreView() {
+  const { setCurrentView, setSelectedUserId } = useApp();
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSubmitted(true);
+  const handleUserClick = (userId: string) => {
+    setSelectedUserId(userId);
+    setCurrentView('profile');
   };
 
+  const filteredPosts = mockPosts.filter(post => 
+    post.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.author.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    post.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
+
+  const suggestedUsers = mockUsers.slice(0, 5);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">S</span>
+    <div className="max-w-2xl mx-auto">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="p-4">
+          <h2 className="font-semibold text-xl mb-4">Explore</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search posts, people, and topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-accent/50"
+            />
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Reset your password</h1>
-          <p className="text-muted-foreground">
-            {submitted 
-              ? 'Check your email for a password reset link'
-              : 'Enter your email to receive a password reset link'
-            }
-          </p>
-        </div>
-
-        <div className="bg-card border border-border rounded-xl p-8 space-y-6">
-          {!submitted ? (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="bg-accent/50"
-                />
-              </div>
-
-              <Button type="submit" className="w-full">
-                Send reset link
-              </Button>
-            </form>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </div>
-              <p className="text-muted-foreground">
-                We've sent a password reset link to <strong>{email}</strong>
-              </p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setSubmitted(false)}
-              >
-                Resend link
-              </Button>
-            </div>
-          )}
-
-          <Button
-            variant="ghost"
-            className="w-full gap-2"
-            onClick={() => setCurrentView('login')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to sign in
-          </Button>
         </div>
       </div>
+
+      <Tabs defaultValue="trending" className="w-full">
+        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent h-auto p-0">
+          <TabsTrigger 
+            value="trending" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <TrendingUp className="h-4 w-4 mr-2" />
+            Trending
+          </TabsTrigger>
+          <TabsTrigger 
+            value="people" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <Users className="h-4 w-4 mr-2" />
+            People
+          </TabsTrigger>
+          <TabsTrigger 
+            value="topics" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          >
+            <Hash className="h-4 w-4 mr-2" />
+            Topics
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="trending" className="mt-0">
+          {searchQuery ? (
+            <div>
+              <div className="p-4 border-b border-border">
+                <p className="text-sm text-muted-foreground">
+                  {filteredPosts.length} results for "{searchQuery}"
+                </p>
+              </div>
+              {filteredPosts.map((post) => (
+                <PostCard 
+                  key={post.id} 
+                  post={post}
+                  onUserClick={handleUserClick}
+                />
+              ))}
+            </div>
+          ) : (
+            mockPosts.slice(0, 10).map((post) => (
+              <PostCard 
+                key={post.id} 
+                post={post}
+                onUserClick={handleUserClick}
+              />
+            ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="people" className="mt-0">
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold">Suggested for you</h3>
+            {suggestedUsers.map((user) => (
+              <div key={user.id} className="flex items-center justify-between p-3 hover:bg-accent/50 rounded-lg transition-colors">
+                <div 
+                  className="flex items-center gap-3 cursor-pointer flex-1"
+                  onClick={() => handleUserClick(user.id)}
+                >
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={user.avatar} alt={user.displayName} />
+                    <AvatarFallback>{user.displayName[0]}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium">{user.displayName}</div>
+                    <div className="text-sm text-muted-foreground">@{user.username}</div>
+                    <div className="text-sm text-muted-foreground">{user.followers.toLocaleString()} followers</div>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm">
+                  Follow
+                </Button>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="topics" className="mt-0">
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold">Trending topics</h3>
+            {mockTrendingTopics.map((topic, index) => (
+              <div key={index} className="p-3 hover:bg-accent/50 rounded-lg transition-colors cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="font-medium">#{topic.hashtag}</div>
+                    <div className="text-sm text-muted-foreground">{topic.posts.toLocaleString()} posts</div>
+                  </div>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

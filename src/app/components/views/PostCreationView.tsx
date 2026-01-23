@@ -1,199 +1,178 @@
 import { useState } from 'react';
-import { ArrowLeft, MapPin, Link as LinkIcon, Calendar, Edit } from 'lucide-react';
+import { ArrowLeft, Image, Video, MapPin, Smile, Calendar, X } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
+import { Textarea } from '@/app/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { PostCard } from '@/app/components/PostCard';
 import { useApp } from '@/context/AppContext';
-import { mockPosts, mockUsers, currentUser as mockCurrentUser } from '@/data/mockData';
+import { currentUser } from '@/data/mockData';
 
-export function ProfileView() {
-  const { setCurrentView, selectedUserId, setSelectedUserId } = useApp();
-  const [isFollowing, setIsFollowing] = useState(false);
-  
-  // Determine which user to show
-  const user = selectedUserId 
-    ? mockUsers.find(u => u.id === selectedUserId) || mockCurrentUser
-    : mockCurrentUser;
-  
-  const isOwnProfile = !selectedUserId || user.id === mockCurrentUser.id;
-  
-  // Filter posts by user
-  const userPosts = mockPosts.filter(post => post.author.id === user.id);
-  const userMediaPosts = userPosts.filter(post => post.image || post.video);
-  const userLikedPosts = mockPosts.filter(post => post.isLiked);
+export function PostCreationView() {
+  const { setCurrentView } = useApp();
+  const [content, setContent] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+
+  const handlePost = async () => {
+    if (!content.trim()) return;
+    
+    setIsPosting(true);
+    
+    // Simulate posting delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Reset form
+    setContent('');
+    setSelectedImage(null);
+    setIsPosting(false);
+    
+    // Navigate back to home
+    setCurrentView('home');
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSelectedImage(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+  };
+
+  const characterCount = content.length;
+  const maxCharacters = 280;
+  const isOverLimit = characterCount > maxCharacters;
+  const canPost = content.trim().length > 0 && !isOverLimit && !isPosting;
 
   return (
     <div className="max-w-2xl mx-auto">
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="flex items-center gap-4 p-4">
+        <div className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setCurrentView('home')}
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <h2 className="font-semibold text-xl">Create Post</h2>
+          </div>
           <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => setCurrentView('home')}
+            onClick={handlePost}
+            disabled={!canPost}
+            className="px-6"
           >
-            <ArrowLeft className="h-5 w-5" />
+            {isPosting ? 'Posting...' : 'Post'}
           </Button>
-          <div>
-            <h2 className="font-semibold text-xl">{user.displayName}</h2>
-            <p className="text-sm text-muted-foreground">{userPosts.length} posts</p>
+        </div>
+      </div>
+
+      <div className="p-4">
+        <div className="flex gap-3">
+          <Avatar className="w-12 h-12 flex-shrink-0">
+            <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
+            <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
+          </Avatar>
+
+          <div className="flex-1 space-y-4">
+            <Textarea
+              placeholder="What's on your mind?"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="min-h-[120px] text-lg border-none resize-none focus-visible:ring-0 p-0 bg-transparent"
+              maxLength={maxCharacters + 50} // Allow typing over limit to show warning
+            />
+
+            {selectedImage && (
+              <div className="relative">
+                <img 
+                  src={selectedImage} 
+                  alt="Upload preview" 
+                  className="w-full max-h-96 object-cover rounded-lg border border-border"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="absolute top-2 right-2 w-8 h-8 p-0"
+                  onClick={removeImage}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between pt-4 border-t border-border">
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload">
+                  <Button variant="ghost" size="sm" className="gap-2" asChild>
+                    <span className="cursor-pointer">
+                      <Image className="h-4 w-4" />
+                      Photo
+                    </span>
+                  </Button>
+                </label>
+
+                <Button variant="ghost" size="sm" className="gap-2" disabled>
+                  <Video className="h-4 w-4" />
+                  Video
+                </Button>
+
+                <Button variant="ghost" size="sm" className="gap-2" disabled>
+                  <MapPin className="h-4 w-4" />
+                  Location
+                </Button>
+
+                <Button variant="ghost" size="sm" className="gap-2" disabled>
+                  <Smile className="h-4 w-4" />
+                  Emoji
+                </Button>
+
+                <Button variant="ghost" size="sm" className="gap-2" disabled>
+                  <Calendar className="h-4 w-4" />
+                  Schedule
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+                  {characterCount}/{maxCharacters}
+                </div>
+                
+                {isOverLimit && (
+                  <Badge variant="destructive" className="text-xs">
+                    Over limit
+                  </Badge>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <div>
-        {/* Cover Image */}
-        <div className="h-48 bg-accent relative">
-          <img 
-            src={user.coverImage} 
-            alt="Cover" 
-            className="w-full h-full object-cover"
-          />
+      <div className="p-4 border-t border-border">
+        <div className="text-sm text-muted-foreground space-y-2">
+          <p>💡 <strong>Tips for great posts:</strong></p>
+          <ul className="list-disc list-inside space-y-1 ml-4">
+            <li>Keep it engaging and authentic</li>
+            <li>Use relevant hashtags to reach more people</li>
+            <li>Add images or videos to increase engagement</li>
+            <li>Ask questions to encourage interaction</li>
+          </ul>
         </div>
-
-        {/* Profile Info */}
-        <div className="px-4 pb-4">
-          <div className="flex justify-between items-start -mt-16 mb-4">
-            <Avatar className="w-32 h-32 border-4 border-background">
-              <AvatarImage src={user.avatar} alt={user.displayName} />
-              <AvatarFallback className="text-3xl">{user.displayName[0]}</AvatarFallback>
-            </Avatar>
-
-            <div className="mt-16">
-              {isOwnProfile ? (
-                <Button variant="outline" className="gap-2">
-                  <Edit className="h-4 w-4" />
-                  Edit profile
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button 
-                    variant={isFollowing ? 'outline' : 'default'}
-                    onClick={() => setIsFollowing(!isFollowing)}
-                  >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </Button>
-                  <Button variant="outline">Message</Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{user.displayName}</h1>
-                {user.verified && (
-                  <Badge variant="secondary" className="h-5 px-2">✓</Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground">@{user.username}</p>
-            </div>
-
-            <p>{user.bio}</p>
-
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-              {user.location && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  {user.location}
-                </div>
-              )}
-              {user.website && (
-                <div className="flex items-center gap-1">
-                  <LinkIcon className="h-4 w-4" />
-                  <a href={`https://${user.website}`} className="text-primary hover:underline">
-                    {user.website}
-                  </a>
-                </div>
-              )}
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
-                Joined {user.joinedDate}
-              </div>
-            </div>
-
-            <div className="flex gap-4">
-              <button className="hover:underline">
-                <span className="font-semibold">{user.following.toLocaleString()}</span>{' '}
-                <span className="text-muted-foreground">Following</span>
-              </button>
-              <button className="hover:underline">
-                <span className="font-semibold">{user.followers.toLocaleString()}</span>{' '}
-                <span className="text-muted-foreground">Followers</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="posts" className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent h-auto p-0">
-            <TabsTrigger 
-              value="posts" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Posts
-            </TabsTrigger>
-            <TabsTrigger 
-              value="media" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Media
-            </TabsTrigger>
-            <TabsTrigger 
-              value="likes" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
-            >
-              Likes
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="posts" className="mt-0">
-            {userPosts.length > 0 ? (
-              userPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                No posts yet
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="media" className="mt-0">
-            {userMediaPosts.length > 0 ? (
-              <div className="grid grid-cols-3 gap-1 p-4">
-                {userMediaPosts.map((post) => (
-                  <div key={post.id} className="aspect-square bg-accent rounded-lg overflow-hidden">
-                    <img 
-                      src={post.image} 
-                      alt="Media" 
-                      className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                No media posts yet
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="likes" className="mt-0">
-            {userLikedPosts.length > 0 ? (
-              userLikedPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
-            ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                No liked posts yet
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
       </div>
     </div>
   );
