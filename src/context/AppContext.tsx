@@ -13,7 +13,8 @@ export type View =
   | 'profile' 
   | 'settings' 
   | 'analytics'
-  | 'post-creation';
+  | 'post-creation'
+  | 'edit-profile';
 
 interface AppContextType {
   currentView: View;

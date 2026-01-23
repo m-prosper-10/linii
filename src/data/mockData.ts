@@ -66,6 +66,16 @@ export interface TrendingTopic {
   category: string;
 }
 
+export interface Comment {
+  id: string;
+  author: User;
+  content: string;
+  timestamp: string;
+  likes: number;
+  isLiked: boolean;
+  replies?: Comment[];
+}
+
 // Mock current user
 export const currentUser: User = {
   id: '1',
@@ -361,6 +371,72 @@ export const mockTrendingTopics: TrendingTopic[] = [
     category: 'Technology'
   }
 ];
+
+// Mock comments for posts
+export const mockComments: Record<string, Comment[]> = {
+  '1': [
+    {
+      id: 'c1',
+      author: mockUsers[1],
+      content: 'This looks amazing! Can you share more details about the design system?',
+      timestamp: '1h ago',
+      likes: 12,
+      isLiked: false,
+    },
+    {
+      id: 'c2',
+      author: currentUser,
+      content: 'Great work! Looking forward to the case study.',
+      timestamp: '45m ago',
+      likes: 8,
+      isLiked: true,
+    },
+    {
+      id: 'c3',
+      author: mockUsers[2],
+      content: 'The consistency improvements are really noticeable. Well done!',
+      timestamp: '30m ago',
+      likes: 5,
+      isLiked: false,
+    },
+  ],
+  '2': [
+    {
+      id: 'c4',
+      author: mockUsers[0],
+      content: 'Completely agree! AI is a tool, not a replacement.',
+      timestamp: '3h ago',
+      likes: 24,
+      isLiked: true,
+    },
+    {
+      id: 'c5',
+      author: mockUsers[3],
+      content: 'This is exactly what I\'ve been thinking. Great perspective!',
+      timestamp: '2h ago',
+      likes: 15,
+      isLiked: false,
+    },
+  ],
+  '5': [
+    {
+      id: 'c6',
+      author: mockUsers[0],
+      content: 'This sounds fascinating! Would love to learn more about the NLP integration.',
+      timestamp: '10h ago',
+      likes: 34,
+      isLiked: false,
+    },
+    {
+      id: 'c7',
+      author: mockUsers[1],
+      content: 'The combination of AI and human creativity is where the magic happens.',
+      timestamp: '8h ago',
+      likes: 28,
+      isLiked: true,
+    },
+  ],
+};
 
 // Analytics data
 export const mockAnalytics = {
