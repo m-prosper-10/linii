@@ -1,42 +1,54 @@
-"use client";
+'use client';
 
-import { useState } from 'react';
-import { ArrowLeft, Image, Video, MapPin, Smile, Calendar, X } from 'lucide-react';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
+import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
-import { Badge } from '@/app/components/ui/badge';
-import { useApp } from '@/context/AppContext';
 import { currentUser } from '@/data/mockData';
+import {
+  ArrowLeft,
+  Calendar,
+  Image as ImageIcon,
+  MapPin,
+  Smile,
+  Video,
+  X,
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export function PostCreationView() {
-  const { setCurrentView } = useApp();
+  const router = useRouter();
   const [content, setContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
 
   const handlePost = async () => {
     if (!content.trim()) return;
-    
+
     setIsPosting(true);
-    
+
     // Simulate posting delay
     await new Promise(resolve => setTimeout(resolve, 1000));
-    
+
     // Reset form
     setContent('');
     setSelectedImage(null);
     setIsPosting(false);
-    
+
     // Navigate back to home
-    setCurrentView('home');
+    router.push('/home');
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
@@ -53,24 +65,20 @@ export function PostCreationView() {
   const canPost = content.trim().length > 0 && !isOverLimit && !isPosting;
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+    <div className="mx-auto max-w-2xl">
+      <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
-              onClick={() => setCurrentView('home')}
+              onClick={() => router.push('/home')}
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h2 className="font-semibold text-xl">Create Post</h2>
+            <h2 className="text-xl font-semibold">Create Post</h2>
           </div>
-          <Button 
-            onClick={handlePost}
-            disabled={!canPost}
-            className="px-6"
-          >
+          <Button onClick={handlePost} disabled={!canPost} className="px-6">
             {isPosting ? 'Posting...' : 'Post'}
           </Button>
         </div>
@@ -78,8 +86,11 @@ export function PostCreationView() {
 
       <div className="p-4">
         <div className="flex gap-3">
-          <Avatar className="w-12 h-12 flex-shrink-0">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
+          <Avatar className="h-12 w-12 shrink-0">
+            <AvatarImage
+              src={currentUser.avatar}
+              alt={currentUser.displayName}
+            />
             <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
           </Avatar>
 
@@ -87,22 +98,23 @@ export function PostCreationView() {
             <Textarea
               placeholder="What's on your mind?"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="min-h-[120px] text-lg border-none resize-none focus-visible:ring-0 p-0 bg-transparent"
+              onChange={e => setContent(e.target.value)}
+              className="min-h-[120px] resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
               maxLength={maxCharacters + 50} // Allow typing over limit to show warning
             />
 
             {selectedImage && (
               <div className="relative">
-                <img 
-                  src={selectedImage} 
-                  alt="Upload preview" 
-                  className="w-full max-h-96 object-cover rounded-lg border border-border"
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selectedImage}
+                  alt="Upload preview"
+                  className="border-border max-h-96 w-full rounded-lg border object-cover"
                 />
                 <Button
                   variant="secondary"
                   size="sm"
-                  className="absolute top-2 right-2 w-8 h-8 p-0"
+                  className="absolute right-2 top-2 h-8 w-8 p-0"
                   onClick={removeImage}
                 >
                   <X className="h-4 w-4" />
@@ -110,7 +122,7 @@ export function PostCreationView() {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-4 border-t border-border">
+            <div className="border-border flex items-center justify-between border-t pt-4">
               <div className="flex items-center gap-2">
                 <input
                   type="file"
@@ -122,7 +134,7 @@ export function PostCreationView() {
                 <label htmlFor="image-upload">
                   <Button variant="ghost" size="sm" className="gap-2" asChild>
                     <span className="cursor-pointer">
-                      <Image className="h-4 w-4" />
+                      <ImageIcon className="h-4 w-4" />
                       Photo
                     </span>
                   </Button>
@@ -150,10 +162,12 @@ export function PostCreationView() {
               </div>
 
               <div className="flex items-center gap-3">
-                <div className={`text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
+                <div
+                  className={`text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}
+                >
                   {characterCount}/{maxCharacters}
                 </div>
-                
+
                 {isOverLimit && (
                   <Badge variant="destructive" className="text-xs">
                     Over limit
@@ -165,10 +179,12 @@ export function PostCreationView() {
         </div>
       </div>
 
-      <div className="p-4 border-t border-border">
-        <div className="text-sm text-muted-foreground space-y-2">
-          <p>💡 <strong>Tips for great posts:</strong></p>
-          <ul className="list-disc list-inside space-y-1 ml-4">
+      <div className="border-border border-t p-4">
+        <div className="text-muted-foreground space-y-2 text-sm">
+          <p>
+            💡 <strong>Tips for great posts:</strong>
+          </p>
+          <ul className="ml-4 list-inside list-disc space-y-1">
             <li>Keep it engaging and authentic</li>
             <li>Use relevant hashtags to reach more people</li>
             <li>Add images or videos to increase engagement</li>
