@@ -1,18 +1,18 @@
 "use client";
 
-import { PenSquare } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { useApp } from '@/context/AppContext';
+import { PenSquare } from 'lucide-react';
+import Link from 'next/link';
 
 export function FloatingActionButton() {
-  const { setCurrentView } = useApp();
-
   return (
     <Button
       className="fixed bottom-20 right-4 w-14 h-14 rounded-full shadow-lg md:hidden z-40"
-      onClick={() => setCurrentView('post-creation')}
+      asChild
     >
-      <PenSquare className="h-6 w-6" />
+      <Link href="/post/create">
+        <PenSquare className="h-6 w-6" />
+      </Link>
     </Button>
   );
 }
