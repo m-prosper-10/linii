@@ -23,7 +23,7 @@ export function LoginView() {
 
   return (
     <div className="bg-background flex min-h-screen items-center justify-center p-4">
-      <div className="max-w-auto w-full space-y-8">
+      <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="bg-primary mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl">
             <span className="text-primary-foreground text-2xl font-bold">

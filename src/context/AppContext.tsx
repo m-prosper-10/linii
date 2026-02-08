@@ -1,8 +1,14 @@
-"use client";
+'use client';
 
 import type { User } from '@/data/mockData';
 import { currentUser } from '@/data/mockData';
-import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
 
 interface AppContextType {
   isAuthenticated: boolean;
@@ -12,6 +18,8 @@ interface AppContextType {
   toggleTheme: () => void;
   selectedUserId: string | null;
   setSelectedUserId: (id: string | null) => void;
+  currentView: string;
+  setCurrentView: (view: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -20,6 +28,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [currentView, setCurrentView] = useState<string>('home');
 
   useEffect(() => {
     // Apply theme to document
@@ -31,7 +40,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
   return (
@@ -43,7 +52,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         theme,
         toggleTheme,
         selectedUserId,
-        setSelectedUserId
+        setSelectedUserId,
+        currentView,
+        setCurrentView,
       }}
     >
       {children}
