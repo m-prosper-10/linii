@@ -1,3 +1,5 @@
+'use client';
+
 import { PostCard } from '@/app/components/PostCard';
 import {
   Card,
