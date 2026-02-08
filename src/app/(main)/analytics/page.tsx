@@ -1,5 +1,3 @@
-'use client';
-
 import { AnalyticsView } from '@/app/components/views/AnalyticsView';
 import type { Metadata } from 'next';
 
