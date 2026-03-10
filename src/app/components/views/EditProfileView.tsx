@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from 'react';
-import { ArrowLeft, Camera, X, Sparkles, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Camera, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { useApp } from '@/context/AppContext';
-import { currentUser } from '@/data/mockData';
 import AIService from '@/services/ai';
 import { toast } from 'sonner';
 
@@ -28,8 +27,7 @@ export function EditProfileView() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
-  // Initialize form data when currentUser is available
-  useState(() => {
+  useEffect(() => {
     if (currentUser) {
       setFormData({
         displayName: currentUser.displayName,
@@ -41,7 +39,7 @@ export function EditProfileView() {
         coverImage: currentUser.coverImage,
       });
     }
-  });
+  }, [currentUser]);
 
   if (loading) {
     return (

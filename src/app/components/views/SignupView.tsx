@@ -10,20 +10,39 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export function SignupView() {
-  const { setIsAuthenticated } = useApp();
+  const { register } = useApp();
   const router = useRouter();
   const [formData, setFormData] = useState({
-    name: '',
+    displayName: '',
     email: '',
     username: '',
     password: '',
     agreedToTerms: false,
   });
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAuthenticated(true);
-    router.push('/home');
+    if (!formData.agreedToTerms) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
+      return;
+    }
+    setError(null);
+    setIsLoading(true);
+    try {
+      await register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        displayName: formData.displayName,
+      });
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -41,17 +60,23 @@ export function SignupView() {
 
         <div className="bg-card border-border space-y-6 rounded-xl border p-8">
           <form onSubmit={handleSignup} className="space-y-4">
+            {error && (
+              <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm flex items-center gap-2">
+                <span className="flex-1">{error}</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
               <Input
                 id="name"
                 type="text"
                 placeholder="Alex Morgan"
-                value={formData.name}
+                value={formData.displayName}
                 onChange={e =>
-                  setFormData({ ...formData, name: e.target.value })
+                  setFormData({ ...formData, displayName: e.target.value })
                 }
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
             </div>
@@ -67,6 +92,7 @@ export function SignupView() {
                   setFormData({ ...formData, email: e.target.value })
                 }
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
             </div>
@@ -82,6 +108,7 @@ export function SignupView() {
                   setFormData({ ...formData, username: e.target.value })
                 }
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
             </div>
@@ -97,6 +124,7 @@ export function SignupView() {
                   setFormData({ ...formData, password: e.target.value })
                 }
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
               <p className="text-muted-foreground text-xs">
@@ -114,6 +142,7 @@ export function SignupView() {
                     agreedToTerms: checked as boolean,
                   })
                 }
+                disabled={isLoading}
                 required
               />
               <label
@@ -131,8 +160,8 @@ export function SignupView() {
               </label>
             </div>
 
-            <Button type="submit" className="w-full">
-              Create account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
           </form>
 

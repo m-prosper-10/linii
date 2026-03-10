@@ -1,6 +1,6 @@
 'use client';
 
-import type { User } from '@/services/auth';
+import type { User, RegisterData } from '@/services/auth';
 import { authService } from '@/services/auth';
 import {
   ReactNode,
@@ -22,6 +22,7 @@ interface AppContextType {
   currentView: string;
   setCurrentView: (view: string) => void;
   login: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -79,6 +80,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const register = async (data: RegisterData) => {
+    setLoading(true);
+    try {
+      const { user } = await authService.register(data);
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
@@ -104,6 +116,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         currentView,
         setCurrentView,
         login,
+        register,
         logout,
         loading,
       }}

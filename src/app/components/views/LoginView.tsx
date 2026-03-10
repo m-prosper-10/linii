@@ -10,15 +10,25 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export function LoginView() {
-  const { setIsAuthenticated } = useApp();
+  const { login } = useApp();
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAuthenticated(true);
-    router.push('/home');
+    setError(null);
+    setIsLoading(true);
+    try {
+      await login(email, password);
+      router.push('/home');
+    } catch (err: any) {
+      setError(err.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +48,11 @@ export function LoginView() {
 
         <div className="bg-card border-border w-auto space-y-6 rounded-xl border p-8">
           <form onSubmit={handleLogin} className="space-y-4">
+            {error && (
+              <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm flex items-center gap-2">
+                <span className="flex-1">{error}</span>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
@@ -47,6 +62,7 @@ export function LoginView() {
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
             </div>
@@ -57,6 +73,7 @@ export function LoginView() {
                 <button
                   type="button"
                   onClick={() => router.push('/forgot-password')}
+                  disabled={isLoading}
                   className="text-primary text-sm hover:underline"
                 >
                   Forgot password?
@@ -69,12 +86,13 @@ export function LoginView() {
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
                 className="bg-accent/50"
               />
             </div>
 
-            <Button type="submit" className="w-full">
-              Sign in
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
 
