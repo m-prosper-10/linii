@@ -1,7 +1,7 @@
 'use client';
 
-import type { User } from '@/data/mockData';
-import { currentUser } from '@/data/mockData';
+import type { User } from '@/services/auth';
+import { authService } from '@/services/auth';
 import {
   ReactNode,
   createContext,
@@ -13,13 +13,17 @@ import {
 interface AppContextType {
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
-  currentUser: User;
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
   theme: 'light' | 'dark';
   toggleTheme: () => void;
   selectedUserId: string | null;
   setSelectedUserId: (id: string | null) => void;
   currentView: string;
   setCurrentView: (view: string) => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  loading: boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
