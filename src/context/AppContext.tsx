@@ -30,9 +30,30 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<string>('home');
+
+  useEffect(() => {
+    // Initial auth check
+    const checkAuth = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+        console.error('Initial auth check failed:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, []);
 
   useEffect(() => {
     // Apply theme to document
@@ -47,18 +68,44 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
   };
 
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      const { user } = await authService.login({ email, password });
+      setCurrentUser(user);
+      setIsAuthenticated(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setLoading(true);
+    try {
+      await authService.logout();
+      setCurrentUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
         isAuthenticated,
         setIsAuthenticated,
         currentUser,
+        setCurrentUser,
         theme,
         toggleTheme,
         selectedUserId,
         setSelectedUserId,
         currentView,
         setCurrentView,
+        login,
+        logout,
+        loading,
       }}
     >
       {children}

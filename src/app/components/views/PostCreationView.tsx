@@ -6,10 +6,8 @@ import {
   AvatarImage,
 } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
-import { apiClient } from "@/lib/api";
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
-import { currentUser } from '@/data/mockData';
 import {
   ArrowLeft,
   Calendar,
@@ -23,12 +21,28 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useApp } from '@/context/AppContext';
 import AIService from '@/services/ai';
-import { toast } from 'sonner'; // Assuming sonner is used for toasts based on modern stack, or I'll use native alert if not.
+import { toast } from 'sonner';
 
 export function PostCreationView() {
   const router = useRouter();
+  const { currentUser, loading } = useApp();
   const [content, setContent] = useState('');
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    // Redirect or show message? Let's redirect to login or home.
+    router.push('/login');
+    return null;
+  }
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);

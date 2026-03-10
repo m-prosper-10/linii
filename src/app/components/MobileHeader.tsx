@@ -35,16 +35,26 @@ export function MobileHeader() {
               </SheetTitle>
             </SheetHeader>
             <div className="mt-8 space-y-6">
-              <div className="flex items-center gap-3 p-2">
-                <Avatar className="w-12 h-12">
-                  <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
-                  <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium truncate">{currentUser.displayName}</div>
-                  <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
+              {currentUser ? (
+                <div className="flex items-center gap-3 p-2">
+                  <Avatar className="w-12 h-12">
+                    <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
+                    <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium truncate">{currentUser.displayName}</div>
+                    <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-center gap-3 p-2 animate-pulse">
+                  <div className="w-12 h-12 bg-muted rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-28" />
+                    <div className="h-3 bg-muted rounded w-20" />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-1">
                 <Button

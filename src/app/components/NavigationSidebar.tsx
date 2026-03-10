@@ -64,19 +64,29 @@ export function NavigationSidebar() {
       </Button>
 
       <div className="pt-4 border-t border-border">
-        <Link 
-          href="/profile"
-          className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
-        >
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
-            <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
-          </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="font-medium truncate">{currentUser.displayName}</div>
-            <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
+        {currentUser ? (
+          <Link 
+            href="/profile"
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent cursor-pointer transition-colors"
+          >
+            <Avatar className="w-12 h-12">
+              <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
+              <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="font-medium truncate">{currentUser.displayName}</div>
+              <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
+            </div>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-3 p-2 animate-pulse">
+            <div className="w-12 h-12 bg-muted rounded-full" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 bg-muted rounded w-28" />
+              <div className="h-3 bg-muted rounded w-20" />
+            </div>
           </div>
-        </Link>
+        )}
       </div>
     </div>
   );
