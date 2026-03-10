@@ -29,6 +29,9 @@ export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
   const [content, setContent] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isPosting, setIsPosting] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
 
   if (loading) {
     return (
@@ -39,13 +42,9 @@ export function PostCreationView() {
   }
 
   if (!currentUser) {
-    // Redirect or show message? Let's redirect to login or home.
     router.push('/login');
     return null;
   }
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [isPosting, setIsPosting] = useState(false);
-  const [isAiLoading, setIsAiLoading] = useState(false);
 
   const handleAiEnhance = async () => {
     if (!content.trim()) return;

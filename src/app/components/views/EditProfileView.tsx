@@ -13,20 +13,48 @@ import AIService from '@/services/ai';
 import { toast } from 'sonner';
 
 export function EditProfileView() {
-  const { setCurrentView } = useApp();
+  const { currentUser, loading, setCurrentView } = useApp();
   const [formData, setFormData] = useState({
-    displayName: currentUser.displayName,
-    username: currentUser.username,
-    bio: currentUser.bio,
-    website: currentUser.website || '',
-    location: currentUser.location || '',
-    avatar: currentUser.avatar,
-    coverImage: currentUser.coverImage,
+    displayName: '',
+    username: '',
+    bio: '',
+    website: '',
+    location: '',
+    avatar: '',
+    coverImage: '',
   });
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Initialize form data when currentUser is available
+  useState(() => {
+    if (currentUser) {
+      setFormData({
+        displayName: currentUser.displayName,
+        username: currentUser.username,
+        bio: currentUser.bio,
+        website: currentUser.website || '',
+        location: currentUser.location || '',
+        avatar: currentUser.avatar,
+        coverImage: currentUser.coverImage,
+      });
+    }
+  });
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    // router.push('/login'); // We don't have router here, using window.location or just return null
+    return null;
+  }
 
   const handleAiBioSuggest = async () => {
     setIsAiLoading(true);
