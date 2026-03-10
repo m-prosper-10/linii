@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { ArrowLeft, Camera, X } from 'lucide-react';
+import { ArrowLeft, Camera, X, Sparkles, Loader2 } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
@@ -9,6 +9,8 @@ import { Textarea } from '@/app/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { useApp } from '@/context/AppContext';
 import { currentUser } from '@/data/mockData';
+import AIService from '@/services/ai';
+import { toast } from 'sonner';
 
 export function EditProfileView() {
   const { setCurrentView } = useApp();
@@ -24,6 +26,25 @@ export function EditProfileView() {
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [coverPreview, setCoverPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const handleAiBioSuggest = async () => {
+    setIsAiLoading(true);
+    try {
+      const suggestion = await AIService.suggestBio(
+        formData.displayName,
+        formData.displayName, 
+        formData.bio
+      );
+      setFormData(prev => ({ ...prev, bio: suggestion }));
+      toast.success("Bio updated by AI!");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Failed to generate bio";
+      alert(message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -164,7 +185,23 @@ export function EditProfileView() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="bio">Bio</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="bio">Bio</Label>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 gap-2 text-primary"
+                onClick={handleAiBioSuggest}
+                disabled={isAiLoading}
+              >
+                {isAiLoading ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Sparkles className="h-3 w-3" />
+                )}
+                AI Suggest
+              </Button>
+            </div>
             <Textarea
               id="bio"
               value={formData.bio}

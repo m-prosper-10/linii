@@ -6,6 +6,7 @@ import {
   AvatarImage,
 } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
+import { apiClient } from "@/lib/api";
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
 import { currentUser } from '@/data/mockData';
@@ -17,15 +18,54 @@ import {
   Smile,
   Video,
   X,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import AIService from '@/services/ai';
+import { toast } from 'sonner'; // Assuming sonner is used for toasts based on modern stack, or I'll use native alert if not.
 
 export function PostCreationView() {
   const router = useRouter();
   const [content, setContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [isAiLoading, setIsAiLoading] = useState(false);
+
+  const handleAiEnhance = async () => {
+    if (!content.trim()) return;
+    setIsAiLoading(true);
+    try {
+      const enhanced = await AIService.suggestPostEnhancement(content);
+      setContent(enhanced);
+      toast.success("Post enhanced by AI!");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "AI enhancement failed";
+      alert(message);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
+
+  const handleImageAnalysis = async (file: File) => {
+    setIsAiLoading(true);
+    try {
+      const description = await AIService.analyzeImage(file);
+      if (!content.trim()) {
+        setContent(description);
+      } else {
+        // Ask or just append? Let's just append or suggest.
+        // For simplicity, if content is empty, fill it. Else, append.
+        setContent(prev => `${prev}\n\n[AI Description: ${description}]`);
+      }
+      toast.success("Image analyzed by AI!");
+    } catch (error: unknown) {
+      console.error("Image analysis failed:", error);
+    } finally {
+      setIsAiLoading(false);
+    }
+  };
 
   const handlePost = async () => {
     if (!content.trim()) return;
@@ -52,6 +92,9 @@ export function PostCreationView() {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
+      
+      // Trigger AI analysis
+      handleImageAnalysis(file);
     }
   };
 
@@ -158,6 +201,21 @@ export function PostCreationView() {
                 <Button variant="ghost" size="sm" className="gap-2" disabled>
                   <Calendar className="h-4 w-4" />
                   Schedule
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-2 text-primary"
+                  onClick={handleAiEnhance}
+                  disabled={isAiLoading || !content.trim()}
+                >
+                  {isAiLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  AI Enhance
                 </Button>
               </div>
 
