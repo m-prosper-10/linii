@@ -39,7 +39,7 @@ export interface AuthTokens {
 
 class AuthService {
   async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
-    const response = await apiClient.post<{ user: User; token: string }>(
+    const response = await apiClient.post<User>(
       '/auth/login',
       credentials,
       { skipAuth: true }
@@ -54,7 +54,7 @@ class AuthService {
   }
 
   async register(data: RegisterData): Promise<{ user: User; token: string }> {
-    const response = await apiClient.post<{ user: User; token: string }>(
+    const response = await apiClient.post<User>(
       '/auth/register',
       data,
       { skipAuth: true }
