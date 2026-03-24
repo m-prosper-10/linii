@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import AIService from '@/services/ai';
+import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 
 export function PostCreationView() {
@@ -85,16 +86,22 @@ export function PostCreationView() {
 
     setIsPosting(true);
 
-    // Simulate posting delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // Reset form
-    setContent('');
-    setSelectedImage(null);
-    setIsPosting(false);
-
-    // Navigate back to home
-    router.push('/home');
+    try {
+      // NOTE: We're passing TEXT for now. If image logic expects direct upload, we would handle media here.
+      await PostService.createPost({
+        content,
+        postType: selectedImage ? 'MEDIA' : 'TEXT'
+      });
+      toast.success('Post created successfully!');
+      setContent('');
+      setSelectedImage(null);
+      router.push('/home');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to create post');
+      console.error(error);
+    } finally {
+      setIsPosting(false);
+    }
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

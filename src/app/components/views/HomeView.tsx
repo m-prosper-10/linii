@@ -2,12 +2,61 @@
 
 import { PostCard } from '@/app/components/PostCard';
 import { Button } from '@/app/components/ui/button';
-import { mockPosts } from '@/data/mockData';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { PostService, PostApiType } from '@/services/post';
+import { toast } from 'sonner';
+import { Post } from '@/data/mockData';
 
 export function HomeView() {
   const router = useRouter();
+  const [posts, setPosts] = useState<PostApiType[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchFeed();
+  }, []);
+
+  const fetchFeed = async () => {
+    try {
+      setLoading(true);
+      const data = await PostService.getFeed(1, 20);
+      setPosts(data.posts);
+    } catch (error: any) {
+      toast.error('Failed to load feed');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const mapToPost = (apiPost: PostApiType): Post => ({
+    id: apiPost._id,
+    author: {
+      id: apiPost.author._id,
+      displayName: apiPost.author.fullnames,
+      username: apiPost.author.username,
+      avatar: apiPost.author.avatar || '',
+      verified: apiPost.author.verified || false,
+      joinedDate: '',
+      following: 0,
+      followers: 0,
+      posts: 0
+    },
+    content: apiPost.content,
+    image: apiPost.media?.[0]?.url,
+    timestamp: new Date(apiPost.createdAt).toLocaleDateString(),
+    likes: apiPost.likesCount,
+    comments: apiPost.commentsCount,
+    reposts: apiPost.sharesCount,
+    saves: 0,
+    reach: apiPost.views,
+    isLiked: apiPost.userReaction?.reactionType === 'LIKE',
+    isSaved: false,
+    isReposted: !!apiPost.userShared,
+    tags: apiPost.tags,
+  });
 
   const handleUserClick = (userId: string) => {
     router.push(`/profile/${userId}`);
@@ -30,22 +79,33 @@ export function HomeView() {
           className="text-muted-foreground cursor-pointer hover:bg-accent/50 p-4 rounded-lg transition-colors"
           onClick={() => router.push('/post/create')}
         >
-          What's on your mind?
+          What&apos;s on your mind?
         </div>
       </div>
 
       <div>
-        {mockPosts.map((post) => (
-          <PostCard 
-            key={post.id} 
-            post={post}
-            onUserClick={handleUserClick}
-          />
-        ))}
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground flex justify-center items-center">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            Loading feed...
+          </div>
+        ) : posts.length > 0 ? (
+          posts.map((apiPost) => (
+            <PostCard 
+              key={apiPost._id} 
+              post={mapToPost(apiPost)}
+              onUserClick={handleUserClick}
+            />
+          ))
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            No posts found. Create your first post!
+          </div>
+        )}
       </div>
 
       <div className="p-8 text-center text-muted-foreground">
-        <p>You've reached the end</p>
+        <p>You&apos;ve reached the end</p>
       </div>
     </div>
   );
