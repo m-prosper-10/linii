@@ -141,4 +141,9 @@ export class PostService {
       throw error;
     }
   }
+
+  static async getUserPosts(userId: string, page = 1, limit = 20): Promise<PostsResponse> {
+    const response = await apiClient.get<PostsResponse>(`/posts/user/${userId}?page=${page}&limit=${limit}`);
+    return response.data!;
+  }
 }

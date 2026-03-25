@@ -15,9 +15,15 @@ export interface User {
   verified: boolean;
   followers: number;
   following: number;
+  postsCount: number;
   website?: string;
   location?: string;
   joinedDate: string;
+  followStatus?: {
+    isFollowing: boolean;
+    isFollowedBy: boolean;
+    status: 'NONE' | 'FOLLOWING' | 'PENDING' | 'BLOCKED';
+  };
 }
 
 export interface LoginCredentials {
@@ -85,6 +91,16 @@ class AuthService {
       return response.success ? response.data || null : null;
     } catch (error) {
       console.error('Failed to get current user:', error);
+      return null;
+    }
+  }
+  
+  async getUserProfile(userId: string): Promise<User | null> {
+    try {
+      const response = await apiClient.get<User>(`/auth/user/${userId}`);
+      return response.success ? response.data || null : null;
+    } catch (error) {
+      console.error('Failed to get user profile:', error);
       return null;
     }
   }
