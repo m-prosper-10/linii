@@ -61,9 +61,32 @@ export class PostService {
     return response.data!;
   }
 
-  static async createPost(payload: CreatePostPayload): Promise<PostApiType> {
-    const response = await apiClient.post<PostApiType>('/posts', payload);
-    return response.data!;
+  static  async createPost(data: Omit<CreatePostPayload, 'media'> & { mediaFiles?: File[] }): Promise<PostApiType> {
+    const formData = new FormData();
+    formData.append('content', data.content);
+
+    if (data.postType) {
+      formData.append('postType', data.postType);
+    }
+
+    if (data.visibility) {
+      formData.append('visibility', data.visibility);
+    }
+
+    if (data.mediaFiles && data.mediaFiles.length > 0) {
+      data.mediaFiles.forEach((file) => {
+        formData.append('media', file);
+      });
+    }
+
+    // Since we are sending FormData, we should use apiClient.upload
+    // Note: By doing this, we also need to ensure apiClient.upload returns the expected shape.
+    // apiClient.upload doesn't set Content-Type header so the browser sets multipart/form-data with boundaries automatically.
+    const response = await apiClient.upload<{ data: { post: PostApiType } }>(
+      '/api/posts',
+      formData
+    );
+    return response.data.data.post;
   }
 
   static async toggleReaction(postId: string, reactionType = 'LIKE') {

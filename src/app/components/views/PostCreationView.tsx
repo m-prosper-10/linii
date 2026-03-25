@@ -32,6 +32,7 @@ export function PostCreationView() {
   const [content, setContent] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isPosting, setIsPosting] = useState(false);
+  const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
 
   if (loading) {
@@ -87,14 +88,15 @@ export function PostCreationView() {
     setIsPosting(true);
 
     try {
-      // NOTE: We're passing TEXT for now. If image logic expects direct upload, we would handle media here.
-      await PostService.createPost({
-        content,
-        postType: selectedImage ? 'MEDIA' : 'TEXT'
+      const newPost = await PostService.createPost({
+        content: content.trim(),
+        postType: selectedMediaFiles.length > 0 ? 'MEDIA' : 'TEXT',
+        mediaFiles: selectedMediaFiles
       });
       toast.success('Post created successfully!');
       setContent('');
       setSelectedImage(null);
+      setSelectedMediaFiles([]);
       router.push('/home');
     } catch (error: any) {
       toast.error(error.message || 'Failed to create post');
@@ -107,6 +109,7 @@ export function PostCreationView() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setSelectedMediaFiles([file]);
       const reader = new FileReader();
       reader.onload = e => {
         setSelectedImage(e.target?.result as string);
@@ -120,6 +123,7 @@ export function PostCreationView() {
 
   const removeImage = () => {
     setSelectedImage(null);
+    setSelectedMediaFiles([]);
   };
 
   const characterCount = content.length;
