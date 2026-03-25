@@ -17,6 +17,23 @@ export interface PostApiType {
     url: string;
     thumbnail?: string;
   }>;
+  comments: Array<{
+    _id: string;
+    author: {
+      _id: string;
+      fullnames: string;
+      username: string;
+      email: string;
+      avatar?: string;
+      verified?: boolean;
+    };
+    content: string;
+    createdAt: string;
+    likesCount: number;
+    userReaction?: {
+      reactionType: string;
+    };
+  }>;
   visibility: string;
   tags: string[];
   mentions: string[];

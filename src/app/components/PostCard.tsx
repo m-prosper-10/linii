@@ -31,7 +31,7 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
   const [reposts, setReposts] = useState(post.reposts);
   const [saves, setSaves] = useState(post.saves);
   const [showComments, setShowComments] = useState(false);
-  const [comments, setComments] = useState<Comment[]>(mockComments[post.id] || []);
+  const [comments, setComments] = useState<Comment[]>(post.commentsData || mockComments[post.id] || []);
   const [commentCount, setCommentCount] = useState(post.comments);
   const [newComment, setNewComment] = useState('');
 

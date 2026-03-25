@@ -57,6 +57,25 @@ export function HomeView() {
     isSaved: false,
     isReposted: !!apiPost.userShared,
     tags: apiPost.tags,
+    commentsData: apiPost.comments?.map(apiComment => ({
+      id: apiComment._id,
+      author: {
+        id: apiComment.author._id,
+        displayName: apiComment.author.fullnames,
+        username: apiComment.author.username,
+        avatar: apiComment.author.avatar || '',
+        verified: apiComment.author.verified || false,
+        joinedDate: '',
+        following: 0,
+        followers: 0,
+        bio: '',
+        coverImage: ''
+      },
+      content: apiComment.content,
+      timestamp: new Date(apiComment.createdAt).toLocaleDateString(),
+      likes: apiComment.likesCount,
+      isLiked: apiComment.userReaction?.reactionType === 'LIKE'
+    }))
   });
 
   const handleUserClick = (userId: string) => {
