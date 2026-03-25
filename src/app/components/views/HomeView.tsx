@@ -42,7 +42,8 @@ export function HomeView() {
       joinedDate: '',
       following: 0,
       followers: 0,
-      posts: 0
+      bio: '',
+      coverImage: ''
     },
     content: apiPost.content,
     image: apiPost.media?.[0]?.url,

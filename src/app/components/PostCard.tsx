@@ -14,6 +14,9 @@ import type { Comment, Post } from '@/data/mockData';
 import { currentUser, mockComments } from '@/data/mockData';
 import { Bookmark, Heart, MessageCircle, MoreHorizontal, Repeat2, Send, Sparkles } from 'lucide-react';
 import { useState } from 'react';
+import { PostService } from '@/services/post';
+import { toast } from 'sonner';
+import { useApp } from '@/context/AppContext';
 
 interface PostCardProps {
   post: Post;
@@ -32,14 +35,33 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
   const [commentCount, setCommentCount] = useState(post.comments);
   const [newComment, setNewComment] = useState('');
 
-  const handleLike = () => {
+  const { currentUser: appUser } = useApp();
+  
+  const handleLike = async () => {
     setIsLiked(!isLiked);
     setLikes(isLiked ? likes - 1 : likes + 1);
+    
+    try {
+      await PostService.toggleReaction(post.id, 'LIKE');
+    } catch (_error) {
+      // Rollback on failure
+      setIsLiked(isLiked);
+      setLikes(likes);
+      toast.error('Failed to update like');
+    }
   };
 
-  const handleRepost = () => {
+  const handleRepost = async () => {
     setIsReposted(!isReposted);
     setReposts(isReposted ? reposts - 1 : reposts + 1);
+
+    try {
+      await PostService.toggleRepost(post.id);
+    } catch (_error) {
+      setIsReposted(isReposted);
+      setReposts(reposts);
+      toast.error('Failed to update repost');
+    }
   };
 
   const handleSave = () => {
@@ -61,13 +83,15 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
     }));
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
+    const content = newComment.trim();
+    // optimistic update
     const comment: Comment = {
-      id: `c${Date.now()}`,
-      author: currentUser,
-      content: newComment.trim(),
+      id: `temp-${Date.now()}`,
+      author: appUser || currentUser, 
+      content,
       timestamp: 'just now',
       likes: 0,
       isLiked: false,
@@ -76,6 +100,16 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
     setComments([...comments, comment]);
     setCommentCount(commentCount + 1);
     setNewComment('');
+
+    try {
+      await PostService.addComment({ postId: post.id, content });
+    } catch (_error) {
+      // rollback
+      setComments(comments);
+      setCommentCount(commentCount);
+      setNewComment(content);
+      toast.error('Failed to add comment');
+    }
   };
 
   return (
@@ -215,8 +249,8 @@ export function PostCard({ post, onUserClick }: PostCardProps) {
               {/* Comment Input */}
               <div className="flex gap-3 mb-4">
                 <Avatar className="w-8 h-8 shrink-0">
-                  <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
-                  <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
+                  <AvatarImage src={appUser?.avatar || currentUser.avatar} alt={appUser?.displayName || currentUser.displayName} />
+                  <AvatarFallback>{(appUser?.displayName || currentUser.displayName)?.[0]}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 flex gap-2">
                   <Textarea
