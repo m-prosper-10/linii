@@ -49,8 +49,9 @@ class ApiClient {
   ): Promise<ApiResponse<T>> {
     const url = `${this.baseUrl}/api${endpoint}`;
 
+    const isFormData = config.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(!isFormData && { 'Content-Type': 'application/json' }),
       ...((config.headers as Record<string, string>) || {}),
     };
 
@@ -119,7 +120,6 @@ class ApiClient {
       ...config,
       method: 'POST',
       body: formData,
-      headers: {}, // Let browser set Content-Type with boundary
     });
   }
 }

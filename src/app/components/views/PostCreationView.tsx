@@ -116,8 +116,8 @@ export function PostCreationView() {
       };
       reader.readAsDataURL(file);
       
-      // Trigger AI analysis
-      handleImageAnalysis(file);
+      // Trigger AI analysis (Disabled per user request)
+      // handleImageAnalysis(file);
     }
   };
 

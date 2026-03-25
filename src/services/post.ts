@@ -83,7 +83,7 @@ export class PostService {
     // Note: By doing this, we also need to ensure apiClient.upload returns the expected shape.
     // apiClient.upload doesn't set Content-Type header so the browser sets multipart/form-data with boundaries automatically.
     const response = await apiClient.upload<{ data: { post: PostApiType } }>(
-      '/api/posts',
+      '/posts',
       formData
     );
     return response.data?.data.post as PostApiType;
