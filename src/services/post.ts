@@ -43,7 +43,7 @@ export interface PostsResponse {
 
 export interface CreatePostPayload {
   content: string;
-  postType?: 'TEXT' | 'MEDIA' | 'POLL' | 'EVENT';
+  postType?: 'TEXT' | 'IMAGE' | 'VIDEO' | 'LINK' | 'POLL' | 'EVENT';
   media?: Array<{ type: string; url: string }>;
   visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' | 'CUSTOM';
   tags?: string[];

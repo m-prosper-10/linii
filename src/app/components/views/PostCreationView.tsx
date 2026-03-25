@@ -90,7 +90,7 @@ export function PostCreationView() {
     try {
       await PostService.createPost({
         content: content.trim(),
-        postType: selectedMediaFiles.length > 0 ? 'MEDIA' : 'TEXT',
+        postType: selectedMediaFiles.length > 0 ? (selectedMediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE') : 'TEXT',
         mediaFiles: selectedMediaFiles
       });
       toast.success('Post created successfully!');
