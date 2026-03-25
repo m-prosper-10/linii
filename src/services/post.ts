@@ -1,4 +1,4 @@
-import { apiClient, ApiResponse } from '../lib/api';
+import { apiClient } from '../lib/api';
 
 export interface PostApiType {
   _id: string;
@@ -19,7 +19,7 @@ export interface PostApiType {
   }>;
   visibility: string;
   tags: string[];
-  mentions: any[];
+  mentions: string[];
   likesCount: number;
   commentsCount: number;
   sharesCount: number;
@@ -86,11 +86,11 @@ export class PostService {
       '/api/posts',
       formData
     );
-    return response.data.data.post;
+    return response.data?.data.post as PostApiType;
   }
 
   static async toggleReaction(postId: string, reactionType = 'LIKE') {
-    const response = await apiClient.post<{ message: string, data: any }>('/engagement/react', {
+    const response = await apiClient.post<{ message: string, data: unknown }>('/engagement/react', {
       targetType: 'POST',
       targetId: postId,
       reactionType
@@ -99,7 +99,7 @@ export class PostService {
   }
 
   static async addComment(payload: CreateCommentPayload) {
-    const response = await apiClient.post<any>(`/engagement/posts/${payload.postId}/comments`, {
+    const response = await apiClient.post<unknown>(`/engagement/posts/${payload.postId}/comments`, {
       postId: payload.postId,
       content: payload.content
     });
@@ -110,15 +110,15 @@ export class PostService {
     try {
       // Attempt to share. If user already shared, this might fail according to backend logic
       // But let's assume if it fails with 'Post already shared', we want to unshare
-      const response = await apiClient.post<any>(`/engagement/posts/${postId}/share`, {
+      const response = await apiClient.post<unknown>(`/engagement/posts/${postId}/share`, {
         postId,
         shareType: 'REPOST',
         content: ''
       });
       return response.data;
-    } catch (error: any) {
-      if (error.message === 'Post already shared') {
-        const response = await apiClient.delete<any>(`/engagement/posts/${postId}/share`);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Post already shared') {
+        const response = await apiClient.delete<unknown>(`/engagement/posts/${postId}/share`);
         return response.data;
       }
       throw error;

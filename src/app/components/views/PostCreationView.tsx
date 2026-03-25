@@ -88,7 +88,7 @@ export function PostCreationView() {
     setIsPosting(true);
 
     try {
-      const newPost = await PostService.createPost({
+      await PostService.createPost({
         content: content.trim(),
         postType: selectedMediaFiles.length > 0 ? 'MEDIA' : 'TEXT',
         mediaFiles: selectedMediaFiles
@@ -98,8 +98,8 @@ export function PostCreationView() {
       setSelectedImage(null);
       setSelectedMediaFiles([]);
       router.push('/home');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create post');
+    } catch (error) {
+      toast.error((error as Error).message || 'Failed to create post');
       console.error(error);
     } finally {
       setIsPosting(false);
