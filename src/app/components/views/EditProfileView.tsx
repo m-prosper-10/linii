@@ -8,6 +8,7 @@ import { Label } from '@/app/components/ui/label';
 import { Textarea } from '@/app/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { useApp } from '@/context/AppContext';
+import { authService } from '@/services/auth';
 import AIService from '@/services/ai';
 import { toast } from 'sonner';
 
@@ -58,7 +59,8 @@ export function EditProfileView() {
     setIsAiLoading(true);
     try {
       const suggestion = await AIService.suggestBio(
-        formData.displayName, 
+        formData.displayName,
+        formData.username,
         formData.bio
       );
       setFormData(prev => ({ ...prev, bio: suggestion }));

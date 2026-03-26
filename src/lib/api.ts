@@ -110,6 +110,14 @@ class ApiClient {
     });
   }
 
+  patch<T>(endpoint: string, body: unknown, config?: RequestConfig) {
+    return this.request<T>(endpoint, {
+      ...config,
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
+
   delete<T>(endpoint: string, config?: RequestConfig) {
     return this.request<T>(endpoint, { ...config, method: 'DELETE' });
   }

@@ -47,6 +47,16 @@ export interface AuthTokens {
   refreshToken: string;
 }
 
+export interface UpdateProfileData {
+  fullnames?: string;
+  displayName?: string;
+  bio?: string;
+  location?: string;
+  website?: string;
+  avatar?: string;
+  coverImage?: string;
+}
+
 class AuthService {
   async login(credentials: LoginCredentials): Promise<{ user: User; token: string }> {
     const response = await apiClient.post<User>(
@@ -143,6 +153,16 @@ class AuthService {
     if (!response.success) {
       throw new Error(response.message || 'Password reset failed');
     }
+  }
+
+  async updateProfile(data: UpdateProfileData): Promise<User> {
+    const response = await apiClient.patch<User>('/auth/profile', data);
+    
+    if (response.success && response.data) {
+      return response.data;
+    }
+    
+    throw new Error(response.message || 'Profile update failed');
   }
 
   isAuthenticated(): boolean {
