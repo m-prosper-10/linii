@@ -65,6 +65,17 @@ export interface CreatePostPayload {
   visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE' | 'CUSTOM';
   tags?: string[];
   mentions?: string[];
+  poll?: {
+    question: string;
+    options: string[];
+    allowMultiple?: boolean;
+    expiresAt?: Date;
+  };
+  location?: {
+    name: string;
+    coordinates?: [number, number];
+  };
+  scheduledFor?: Date;
 }
 
 export interface CreateCommentPayload {
@@ -94,6 +105,22 @@ export class PostService {
       data.mediaFiles.forEach((file) => {
         formData.append('media', file);
       });
+    }
+
+    if ((data as any).poll) {
+      formData.append('poll', JSON.stringify((data as any).poll));
+    }
+
+    if ((data as any).location) {
+      formData.append('location', JSON.stringify((data as any).location));
+    }
+
+    if ((data as any).scheduledFor) {
+      formData.append('scheduledFor', (data as any).scheduledFor.toISOString());
+    }
+
+    if ((data as any).tags && (data as any).tags.length > 0) {
+      formData.append('tags', JSON.stringify((data as any).tags));
     }
 
     // Since we are sending FormData, we should use apiClient.upload
