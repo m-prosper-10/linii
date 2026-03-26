@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { PostCard } from '@/app/components/PostCard';
 import { PostDetailModal } from '@/app/components/PostDetailModal';
 import {
@@ -10,9 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card';
-import { mockAnalytics } from '@/data/mockData';
-import { Eye, Heart, MessageCircle, TrendingUp, Users } from 'lucide-react';
-import { PostApiType } from '@/services/post';
+import { useApp } from '@/context/AppContext';
+import { analyticsService, UserAnalytics } from '@/services/analytics';
+import { postService, PostApiType } from '@/services/post';
+import { Eye, Heart, MessageCircle, TrendingUp, Users, Loader2 } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -27,33 +28,53 @@ import {
 } from 'recharts';
 
 export function AnalyticsView() {
+  const { currentUser } = useApp();
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
+  const [topPosts, setTopPosts] = useState<PostApiType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Map mock top posts to PostApiType for compatibility with updated PostCard
-  const topPosts = mockAnalytics.topPosts.map(
-    post =>
-      ({
-        _id: post.id,
-        author: {
-          _id: post.author.id,
-          fullnames: post.author.displayName,
-          username: post.author.username,
-          avatar: post.author.avatar,
-          verified: post.author.verified,
-        },
-        content: post.content,
-        media: post.image ? [{ url: post.image, type: 'IMAGE' }] : [],
-        likesCount: post.likes,
-        commentsCount: post.comments,
-        sharesCount: post.reposts,
-        views: post.reach,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        tags: post.tags || [],
-        userReaction: post.isLiked ? { reactionType: 'LIKE' } : undefined,
-        userShared: post.isReposted,
-      }) as unknown as PostApiType
-  );
+  const fetchAnalytics = useCallback(async () => {
+    if (!currentUser?._id) return;
+    setLoading(true);
+    try {
+      const data = await analyticsService.getUserAnalytics(currentUser._id);
+      setAnalytics(data);
+      
+      // Fetch details for top performing posts
+      if (data.topPerformingPosts?.length > 0) {
+        const postPromises = data.topPerformingPosts.map(p => 
+          postService.getPost(p.postId).catch(() => null)
+        );
+        const posts = await Promise.all(postPromises);
+        setTopPosts(posts.filter((p): p is PostApiType => p !== null));
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?._id]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  if (loading && !analytics) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!analytics) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center text-muted-foreground">
+        No analytics data available
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl pb-20">
@@ -78,10 +99,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalPosts}
+                {analytics.totalPosts}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +12% from last month
+                Lifetime content
               </p>
             </CardContent>
           </Card>
@@ -95,10 +116,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalLikes.toLocaleString()}
+                {analytics.totalLikesReceived.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +18% from last month
+                Received across posts
               </p>
             </CardContent>
           </Card>
@@ -112,10 +133,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalComments.toLocaleString()}
+                {analytics.totalCommentsReceived.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +24% from last month
+                Audience engagement
               </p>
             </CardContent>
           </Card>
@@ -129,11 +150,11 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalFollowers.toLocaleString()}
+                {analytics.totalFollowers.toLocaleString()}
               </div>
               <p className="flex items-center gap-1 text-xs font-bold text-green-500">
-                <TrendingUp className="h-3 w-3" />+
-                {mockAnalytics.followerGrowth}% growth
+                <TrendingUp className="h-3 w-3" />
+                {analytics.engagementRate.toFixed(1)}% ER
               </p>
             </CardContent>
           </Card>

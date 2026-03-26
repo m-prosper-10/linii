@@ -1,43 +1,65 @@
-import { apiClient } from "@/lib/api";
-import { PostApiType } from "./post";
+import { apiClient } from '../lib/api';
 
-export interface TrendingPost extends PostApiType {
-  score?: number;
+export interface ContentAnalytics {
+  totalViews: number;
+  totalLikes: number;
+  totalShares: number;
+  totalComments: number;
+  uniqueViewers: number;
+  engagementRate: number;
+  dailyBreakdown: Array<{ date: string; views: number; engagement: number }>;
 }
 
-export interface TrendingTopic {
-  hashtag: string;
-  posts: number;
+export interface UserAnalytics {
+  totalPosts: number;
+  totalFollowers: number;
+  totalLikesReceived: number;
+  totalCommentsReceived: number;
+  totalViews: number;
+  engagementRate: number;
+  topPerformingPosts: Array<{
+    postId: string;
+    views: number;
+    engagement: number;
+  }>;
+  growthMetrics: {
+    followersGrowth: Array<{ date: string; count: number }>;
+    engagementGrowth: Array<{ date: string; rate: number }>;
+  };
 }
 
-export const analyticsService = {
-  /**
-   * Get trending content
-   */
-  async getTrendingContent(limit: number = 10): Promise<PostApiType[]> {
-    const response = await apiClient.get<{ trending: PostApiType[] }>(`/analytics/trending?limit=${limit}`);
+class AnalyticsService {
+  async getUserAnalytics(userId: string): Promise<UserAnalytics> {
+    const response = await apiClient.get<UserAnalytics>(`/analytics/users/${userId}`);
     if (response.success && response.data) {
-      return response.data.trending;
+      return response.data;
     }
-    throw new Error(response.message || 'Failed to get trending content');
-  },
-
-  /**
-   * Get trending topics (hashtags)
-   * Note: This might need a backend implementation if not already present
-   */
-  async getTrendingTopics(): Promise<TrendingTopic[]> {
-    try {
-      // For now, if there's no dedicated endpoint, we might just return empty or mock
-      // But let's assume we'll add one or it exists under a different name
-      const response = await apiClient.get<{ topics: TrendingTopic[] }>('/analytics/topics');
-      if (response.success && response.data) {
-        return response.data.topics;
-      }
-      return [];
-    } catch (error) {
-       console.error('Failed to get trending topics:', error);
-       return [];
-    }
+    throw new Error(response.message || 'Failed to fetch user analytics');
   }
-};
+
+  async getAccountInsights(): Promise<UserAnalytics> {
+    const response = await apiClient.get<UserAnalytics>('/analytics/account/insights');
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to fetch account insights');
+  }
+
+  async getContentAnalytics(contentType: string, contentId: string): Promise<ContentAnalytics> {
+    const response = await apiClient.get<ContentAnalytics>(`/analytics/content/${contentType}/${contentId}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to fetch content analytics');
+  }
+
+  async getTrendingTopics(limit: number = 10): Promise<Array<{ hashtag: string; posts: number }>> {
+    const response = await apiClient.get<Array<{ hashtag: string; posts: number }>>(`/analytics/topics?limit=${limit}`);
+    if (response.success && response.data) {
+      return response.data;
+    }
+    throw new Error(response.message || 'Failed to fetch trending topics');
+  }
+}
+
+export const analyticsService = new AnalyticsService();
