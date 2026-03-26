@@ -158,7 +158,7 @@ export function ProfileView() {
             <Avatar className="border-background h-32 w-32 border-4 shadow-xl">
               <AvatarImage src={user.avatar} alt={user.fullnames} />
               <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
-                {user.fullnames[0]}
+                {user.fullnames ? user.fullnames[0] : (user.username ? user.username[0] : '?')}
               </AvatarFallback>
             </Avatar>
 

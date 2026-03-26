@@ -6,9 +6,12 @@
 import { apiClient } from '../lib/api';
 
 export interface User {
-  _id: string;
+  _id: string;      // Backend MongoDB ID
+  id: string;       // Legacy ID for compatibility
   username: string;
+  email: string;
   fullnames: string;
+  displayName: string; // Legacy display name for compatibility
   avatar: string;
   bio: string;
   coverImage: string;
@@ -35,7 +38,8 @@ export interface RegisterData {
   username: string;
   email: string;
   password: string;
-  displayName: string;
+  fullnames?: string;
+  displayName?: string;
 }
 
 export interface AuthTokens {
