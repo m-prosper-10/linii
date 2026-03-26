@@ -1,16 +1,33 @@
-"use client";
+'use client';
 
 import { PostCard } from '@/app/components/PostCard';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Post, Comment } from '@/data/mockData';
-import { ArrowLeft, Calendar, Edit, Link as LinkIcon, MapPin, Loader2 } from 'lucide-react';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/app/components/ui/tabs';
+import { Post } from '@/data/mockData';
+import {
+  ArrowLeft,
+  Calendar,
+  Edit,
+  Link as LinkIcon,
+  MapPin,
+  Loader2,
+} from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authService, User as ApiUser } from '@/services/auth';
 import { PostService, PostApiType } from '@/services/post';
+import { socialService } from '@/services/social';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 
@@ -18,7 +35,7 @@ export function ProfileView() {
   const router = useRouter();
   const params = useParams();
   const { currentUser: appUser } = useApp();
-  
+
   const [user, setUser] = useState<ApiUser | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,7 +57,7 @@ export function ProfileView() {
 
       const [profileData, postsData] = await Promise.all([
         authService.getUserProfile(targetId),
-        PostService.getUserPosts(targetId)
+        PostService.getUserPosts(targetId),
       ]);
 
       if (profileData) {
@@ -71,7 +88,7 @@ export function ProfileView() {
       following: 0,
       followers: 0,
       bio: '',
-      coverImage: ''
+      coverImage: '',
     },
     content: apiPost.content,
     image: apiPost.media?.[0]?.url,
@@ -97,34 +114,37 @@ export function ProfileView() {
         following: 0,
         followers: 0,
         bio: '',
-        coverImage: ''
+        coverImage: '',
       },
       content: apiComment.content,
       timestamp: new Date(apiComment.createdAt).toLocaleDateString(),
       likes: apiComment.likesCount,
-      isLiked: apiComment.userReaction?.reactionType === 'LIKE'
-    }))
+      isLiked: apiComment.userReaction?.reactionType === 'LIKE',
+    })),
   });
 
   const handleFollowToggle = async () => {
     if (!user) return;
+    const previousState = isFollowing;
     try {
-      // Note: We'd ideally have a FollowService, but for now we can use follow endpoints
-      // from followRoutes via apiClient or similar.
-      // Assuming for now it's integrated into auth or engagement
       setIsFollowing(!isFollowing);
-      // Actual API call would go here
-      toast.success(isFollowing ? 'Unfollowed user' : 'Following user');
-    } catch (error) {
-      setIsFollowing(isFollowing);
-      toast.error('Failed to update follow status');
+      if (previousState) {
+        await socialService.unfollowUser(user.id);
+        toast.success(`Unfollowed @${user.username}`);
+      } else {
+        await socialService.followUser(user.id);
+        toast.success(`Following @${user.username}`);
+      }
+    } catch (error: any) {
+      setIsFollowing(previousState);
+      toast.error(error.message || 'Failed to update follow status');
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -133,7 +153,9 @@ export function ProfileView() {
     return (
       <div className="p-8 text-center">
         <h2 className="text-xl font-semibold">User not found</h2>
-        <Button variant="link" onClick={() => router.push('/home')}>Go Home</Button>
+        <Button variant="link" onClick={() => router.push('/home')}>
+          Go Home
+        </Button>
       </div>
     );
   }
@@ -142,47 +164,47 @@ export function ProfileView() {
   const likedPosts = posts.filter(post => post.isLiked);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+    <div className="mx-auto max-w-2xl">
+      <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center gap-4 p-4">
-          <Button 
-            variant="ghost" 
-            size="sm"
-            onClick={() => router.back()}
-          >
+          <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div>
-            <h2 className="font-semibold text-xl">{user.displayName}</h2>
-            <p className="text-sm text-muted-foreground">{user.postsCount || 0} posts</p>
+            <h2 className="text-xl font-semibold">{user.displayName}</h2>
+            <p className="text-muted-foreground text-sm">
+              {user.postsCount || 0} posts
+            </p>
           </div>
         </div>
       </div>
 
       <div>
         {/* Cover Image */}
-        <div className="h-48 bg-accent relative">
+        <div className="bg-accent relative h-48">
           {user.coverImage && (
-            <img 
-              src={user.coverImage} 
-              alt="Cover" 
-              className="w-full h-full object-cover"
+            <img
+              src={user.coverImage}
+              alt="Cover"
+              className="h-full w-full object-cover"
             />
           )}
         </div>
 
         {/* Profile Info */}
         <div className="px-4 pb-4">
-          <div className="flex justify-between items-start -mt-16 mb-4">
-            <Avatar className="w-32 h-32 border-4 border-background">
+          <div className="-mt-16 mb-4 flex items-start justify-between">
+            <Avatar className="border-background h-32 w-32 border-4">
               <AvatarImage src={user.avatar} alt={user.displayName} />
-              <AvatarFallback className="text-3xl">{user.displayName[0]}</AvatarFallback>
+              <AvatarFallback className="text-3xl">
+                {user.displayName[0]}
+              </AvatarFallback>
             </Avatar>
 
             <div className="mt-16">
               {isOwnProfile ? (
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="gap-2"
                   onClick={() => router.push('/edit-profile')}
                 >
@@ -191,7 +213,7 @@ export function ProfileView() {
                 </Button>
               ) : (
                 <div className="flex gap-2">
-                  <Button 
+                  <Button
                     variant={isFollowing ? 'outline' : 'default'}
                     onClick={handleFollowToggle}
                   >
@@ -208,7 +230,9 @@ export function ProfileView() {
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{user.displayName}</h1>
                 {user.verified && (
-                  <Badge variant="secondary" className="h-5 px-2">✓</Badge>
+                  <Badge variant="secondary" className="h-5 px-2">
+                    ✓
+                  </Badge>
                 )}
               </div>
               <p className="text-muted-foreground">@{user.username}</p>
@@ -216,7 +240,7 @@ export function ProfileView() {
 
             {user.bio && <p className="whitespace-pre-wrap">{user.bio}</p>}
 
-            <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">
               {user.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="h-4 w-4" />
@@ -226,24 +250,35 @@ export function ProfileView() {
               {user.website && (
                 <div className="flex items-center gap-1">
                   <LinkIcon className="h-4 w-4" />
-                  <a href={`https://${user.website}`} className="text-primary hover:underline">
+                  <a
+                    href={`https://${user.website}`}
+                    className="text-primary hover:underline"
+                  >
                     {user.website}
                   </a>
                 </div>
               )}
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                Joined {new Date(user.joinedDate).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+                Joined{' '}
+                {new Date(user.joinedDate).toLocaleDateString(undefined, {
+                  month: 'long',
+                  year: 'numeric',
+                })}
               </div>
             </div>
 
             <div className="flex gap-4">
               <button className="hover:underline">
-                <span className="font-semibold">{user.following?.toLocaleString()}</span>{' '}
+                <span className="font-semibold">
+                  {user.following?.toLocaleString()}
+                </span>{' '}
                 <span className="text-muted-foreground">Following</span>
               </button>
               <button className="hover:underline">
-                <span className="font-semibold">{user.followers?.toLocaleString()}</span>{' '}
+                <span className="font-semibold">
+                  {user.followers?.toLocaleString()}
+                </span>{' '}
                 <span className="text-muted-foreground">Followers</span>
               </button>
             </div>
@@ -252,22 +287,22 @@ export function ProfileView() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent h-auto p-0">
-            <TabsTrigger 
-              value="posts" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+          <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
+            <TabsTrigger
+              value="posts"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
             >
               Posts
             </TabsTrigger>
-            <TabsTrigger 
-              value="media" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            <TabsTrigger
+              value="media"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
             >
               Media
             </TabsTrigger>
-            <TabsTrigger 
-              value="likes" 
-              className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent"
+            <TabsTrigger
+              value="likes"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
             >
               Likes
             </TabsTrigger>
@@ -275,11 +310,9 @@ export function ProfileView() {
 
           <TabsContent value="posts" className="mt-0">
             {posts.length > 0 ? (
-              posts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
+              posts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
+              <div className="text-muted-foreground p-8 text-center">
                 No posts yet
               </div>
             )}
@@ -288,18 +321,21 @@ export function ProfileView() {
           <TabsContent value="media" className="mt-0">
             {mediaPosts.length > 0 ? (
               <div className="grid grid-cols-3 gap-1 p-4">
-                {mediaPosts.map((post) => (
-                  <div key={post.id} className="aspect-square bg-accent rounded-lg overflow-hidden">
-                    <img 
-                      src={post.image} 
-                      alt="Media" 
-                      className="w-full h-full object-cover hover:opacity-90 transition-opacity cursor-pointer"
+                {mediaPosts.map(post => (
+                  <div
+                    key={post.id}
+                    className="bg-accent aspect-square overflow-hidden rounded-lg"
+                  >
+                    <img
+                      src={post.image}
+                      alt="Media"
+                      className="h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
+              <div className="text-muted-foreground p-8 text-center">
                 No media posts yet
               </div>
             )}
@@ -307,11 +343,9 @@ export function ProfileView() {
 
           <TabsContent value="likes" className="mt-0">
             {likedPosts.length > 0 ? (
-              likedPosts.map((post) => (
-                <PostCard key={post.id} post={post} />
-              ))
+              likedPosts.map(post => <PostCard key={post.id} post={post} />)
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
+              <div className="text-muted-foreground p-8 text-center">
                 No liked posts yet
               </div>
             )}

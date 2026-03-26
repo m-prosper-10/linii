@@ -12,7 +12,7 @@ import AIService from '@/services/ai';
 import { toast } from 'sonner';
 
 export function EditProfileView() {
-  const { currentUser, loading, setCurrentView } = useApp();
+  const { currentUser, loading, setCurrentUser, setCurrentView } = useApp();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -58,7 +58,6 @@ export function EditProfileView() {
     setIsAiLoading(true);
     try {
       const suggestion = await AIService.suggestBio(
-        formData.displayName,
         formData.displayName, 
         formData.bio
       );
@@ -66,7 +65,7 @@ export function EditProfileView() {
       toast.success("Bio updated by AI!");
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Failed to generate bio";
-      alert(message);
+      toast.error(message);
     } finally {
       setIsAiLoading(false);
     }
@@ -96,10 +95,23 @@ export function EditProfileView() {
 
   const handleSave = async () => {
     setIsSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setIsSaving(false);
-    setCurrentView('profile');
+    try {
+      const updatedUser = await authService.updateProfile({
+        displayName: formData.displayName,
+        bio: formData.bio,
+        website: formData.website,
+        location: formData.location,
+        avatar: formData.avatar,
+        coverImage: formData.coverImage
+      });
+      setCurrentUser(updatedUser);
+      toast.success("Profile updated successfully!");
+      setCurrentView('profile');
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update profile");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
