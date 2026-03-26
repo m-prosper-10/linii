@@ -1,18 +1,19 @@
 "use client";
 
 import { PostCard } from '@/app/components/PostCard';
+import { PostDetailModal } from '@/app/components/PostDetailModal';
 import { Button } from '@/app/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { PostService, PostApiType } from '@/services/post';
 import { toast } from 'sonner';
-import { Post } from '@/data/mockData';
 
 export function HomeView() {
   const router = useRouter();
   const [posts, setPosts] = useState<PostApiType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFeed();
@@ -31,55 +32,16 @@ export function HomeView() {
     }
   };
 
-  const mapToPost = (apiPost: PostApiType): Post => ({
-    id: apiPost._id,
-    author: {
-      id: apiPost.author._id,
-      displayName: apiPost.author.fullnames,
-      username: apiPost.author.username,
-      avatar: apiPost.author.avatar || '',
-      verified: apiPost.author.verified || false,
-      joinedDate: '',
-      following: 0,
-      followers: 0,
-      bio: '',
-      coverImage: ''
-    },
-    content: apiPost.content,
-    image: apiPost.media?.[0]?.url,
-    timestamp: new Date(apiPost.createdAt).toLocaleDateString(),
-    likes: apiPost.likesCount,
-    comments: apiPost.commentsCount,
-    reposts: apiPost.sharesCount,
-    saves: 0,
-    reach: apiPost.views,
-    isLiked: apiPost.userReaction?.reactionType === 'LIKE',
-    isSaved: false,
-    isReposted: !!apiPost.userShared,
-    tags: apiPost.tags,
-    commentsData: apiPost.comments?.map(apiComment => ({
-      id: apiComment._id,
-      author: {
-        id: apiComment.author._id,
-        displayName: apiComment.author.fullnames,
-        username: apiComment.author.username,
-        avatar: apiComment.author.avatar || '',
-        verified: apiComment.author.verified || false,
-        joinedDate: '',
-        following: 0,
-        followers: 0,
-        bio: '',
-        coverImage: ''
-      },
-      content: apiComment.content,
-      timestamp: new Date(apiComment.createdAt).toLocaleDateString(),
-      likes: apiComment.likesCount,
-      isLiked: apiComment.userReaction?.reactionType === 'LIKE'
-    }))
-  });
-
   const handleUserClick = (userId: string) => {
     router.push(`/profile/${userId}`);
+  };
+
+  const handlePostClick = (postId: string) => {
+    setSelectedPostId(postId);
+  };
+
+  const handlePostDeleted = (deletedPostId: string) => {
+    setPosts(posts.filter(p => p._id !== deletedPostId));
   };
 
   return (
@@ -110,11 +72,13 @@ export function HomeView() {
             Loading feed...
           </div>
         ) : posts.length > 0 ? (
-          posts.map((apiPost) => (
+          posts.map((post) => (
             <PostCard 
-              key={apiPost._id} 
-              post={mapToPost(apiPost)}
+              key={post._id} 
+              post={post}
               onUserClick={handleUserClick}
+              onPostClick={handlePostClick}
+              onDeleted={handlePostDeleted}
             />
           ))
         ) : (
@@ -127,6 +91,14 @@ export function HomeView() {
       <div className="p-8 text-center text-muted-foreground">
         <p>You&apos;ve reached the end</p>
       </div>
+
+      {selectedPostId && (
+        <PostDetailModal 
+          postId={selectedPostId} 
+          onClose={() => setSelectedPostId(null)}
+          onDeleted={handlePostDeleted}
+        />
+      )}
     </div>
   );
 }

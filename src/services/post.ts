@@ -146,4 +146,13 @@ export class PostService {
     const response = await apiClient.get<PostsResponse>(`/posts/user/${userId}?page=${page}&limit=${limit}`);
     return response.data!;
   }
+
+  static async getPost(postId: string): Promise<PostApiType> {
+    const response = await apiClient.get<{ post: PostApiType }>(`/posts/${postId}`);
+    return response.data!.post;
+  }
+
+  static async deletePost(postId: string): Promise<void> {
+    await apiClient.delete(`/posts/${postId}`);
+  }
 }
