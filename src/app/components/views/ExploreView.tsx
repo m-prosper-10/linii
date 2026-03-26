@@ -55,10 +55,9 @@ export function ExploreView() {
       ]);
       
       setPosts(trendingPosts);
-      setSuggestedUsers(suggestions);
+      setSuggestedUsers(suggestions as SuggestedUser[]);
       setTrendingTopics(topics);
-    } catch (error) {
-      console.error('Failed to load explore data:', error);
+    } catch {
       toast.error('Failed to load explore content');
     } finally {
       setLoading(false);
@@ -70,7 +69,7 @@ export function ExploreView() {
       setLoading(true);
       const data = await PostService.searchPosts(searchQuery);
       setPosts(data.posts);
-    } catch (error) {
+    } catch {
       toast.error('Search failed');
     } finally {
       setLoading(false);
@@ -100,8 +99,9 @@ export function ExploreView() {
       setSuggestedUsers(prev => prev.map(u => 
         u._id === userId ? { ...u, isFollowing: !isFollowing } : u
       ));
-    } catch (error: any) {
-      toast.error(error.message || 'Action failed');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Action failed';
+      toast.error(message);
     }
   };
 

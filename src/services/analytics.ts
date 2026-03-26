@@ -26,7 +26,7 @@ export const analyticsService = {
    * Get trending topics (hashtags)
    * Note: This might need a backend implementation if not already present
    */
-  async getTrendingTopics(limit: number = 10): Promise<TrendingTopic[]> {
+  async getTrendingTopics(): Promise<TrendingTopic[]> {
     try {
       // For now, if there's no dedicated endpoint, we might just return empty or mock
       // But let's assume we'll add one or it exists under a different name
