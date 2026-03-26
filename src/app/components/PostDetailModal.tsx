@@ -28,6 +28,13 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   const [newComment, setNewComment] = useState('');
   const { currentUser } = useApp();
 
+  useEffect(() => {
+    fetchPost();
+    // Prevent scrolling on the body when modal is open
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
@@ -36,7 +43,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
       setLoading(true);
       const data = await PostService.getPost(postId);
       setPost(data);
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to load post details');
       onClose();
     } finally {
@@ -57,7 +64,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
 
     try {
       await PostService.toggleReaction(post._id, 'LIKE');
-    } catch (error) {
+    } catch (_error) {
       // Rollback
       fetchPost();
       toast.error('Failed to update like');
@@ -73,7 +80,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
       await PostService.addComment({ postId: post._id, content });
       fetchPost(); // Refresh to show new comment
       toast.success('Comment added');
-    } catch (error) {
+    } catch (_error) {
       setNewComment(content);
       toast.error('Failed to add comment');
     }
@@ -88,7 +95,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
       toast.success('Post deleted');
       onDeleted?.(post._id);
       onClose();
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to delete post');
     }
   };
@@ -195,7 +202,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
               {post.tags && post.tags.length > 0 && (
                 <div className="flex gap-2 mb-4 flex-wrap">
                   {post.tags.map((tag) => (
-                    <span key={tag} className="text-primary hover:underline cursor-pointer text-xs">
+                    <span key={tag} className="text-primary hover:underline cursor-pointer text-sm">
                       #{tag}
                     </span>
                   ))}

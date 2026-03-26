@@ -1,6 +1,7 @@
 'use client';
 
 import { PostCard } from '@/app/components/PostCard';
+import { PostDetailModal } from '@/app/components/PostDetailModal';
 import {
   Avatar,
   AvatarFallback,
@@ -14,7 +15,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/app/components/ui/tabs';
-import { Post } from '@/data/mockData';
 import {
   ArrowLeft,
   Calendar,
@@ -37,22 +37,24 @@ export function ProfileView() {
   const { currentUser: appUser } = useApp();
 
   const [user, setUser] = useState<ApiUser | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<PostApiType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('posts');
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
   const userId = params?.userId as string;
-  const isOwnProfile = !userId || userId === appUser?.id;
+  const isOwnProfile = !userId || userId === appUser?._id;
 
   useEffect(() => {
     fetchProfile();
-  }, [userId, appUser?.id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, appUser?._id]);
 
   const fetchProfile = async () => {
     try {
       setIsLoading(true);
-      const targetId = userId || appUser?.id;
+      const targetId = userId || appUser?._id;
       if (!targetId) return;
 
       const [profileData, postsData] = await Promise.all([
@@ -66,7 +68,7 @@ export function ProfileView() {
       }
 
       if (postsData) {
-        setPosts(postsData.posts.map(mapToPost));
+        setPosts(postsData.posts);
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -76,69 +78,26 @@ export function ProfileView() {
     }
   };
 
-  const mapToPost = (apiPost: PostApiType): Post => ({
-    id: apiPost._id,
-    author: {
-      id: apiPost.author._id,
-      displayName: apiPost.author.fullnames,
-      username: apiPost.author.username,
-      avatar: apiPost.author.avatar || '',
-      verified: apiPost.author.verified || false,
-      joinedDate: '',
-      following: 0,
-      followers: 0,
-      bio: '',
-      coverImage: '',
-    },
-    content: apiPost.content,
-    image: apiPost.media?.[0]?.url,
-    timestamp: new Date(apiPost.createdAt).toLocaleDateString(),
-    likes: apiPost.likesCount,
-    comments: apiPost.commentsCount,
-    reposts: apiPost.sharesCount,
-    saves: 0,
-    reach: apiPost.views,
-    isLiked: apiPost.userReaction?.reactionType === 'LIKE',
-    isSaved: false,
-    isReposted: !!apiPost.userShared,
-    tags: apiPost.tags,
-    commentsData: apiPost.comments?.map(apiComment => ({
-      id: apiComment._id,
-      author: {
-        id: apiComment.author._id,
-        displayName: apiComment.author.fullnames,
-        username: apiComment.author.username,
-        avatar: apiComment.author.avatar || '',
-        verified: apiComment.author.verified || false,
-        joinedDate: '',
-        following: 0,
-        followers: 0,
-        bio: '',
-        coverImage: '',
-      },
-      content: apiComment.content,
-      timestamp: new Date(apiComment.createdAt).toLocaleDateString(),
-      likes: apiComment.likesCount,
-      isLiked: apiComment.userReaction?.reactionType === 'LIKE',
-    })),
-  });
-
   const handleFollowToggle = async () => {
     if (!user) return;
     const previousState = isFollowing;
     try {
       setIsFollowing(!isFollowing);
       if (previousState) {
-        await socialService.unfollowUser(user.id);
+        await socialService.unfollowUser(user._id);
         toast.success(`Unfollowed @${user.username}`);
       } else {
-        await socialService.followUser(user.id);
+        await socialService.followUser(user._id);
         toast.success(`Following @${user.username}`);
       }
     } catch (error: any) {
       setIsFollowing(previousState);
       toast.error(error.message || 'Failed to update follow status');
     }
+  };
+
+  const handlePostDeleted = (deletedPostId: string) => {
+    setPosts(posts.filter(p => p._id !== deletedPostId));
   };
 
   if (isLoading) {
@@ -160,8 +119,8 @@ export function ProfileView() {
     );
   }
 
-  const mediaPosts = posts.filter(post => post.image || post.video);
-  const likedPosts = posts.filter(post => post.isLiked);
+  const mediaPosts = posts.filter(post => post.media && post.media.length > 0);
+  const likedPosts = posts.filter(post => post.userReaction?.reactionType === 'LIKE');
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -170,9 +129,9 @@ export function ProfileView() {
           <Button variant="ghost" size="sm" onClick={() => router.back()}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h2 className="text-xl font-semibold">{user.displayName}</h2>
-            <p className="text-muted-foreground text-sm">
+          <div className="flex flex-col">
+            <h2 className="text-xl font-semibold">{user.fullnames}</h2>
+            <p className="text-muted-foreground text-xs font-medium opacity-70">
               {user.postsCount || 0} posts
             </p>
           </div>
@@ -181,23 +140,25 @@ export function ProfileView() {
 
       <div>
         {/* Cover Image */}
-        <div className="bg-accent relative h-48">
-          {user.coverImage && (
+        <div className="bg-accent/20 relative h-48 overflow-hidden">
+          {user.coverImage ? (
             <img
               src={user.coverImage}
               alt="Cover"
               className="h-full w-full object-cover"
             />
+          ) : (
+             <div className="h-full w-full bg-gradient-to-r from-primary/10 to-accent/10" />
           )}
         </div>
 
         {/* Profile Info */}
         <div className="px-4 pb-4">
           <div className="-mt-16 mb-4 flex items-start justify-between">
-            <Avatar className="border-background h-32 w-32 border-4">
-              <AvatarImage src={user.avatar} alt={user.displayName} />
-              <AvatarFallback className="text-3xl">
-                {user.displayName[0]}
+            <Avatar className="border-background h-32 w-32 border-4 shadow-xl">
+              <AvatarImage src={user.avatar} alt={user.fullnames} />
+              <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
+                {user.fullnames[0]}
               </AvatarFallback>
             </Avatar>
 
@@ -205,7 +166,7 @@ export function ProfileView() {
               {isOwnProfile ? (
                 <Button
                   variant="outline"
-                  className="gap-2"
+                  className="gap-2 rounded-full font-semibold px-6"
                   onClick={() => router.push('/edit-profile')}
                 >
                   <Edit className="h-4 w-4" />
@@ -215,51 +176,54 @@ export function ProfileView() {
                 <div className="flex gap-2">
                   <Button
                     variant={isFollowing ? 'outline' : 'default'}
+                    className="rounded-full font-bold px-6"
                     onClick={handleFollowToggle}
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </Button>
-                  <Button variant="outline">Message</Button>
+                  <Button variant="outline" className="rounded-full">Message</Button>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold">{user.displayName}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">{user.fullnames}</h1>
                 {user.verified && (
-                  <Badge variant="secondary" className="h-5 px-2">
+                  <Badge variant="secondary" className="h-5 px-2 bg-primary/10 text-primary border-none">
                     ✓
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground">@{user.username}</p>
+              <p className="text-muted-foreground font-medium opacity-80">@{user.username}</p>
             </div>
 
-            {user.bio && <p className="whitespace-pre-wrap">{user.bio}</p>}
+            {user.bio && <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed font-normal">{user.bio}</p>}
 
-            <div className="text-muted-foreground flex flex-wrap gap-4 text-sm">
+            <div className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium opacity-80">
               {user.location && (
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
+                <div className="flex items-center gap-1.5">
+                  <MapPin className="h-4 w-4 opacity-70" />
                   {user.location}
                 </div>
               )}
               {user.website && (
-                <div className="flex items-center gap-1">
-                  <LinkIcon className="h-4 w-4" />
+                <div className="flex items-center gap-1.5">
+                  <LinkIcon className="h-4 w-4 opacity-70" />
                   <a
                     href={`https://${user.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     className="text-primary hover:underline"
                   >
                     {user.website}
                   </a>
                 </div>
               )}
-              <div className="flex items-center gap-1">
-                <Calendar className="h-4 w-4" />
+              <div className="flex items-center gap-1.5">
+                <Calendar className="h-4 w-4 opacity-70" />
                 Joined{' '}
                 {new Date(user.joinedDate).toLocaleDateString(undefined, {
                   month: 'long',
@@ -268,18 +232,18 @@ export function ProfileView() {
               </div>
             </div>
 
-            <div className="flex gap-4">
-              <button className="hover:underline">
-                <span className="font-semibold">
-                  {user.following?.toLocaleString()}
+            <div className="flex gap-6 pb-2">
+              <button className="hover:underline flex items-center gap-1.5">
+                <span className="font-bold text-foreground">
+                  {user.following?.toLocaleString() || 0}
                 </span>{' '}
-                <span className="text-muted-foreground">Following</span>
+                <span className="text-muted-foreground text-sm font-medium">Following</span>
               </button>
-              <button className="hover:underline">
-                <span className="font-semibold">
-                  {user.followers?.toLocaleString()}
+              <button className="hover:underline flex items-center gap-1.5">
+                <span className="font-bold text-foreground">
+                  {user.followers?.toLocaleString() || 0}
                 </span>{' '}
-                <span className="text-muted-foreground">Followers</span>
+                <span className="text-muted-foreground text-sm font-medium">Followers</span>
               </button>
             </div>
           </div>
@@ -290,19 +254,19 @@ export function ProfileView() {
           <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger
               value="posts"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
+              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
             >
               Posts
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
+              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
             >
               Media
             </TabsTrigger>
             <TabsTrigger
               value="likes"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent"
+              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
             >
               Likes
             </TabsTrigger>
@@ -310,32 +274,46 @@ export function ProfileView() {
 
           <TabsContent value="posts" className="mt-0">
             {posts.length > 0 ? (
-              posts.map(post => <PostCard key={post.id} post={post} />)
+              posts.map(post => (
+                <PostCard 
+                  key={post._id} 
+                  post={post} 
+                  onPostClick={() => setSelectedPostId(post._id)}
+                  onDeleted={handlePostDeleted}
+                />
+              ))
             ) : (
-              <div className="text-muted-foreground p-8 text-center">
+              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
                 No posts yet
               </div>
             )}
           </TabsContent>
 
-          <TabsContent value="media" className="mt-0">
+          <TabsContent value="media" className="mt-0 p-1">
             {mediaPosts.length > 0 ? (
-              <div className="grid grid-cols-3 gap-1 p-4">
+              <div className="grid grid-cols-3 gap-1">
                 {mediaPosts.map(post => (
                   <div
-                    key={post.id}
-                    className="bg-accent aspect-square overflow-hidden rounded-lg"
+                    key={post._id}
+                    className="bg-accent/20 aspect-square overflow-hidden hover:opacity-90 transition-opacity cursor-pointer border border-border/50"
+                    onClick={() => setSelectedPostId(post._id)}
                   >
-                    <img
-                      src={post.image}
-                      alt="Media"
-                      className="h-full w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
-                    />
+                    {post.media[0].type === 'VIDEO' ? (
+                      <div className="w-full h-full flex items-center justify-center bg-black">
+                         <span className="text-white text-xs font-bold uppercase tracking-widest">Video</span>
+                      </div>
+                    ) : (
+                      <img
+                        src={post.media[0].url}
+                        alt="Media"
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-muted-foreground p-8 text-center">
+              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
                 No media posts yet
               </div>
             )}
@@ -343,15 +321,30 @@ export function ProfileView() {
 
           <TabsContent value="likes" className="mt-0">
             {likedPosts.length > 0 ? (
-              likedPosts.map(post => <PostCard key={post.id} post={post} />)
+              likedPosts.map(post => (
+                <PostCard 
+                  key={post._id} 
+                  post={post} 
+                  onPostClick={() => setSelectedPostId(post._id)}
+                  onDeleted={handlePostDeleted}
+                />
+              ))
             ) : (
-              <div className="text-muted-foreground p-8 text-center">
+              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
                 No liked posts yet
               </div>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {selectedPostId && (
+        <PostDetailModal 
+          postId={selectedPostId} 
+          onClose={() => setSelectedPostId(null)}
+          onDeleted={handlePostDeleted}
+        />
+      )}
     </div>
   );
 }
