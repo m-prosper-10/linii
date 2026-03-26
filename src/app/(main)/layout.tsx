@@ -8,13 +8,14 @@ import { NavigationSidebar } from '@/app/components/NavigationSidebar';
 import { useApp } from '@/context/AppContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { cn } from '@/app/components/ui/utils';
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, isSidebarCollapsed } = useApp();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -28,20 +29,21 @@ export default function MainLayout({
     return null;
   }
 
-  // Determine if we should show the three-column layout
   const showThreeColumnLayout = pathname && ['home', 'explore', 'profile'].some(route => pathname.includes(route));
   const showMessagesLayout = pathname?.includes('messages');
   const hideFloatingButton = pathname?.includes('post/create') || pathname?.includes('edit-profile');
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Left Sidebar - Navigation (Desktop only) */}
-      <div className="w-64 shrink-0 hidden md:block">
+      <div className={cn(
+        "shrink-0 hidden md:block transition-all duration-300 ease-in-out",
+        isSidebarCollapsed ? "w-20" : "w-64"
+      )}>
         <NavigationSidebar />
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 border flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
+      <div className={`flex-1 flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
         {/* Mobile Header */}
         <MobileHeader />
         
