@@ -6,6 +6,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
 import { useApp } from '@/context/AppContext';
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -61,7 +62,7 @@ export function SignupView() {
         <div className="bg-card border-border space-y-6 rounded-xl border p-8">
           <form onSubmit={handleSignup} className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg p-3 text-sm">
                 <span className="flex-1">{error}</span>
               </div>
             )}
@@ -161,7 +162,14 @@ export function SignupView() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Creating account...' : 'Create account'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
             </Button>
           </form>
 
