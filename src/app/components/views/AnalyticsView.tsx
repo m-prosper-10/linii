@@ -14,7 +14,8 @@ import { format } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { analyticsService, UserAnalytics } from '@/services/analytics';
 import { PostService, PostApiType } from '@/services/post';
-import { Eye, Heart, MessageCircle, TrendingUp, Users, Loader2 } from 'lucide-react';
+import AnalyticsSkeleton from '@/app/components/skeletons/AnalyticsSkeleton';
+import { Eye, Heart, MessageCircle, TrendingUp, Users } from 'lucide-react';
 import {
   Area,
   AreaChart,
@@ -62,11 +63,7 @@ export function AnalyticsView() {
   }, [fetchAnalytics]);
 
   if (loading && !analytics) {
-    return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
+    return <AnalyticsSkeleton />;
   }
 
   if (!analytics) {
