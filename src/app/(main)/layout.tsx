@@ -41,12 +41,12 @@ export default function MainLayout({
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
+      <div className={`flex-1 border flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
         {/* Mobile Header */}
         <MobileHeader />
         
         {/* Main Content */}
-        <div className="flex-1 pb-16 md:pb-0">
+        <div className="flex-1 pb-8 md:pb-8">
           {children}
         </div>
 
