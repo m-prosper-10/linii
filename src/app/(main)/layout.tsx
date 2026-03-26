@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { DiscoverySidebar } from '@/app/components/DiscoverySidebar';
 import { FloatingActionButton } from '@/app/components/FloatingActionBar';
@@ -8,13 +8,14 @@ import { NavigationSidebar } from '@/app/components/NavigationSidebar';
 import { useApp } from '@/context/AppContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { cn } from '@/app/components/ui/utils';
 
 export default function MainLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isAuthenticated } = useApp();
+  const { isAuthenticated, isSidebarCollapsed } = useApp();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -28,27 +29,33 @@ export default function MainLayout({
     return null;
   }
 
-  // Determine if we should show the three-column layout
-  const showThreeColumnLayout = pathname && ['home', 'explore', 'profile'].some(route => pathname.includes(route));
+  const showThreeColumnLayout =
+    pathname &&
+    ['home', 'explore', 'profile'].some(route => pathname.includes(route));
   const showMessagesLayout = pathname?.includes('messages');
-  const hideFloatingButton = pathname?.includes('post/create') || pathname?.includes('edit-profile');
+  const hideFloatingButton =
+    pathname?.includes('post/create') || pathname?.includes('edit-profile');
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left Sidebar - Navigation (Desktop only) */}
-      <div className="w-64 shrink-0 hidden md:block">
+    <div className="bg-background flex min-h-screen">
+      <div
+        className={cn(
+          'hidden shrink-0 transition-all duration-300 ease-in-out md:block',
+          isSidebarCollapsed ? 'w-20' : 'w-64'
+        )}
+      >
         <NavigationSidebar />
       </div>
 
       {/* Main Content Area */}
-      <div className={`flex-1 border flex flex-col ${showMessagesLayout ? '' : 'md:border-r md:border-border'}`}>
+      <div
+        className={`flex flex-1 flex-col ${showMessagesLayout ? '' : 'md:border-border md:border-r'}`}
+      >
         {/* Mobile Header */}
         <MobileHeader />
-        
+
         {/* Main Content */}
-        <div className="flex-1 pb-8 md:pb-8">
-          {children}
-        </div>
+        <div className="flex-1 md:pb-1">{children}</div>
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
@@ -56,7 +63,7 @@ export default function MainLayout({
 
       {/* Right Sidebar - Discovery (Desktop only, certain views) */}
       {showThreeColumnLayout && (
-        <div className="w-80 shrink-0 hidden lg:block">
+        <div className="hidden w-80 shrink-0 lg:block">
           <DiscoverySidebar />
         </div>
       )}

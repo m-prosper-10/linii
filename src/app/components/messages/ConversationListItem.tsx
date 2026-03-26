@@ -7,8 +7,10 @@ import {
 } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
 import { cn } from '@/app/components/ui/utils';
-import { Message, User } from '@/data/mockData';
-import { CheckCircle2, Verified } from 'lucide-react';
+import { Message } from '@/services/chat';
+import { User } from '@/services/auth';
+import { Verified } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ConversationListItemProps {
   otherUser: User;
@@ -65,7 +67,7 @@ export function ConversationListItem({
               )}
             </div>
             <span className="text-muted-foreground ml-2 shrink-0 text-xs">
-              {lastMessage.timestamp}
+              {format(new Date(lastMessage.createdAt), 'HH:mm')}
             </span>
           </div>
 
@@ -80,7 +82,7 @@ export function ConversationListItem({
             >
               {unreadCount > 0
                 ? `${unreadCount} new messages`
-                : `${lastMessage.content.slice(0, 25)} ...`}
+                : lastMessage.content}
             </p>
             {unreadCount > 0 && (
               <Badge className="bg-primary text-primary-foreground animate-in zoom-in-50 h-5 min-w-5 shrink-0 rounded-full px-1.5">

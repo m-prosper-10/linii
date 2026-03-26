@@ -6,12 +6,14 @@ import {
   AvatarImage,
 } from '@/app/components/ui/avatar';
 import { cn } from '@/app/components/ui/utils';
-import { User } from '@/data/mockData';
+import { User } from '@/services/auth';
 import { Check, CheckCheck } from 'lucide-react';
+
+import { format } from 'date-fns';
 
 interface MessageBubbleProps {
   content: string;
-  timestamp: string;
+  createdAt: string;
   sender: User;
   isCurrentUser: boolean;
   isRead: boolean;
@@ -21,7 +23,7 @@ interface MessageBubbleProps {
 
 export function MessageBubble({
   content,
-  timestamp,
+  createdAt,
   sender,
   isCurrentUser,
   isRead,
@@ -74,7 +76,7 @@ export function MessageBubble({
             'opacity-0 transition-opacity duration-200 group-hover:opacity-100'
           )}
         >
-          <span>{timestamp}</span>
+          <span>{format(new Date(createdAt), 'HH:mm')}</span>
           {isCurrentUser && (
             <span className="flex items-center">
               {isRead ? (

@@ -11,10 +11,12 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { ScrollArea } from '@/app/components/ui/scroll-area';
+import { useApp } from '@/context/AppContext';
+import { chatService, Conversation, Message } from '@/services/chat';
 import { cn } from '@/app/components/ui/utils';
-import { currentUser, mockConversations } from '@/data/mockData';
 import {
   ArrowLeft,
+  Loader2,
   MoreVertical,
   Paperclip,
   Phone,
@@ -24,81 +26,86 @@ import {
   Video,
   X,
 } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function MessagesView() {
+  const { currentUser } = useApp();
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
-  >(mockConversations[0]?.id || null);
+  >(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const selectedConversation = mockConversations.find(
-    c => c.id === selectedConversationId
+  const selectedConversation = conversations.find(
+    c => c._id === selectedConversationId
   );
 
   const otherUser = selectedConversation?.participants.find(
-    p => p.id !== currentUser.id
+    p => p._id !== currentUser?._id
   );
 
+  // Fetch conversations
+  const fetchConversations = useCallback(async () => {
+    try {
+      const data = await chatService.getConversations();
+      setConversations(data);
+      if (data.length > 0 && !selectedConversationId) {
+        setSelectedConversationId(data[0]._id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch conversations:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedConversationId]);
+
+  // Fetch messages for selected conversation
+  const fetchMessages = useCallback(async (conversationId: string) => {
+    setMessagesLoading(true);
+    try {
+      const data = await chatService.getMessages(conversationId);
+      setMessages(data.reverse()); // Backend returns newest first
+      await chatService.markAsRead(conversationId);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
+
+  useEffect(() => {
+    if (selectedConversationId) {
+      fetchMessages(selectedConversationId);
+    }
+  }, [selectedConversationId, fetchMessages]);
+
   // Filter conversations based on search
-  const filteredConversations = mockConversations.filter(conv => {
+  const filteredConversations = conversations.filter(conv => {
     const otherParticipant = conv.participants.find(
-      p => p.id !== currentUser.id
+      p => p._id !== currentUser?._id
     );
     return (
-      otherParticipant?.displayName
+      otherParticipant?.fullnames
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      conv.lastMessage.content.toLowerCase().includes(searchQuery.toLowerCase())
+      conv.lastMessage?.content
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
     );
   });
-
-  // Mock messages for the selected conversation
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const messages = selectedConversation
-    ? [
-        {
-          id: '1',
-          sender: otherUser!,
-          content: 'Hey! How are you doing?',
-          timestamp: '10:30 AM',
-          read: true,
-        },
-        {
-          id: '2',
-          sender: currentUser,
-          content: "I'm doing great! Working on some exciting projects.",
-          timestamp: '10:32 AM',
-          read: true,
-        },
-        {
-          id: '3',
-          sender: otherUser!,
-          content: 'That sounds amazing! Would love to hear more about it.',
-          timestamp: '10:35 AM',
-          read: true,
-        },
-        {
-          id: '4',
-          sender: currentUser,
-          content: "Sure! Let me know when you're free for a call.",
-          timestamp: '10:37 AM',
-          read: true,
-        },
-        {
-          id: '5',
-          sender: otherUser!,
-          content: selectedConversation.lastMessage.content,
-          timestamp: selectedConversation.lastMessage.timestamp,
-          read: selectedConversation.lastMessage.read,
-        },
-      ]
-    : [];
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -116,13 +123,31 @@ export function MessagesView() {
     }
   }, [messageInput]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (messageInput.trim()) {
-      // Handle send message
+    if (messageInput.trim() && selectedConversationId) {
+      const content = messageInput.trim();
       setMessageInput('');
       if (inputRef.current) {
         inputRef.current.style.height = 'auto';
+      }
+
+      try {
+        const newMessage = await chatService.sendMessage({
+          conversationId: selectedConversationId,
+          content,
+        });
+        setMessages(prev => [...prev, newMessage]);
+        // Update last message in conversations list
+        setConversations(prev =>
+          prev.map(c =>
+            c._id === selectedConversationId
+              ? { ...c, lastMessage: newMessage }
+              : c
+          )
+        );
+      } catch (error) {
+        console.error('Failed to send message:', error);
       }
     }
   };
@@ -151,11 +176,11 @@ export function MessagesView() {
   // Determine if messages should be grouped
   const shouldGroupMessage = (index: number) => {
     if (index === 0) return false;
-    return messages[index].sender.id === messages[index - 1].sender.id;
+    return messages[index].sender._id === messages[index - 1].sender._id;
   };
 
   return (
-    <div className="mx-2 flex h-[calc(100vh-4rem)] max-w-full flex-row">
+    <div className="flex h-full w-full flex-row">
       {/* Conversations List */}
       <div
         className={cn(
@@ -185,20 +210,34 @@ export function MessagesView() {
         </div>
 
         <ScrollArea className="flex-1">
-          {filteredConversations.length > 0 ? (
+          {loading ? (
+            <div className="flex h-32 items-center justify-center">
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
+            </div>
+          ) : filteredConversations.length > 0 ? (
             filteredConversations.map(conversation => {
               const otherParticipant = conversation.participants.find(
-                p => p.id !== currentUser.id
+                p => p._id !== currentUser?._id
               );
+
+              // Simple unread count for now - backend could provide this properly
+              const unreadCount =
+                conversation.lastMessage?.sender._id !== currentUser?._id &&
+                !conversation.lastMessage?.readBy.some(
+                  r => r.userId === currentUser?._id
+                )
+                  ? 1
+                  : 0;
+
               return (
                 <ConversationListItem
-                  key={conversation.id}
+                  key={conversation._id}
                   otherUser={otherParticipant!}
-                  lastMessage={conversation.lastMessage}
-                  unreadCount={conversation.unreadCount}
-                  isSelected={conversation.id === selectedConversationId}
+                  lastMessage={conversation.lastMessage!}
+                  unreadCount={unreadCount}
+                  isSelected={conversation._id === selectedConversationId}
                   isOnline={true}
-                  onClick={() => handleConversationSelect(conversation.id)}
+                  onClick={() => handleConversationSelect(conversation._id)}
                 />
               );
             })
@@ -231,15 +270,14 @@ export function MessagesView() {
               </Button>
               <Avatar className="ring-primary/10 h-10 w-10 ring-2">
                 <AvatarImage src={otherUser?.avatar} />
-                <AvatarFallback>{otherUser?.displayName[0]}</AvatarFallback>
+                <AvatarFallback>{otherUser?.fullnames[0]}</AvatarFallback>
               </Avatar>
               <div>
                 <div className="flex items-center gap-2 font-medium">
-                  {otherUser?.displayName}
-                  {otherUser?.verified && (
-                    <Verified
-                      className="h-4 w-4 fill-blue-600"
-                    />
+                  {otherUser?.fullnames}
+                  {/* Verified logic could be more robust */}
+                  {otherUser?.username === 'verified_user' && (
+                    <Verified className="h-4 w-4 fill-blue-600" />
                   )}
                 </div>
                 <div className="text-muted-foreground text-sm">
@@ -282,25 +320,34 @@ export function MessagesView() {
 
           {/* Messages */}
           <ScrollArea className="flex-1 p-4">
-            <div className="mx-auto max-w-4xl space-y-4">
-              {messages.map((message, index) => {
-                const isCurrentUser = message.sender.id === currentUser.id;
-                const isGrouped = shouldGroupMessage(index);
-                return (
-                  <MessageBubble
-                    key={message.id}
-                    content={message.content}
-                    timestamp={message.timestamp}
-                    sender={message.sender}
-                    isCurrentUser={isCurrentUser}
-                    isRead={message.read}
-                    showAvatar={!isGrouped}
-                    isGrouped={isGrouped}
-                  />
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </div>
+            {messagesLoading && messages.length === 0 ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+              </div>
+            ) : (
+              <div className="mx-auto max-w-4xl space-y-4">
+                {messages.map((message, index) => {
+                  const isCurrentUser = message.sender._id === currentUser?._id;
+                  const isGrouped = shouldGroupMessage(index);
+                  const isRead = message.readBy.some(
+                    r => r.userId !== message.sender._id
+                  );
+                  return (
+                    <MessageBubble
+                      key={message._id}
+                      content={message.content}
+                      createdAt={message.createdAt}
+                      sender={message.sender}
+                      isCurrentUser={isCurrentUser}
+                      isRead={isRead}
+                      showAvatar={!isGrouped}
+                      isGrouped={isGrouped}
+                    />
+                  );
+                })}
+                <div ref={messagesEndRef} />
+              </div>
+            )}
           </ScrollArea>
 
           {/* Message Input */}

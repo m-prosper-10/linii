@@ -21,45 +21,44 @@ const navigationItems = [
 ];
 
 export function NavigationSidebar() {
-  const { currentUser } = useApp();
+  const { currentUser, isSidebarCollapsed, setIsSidebarCollapsed } = useApp();
   const pathname = usePathname();
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [lastAutoPath, setLastAutoPath] = useState<string | null>(null);
 
   if (pathname !== lastAutoPath) {
     setLastAutoPath(pathname || '');
     if (pathname?.startsWith('/messages')) {
-      setIsCollapsed(true);
+      setIsSidebarCollapsed(true);
     } else {
-      setIsCollapsed(false);
+      setIsSidebarCollapsed(false);
     }
   }
 
   const toggleCollapse = () => {
-    setIsCollapsed(prev => !prev);
+    setIsSidebarCollapsed(!isSidebarCollapsed);
   };
 
   return (
     <TooltipProvider delayDuration={0}>
       <div className={cn(
         "sticky top-0 h-screen flex flex-col border-r border-border p-4 transition-all duration-300 ease-in-out group",
-        isCollapsed ? "w-20" : "w-64"
+        isSidebarCollapsed ? "w-20" : "w-64"
       )}>
         <div className="mb-8 flex items-center justify-between">
           <Link href="/home" className={cn(
             "flex items-center gap-2 px-1 transition-all duration-300",
-            isCollapsed && "justify-center w-full"
+            isSidebarCollapsed && "justify-center w-full"
           )}>
             <div className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center shrink-0 border border-primary/20">
               <span className="text-xl font-black">L</span>
             </div>
-            {!isCollapsed && (
+            {!isSidebarCollapsed && (
               <span className="font-bold text-xl tracking-tight bg-linear-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Linii
               </span>
             )}
           </Link>
-          {!isCollapsed && (
+          {!isSidebarCollapsed && (
             <Button 
               variant="ghost" 
               size="icon" 
@@ -69,7 +68,7 @@ export function NavigationSidebar() {
               <ChevronLeft className="h-4 w-4" />
             </Button>
           )}
-          {isCollapsed && (
+          {isSidebarCollapsed && (
             <Button 
               variant="ghost" 
               size="icon" 
@@ -93,18 +92,18 @@ export function NavigationSidebar() {
                 className={cn(
                   "w-full justify-start gap-4 h-10 rounded-lg px-3 font-medium transition-all duration-200",
                   isActive && "bg-primary/10 text-primary hover:bg-primary/20 font-semibold",
-                  isCollapsed && "justify-center px-0"
+                  isSidebarCollapsed && "justify-center px-0"
                 )}
                 asChild
               >
                 <Link href={item.href}>
                   <Icon className={cn("h-6 w-6 shrink-0", isActive && "text-primary")} />
-                  {!isCollapsed && <span className="text-base">{item.label}</span>}
+                  {!isSidebarCollapsed && <span className="text-base">{item.label}</span>}
                 </Link>
               </Button>
             );
 
-            if (isCollapsed) {
+            if (isSidebarCollapsed) {
               return (
                 <Tooltip key={item.href}>
                   <TooltipTrigger asChild>
@@ -127,17 +126,17 @@ export function NavigationSidebar() {
               <Button 
                 className={cn(
                   "w-full h-12 rounded-xl font-semibold transition-all",
-                  isCollapsed ? "px-0" : "gap-3"
+                  isSidebarCollapsed ? "px-0" : "gap-3"
                 )}
                 asChild
               >
                 <Link href="/post/create">
                   <PenSquare className="h-6 w-6" />
-                  {!isCollapsed && <span>Post content</span>}
+                  {!isSidebarCollapsed && <span>Post content</span>}
                 </Link>
               </Button>
             </TooltipTrigger>
-            {isCollapsed && (
+            {isSidebarCollapsed && (
               <TooltipContent side="right" className="font-semibold bg-primary text-primary-foreground border-none">
                 Post content
               </TooltipContent>
@@ -146,7 +145,7 @@ export function NavigationSidebar() {
 
           <div className={cn(
             "pt-6 border-t border-border/50",
-            isCollapsed && "flex justify-center"
+            isSidebarCollapsed && "flex justify-center"
           )}>
             {currentUser ? (
               <Tooltip>
@@ -155,19 +154,19 @@ export function NavigationSidebar() {
                     href="/profile"
                     className={cn(
                       "flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 group transition-all duration-300",
-                      isCollapsed && "p-0"
+                      isSidebarCollapsed && "p-0"
                     )}
                   >
                     <Avatar className={cn(
                       "h-12 w-12 border-2 border-transparent group-hover:border-primary/20 transition-all",
-                      isCollapsed && "h-14 w-14"
+                      isSidebarCollapsed && "h-14 w-14"
                     )}>
                       <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
                         {currentUser.displayName?.[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    {!isCollapsed && (
+                    {!isSidebarCollapsed && (
                       <div className="flex-1 min-w-0">
                         <div className="font-bold truncate text-sm">{currentUser.displayName}</div>
                         <div className="text-xs text-muted-foreground truncate font-medium">@{currentUser.username}</div>
@@ -175,7 +174,7 @@ export function NavigationSidebar() {
                     )}
                   </Link>
                 </TooltipTrigger>
-                {isCollapsed && (
+                {isSidebarCollapsed && (
                   <TooltipContent side="right" className="p-3 bg-primary text-primary-foreground border-none">
                     <div className="font-semibold text-md">{currentUser.displayName}</div>
                     <div className="text-sm text-muted-foreground">@{currentUser.username}</div>
@@ -185,7 +184,7 @@ export function NavigationSidebar() {
             ) : (
               <div className="flex items-center gap-3 p-2 animate-pulse">
                 <div className="w-12 h-12 bg-muted rounded-full" />
-                {!isCollapsed && (
+                {!isSidebarCollapsed && (
                   <div className="flex-1 space-y-2">
                     <div className="h-4 bg-muted rounded w-28" />
                     <div className="h-3 bg-muted rounded w-20" />
