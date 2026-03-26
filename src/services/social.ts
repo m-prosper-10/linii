@@ -73,5 +73,16 @@ export const socialService = {
       return response.data;
     }
     throw new Error(response.message || 'Failed to get user stats');
+  },
+
+  /**
+   * Get suggested users to follow
+   */
+  async getSuggestedUsers(limit: number = 5): Promise<any[]> {
+    const response = await apiClient.get<{ users: any[] }>(`/social/suggested?limit=${limit}`);
+    if (response.success && response.data) {
+      return response.data.users;
+    }
+    throw new Error(response.message || 'Failed to get suggested users');
   }
 };

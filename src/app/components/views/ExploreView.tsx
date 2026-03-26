@@ -7,16 +7,29 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { mockTrendingTopics, mockUsers } from '@/data/mockData';
 import { Hash, Search, TrendingUp, Users, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PostService, PostApiType } from '@/services/post';
+import { socialService } from '@/services/social';
+import { analyticsService, TrendingTopic } from '@/services/analytics';
 import { toast } from 'sonner';
+
+interface SuggestedUser {
+  _id: string;
+  fullnames: string;
+  username: string;
+  avatar: string;
+  bio?: string;
+  followersCount?: number;
+  isFollowing?: boolean;
+}
 
 export function ExploreView() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState('');
   const [posts, setPosts] = useState<PostApiType[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
+  const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
@@ -27,10 +40,30 @@ export function ExploreView() {
       }, 500);
       return () => clearTimeout(timer);
     } else if (searchQuery.trim().length === 0) {
-      fetchTrending();
+      fetchExploreData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
+
+  const fetchExploreData = async () => {
+    try {
+      setLoading(true);
+      const [trendingPosts, suggestions, topics] = await Promise.all([
+        analyticsService.getTrendingContent(10),
+        socialService.getSuggestedUsers(10),
+        analyticsService.getTrendingTopics(10)
+      ]);
+      
+      setPosts(trendingPosts);
+      setSuggestedUsers(suggestions);
+      setTrendingTopics(topics);
+    } catch (error) {
+      console.error('Failed to load explore data:', error);
+      toast.error('Failed to load explore content');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = async () => {
     try {
@@ -44,18 +77,6 @@ export function ExploreView() {
     }
   };
 
-  const fetchTrending = async () => {
-    try {
-      setLoading(true);
-      const data = await PostService.getFeed(1, 10);
-      setPosts(data.posts);
-    } catch (error) {
-      toast.error('Failed to load trending posts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleUserClick = (userId: string) => {
     router.push(`/profile/${userId}`);
   };
@@ -64,7 +85,25 @@ export function ExploreView() {
     setPosts(posts.filter(p => p._id !== postId));
   };
 
-  const suggestedUsers = mockUsers.slice(0, 5);
+  const handleFollowToggle = async (userId: string) => {
+    try {
+      const isFollowing = suggestedUsers.find(u => u._id === userId)?.isFollowing;
+      if (isFollowing) {
+        await socialService.unfollowUser(userId);
+        toast.success('Unfollowed user');
+      } else {
+        await socialService.followUser(userId);
+        toast.success('Following user');
+      }
+      
+      // Update local state
+      setSuggestedUsers(prev => prev.map(u => 
+        u._id === userId ? { ...u, isFollowing: !isFollowing } : u
+      ));
+    } catch (error: any) {
+      toast.error(error.message || 'Action failed');
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -144,25 +183,30 @@ export function ExploreView() {
           <div className="p-4 space-y-4">
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-tight mb-4">Suggested for you</h3>
             {suggestedUsers.map((user) => (
-              <div key={user.id} className="flex items-center justify-between p-3 hover:bg-accent/30 rounded-xl transition-all group">
+              <div key={user._id} className="flex items-center justify-between p-3 hover:bg-accent/30 rounded-xl transition-all group">
                 <div 
                   className="flex items-center gap-3 cursor-pointer flex-1"
-                  onClick={() => handleUserClick(user.id)}
+                  onClick={() => handleUserClick(user._id)}
                 >
                   <Avatar className="w-12 h-12 border-2 border-transparent group-hover:border-primary/20 transition-all">
-                    <AvatarImage src={user.avatar} alt={user.displayName} />
-                    <AvatarFallback className="font-bold">{user.displayName[0]}</AvatarFallback>
+                    <AvatarImage src={user.avatar} alt={user.fullnames} />
+                    <AvatarFallback className="font-bold">{user.fullnames?.[0] || user.username?.[0]}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-bold text-sm">{user.displayName}</div>
+                    <div className="font-bold text-sm">{user.fullnames}</div>
                     <div className="text-xs text-muted-foreground font-medium">@{user.username}</div>
                     <div className="text-[10px] text-muted-foreground mt-1 font-semibold opacity-60 uppercase tracking-tighter">
-                      {user.followers.toLocaleString()} followers
+                      {(user.followersCount || 0).toLocaleString()} followers
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" className="rounded-full font-bold px-4 hover:bg-primary hover:text-primary-foreground border-primary/20 hover:border-primary transition-all">
-                  Follow
+                <Button 
+                  variant={user.isFollowing ? "outline" : "default"} 
+                  size="sm" 
+                  className="rounded-full font-bold px-4 hover:bg-primary hover:text-primary-foreground border-primary/20 hover:border-primary transition-all"
+                  onClick={() => handleFollowToggle(user._id)}
+                >
+                  {user.isFollowing ? 'Following' : 'Follow'}
                 </Button>
               </div>
             ))}
@@ -172,15 +216,21 @@ export function ExploreView() {
         <TabsContent value="topics" className="mt-0">
           <div className="p-4 space-y-2">
             <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-tight mb-4">Trending topics</h3>
-            {mockTrendingTopics.map((topic, index) => (
-              <div key={index} className="px-4 py-3 hover:bg-accent/30 rounded-xl transition-all cursor-pointer group flex items-center justify-between">
-                <div>
-                  <div className="font-bold text-primary group-hover:underline">#{topic.hashtag}</div>
-                  <div className="text-xs text-muted-foreground font-semibold opacity-60 mt-0.5">{topic.posts.toLocaleString()} posts</div>
+            {trendingTopics.length > 0 ? (
+              trendingTopics.map((topic, index) => (
+                <div key={index} className="px-4 py-3 hover:bg-accent/30 rounded-xl transition-all cursor-pointer group flex items-center justify-between">
+                  <div>
+                    <div className="font-bold text-primary group-hover:underline">#{topic.hashtag}</div>
+                    <div className="text-xs text-muted-foreground font-semibold opacity-60 mt-0.5">{topic.posts.toLocaleString()} posts</div>
+                  </div>
+                  <TrendingUp className="h-4 w-4 text-muted-foreground opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all" />
                 </div>
-                <TrendingUp className="h-4 w-4 text-muted-foreground opacity-40 group-hover:opacity-100 group-hover:text-primary transition-all" />
+              ))
+            ) : (
+              <div className="p-12 text-center text-muted-foreground font-medium italic opacity-60">
+                No trending topics yet.
               </div>
-            ))}
+            )}
           </div>
         </TabsContent>
       </Tabs>
