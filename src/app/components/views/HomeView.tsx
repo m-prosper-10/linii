@@ -3,7 +3,8 @@
 import { PostCard } from '@/app/components/PostCard';
 import { PostDetailModal } from '@/app/components/PostDetailModal';
 import { Button } from '@/app/components/ui/button';
-import { Sparkles, Loader2 } from 'lucide-react';
+import PostSkeleton from '@/app/components/skeletons/PostSkeleton';
+import { Sparkles } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { PostService, PostApiType } from '@/services/post';
@@ -65,11 +66,12 @@ export function HomeView() {
         </div>
       </div>
 
-      <div>
+      <div className="space-y-4">
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground flex justify-center items-center">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            Loading feed...
+          <div className="flex flex-col gap-6 p-4">
+            {[...Array(5)].map((_, i) => (
+              <PostSkeleton key={i} />
+            ))}
           </div>
         ) : posts.length > 0 ? (
           posts.map((post) => (
