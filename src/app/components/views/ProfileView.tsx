@@ -120,7 +120,9 @@ export function ProfileView() {
   }
 
   const mediaPosts = posts.filter(post => post.media && post.media.length > 0);
-  const likedPosts = posts.filter(post => post.userReaction?.reactionType === 'LIKE');
+  const likedPosts = posts.filter(
+    post => post.userReaction?.reactionType === 'LIKE'
+  );
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -148,7 +150,7 @@ export function ProfileView() {
               className="h-full w-full object-cover"
             />
           ) : (
-             <div className="h-full w-full bg-gradient-to-r from-primary/10 to-accent/10" />
+            <div className="from-primary/10 to-accent/10 h-full w-full bg-gradient-to-r" />
           )}
         </div>
 
@@ -157,8 +159,12 @@ export function ProfileView() {
           <div className="-mt-16 mb-4 flex items-start justify-between">
             <Avatar className="border-background h-32 w-32 border-4 shadow-xl">
               <AvatarImage src={user.avatar} alt={user.fullnames} />
-              <AvatarFallback className="text-3xl font-bold bg-primary/10 text-primary">
-                {user.fullnames ? user.fullnames[0] : (user.username ? user.username[0] : '?')}
+              <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
+                {user.fullnames
+                  ? user.fullnames[0]
+                  : user.username
+                    ? user.username[0]
+                    : '?'}
               </AvatarFallback>
             </Avatar>
 
@@ -166,7 +172,7 @@ export function ProfileView() {
               {isOwnProfile ? (
                 <Button
                   variant="outline"
-                  className="gap-2 rounded-full font-semibold px-6"
+                  className="gap-2 rounded-full px-6 font-semibold"
                   onClick={() => router.push('/edit-profile')}
                 >
                   <Edit className="h-4 w-4" />
@@ -176,12 +182,14 @@ export function ProfileView() {
                 <div className="flex gap-2">
                   <Button
                     variant={isFollowing ? 'outline' : 'default'}
-                    className="rounded-full font-bold px-6"
+                    className="rounded-full px-6 font-bold"
                     onClick={handleFollowToggle}
                   >
                     {isFollowing ? 'Following' : 'Follow'}
                   </Button>
-                  <Button variant="outline" className="rounded-full">Message</Button>
+                  <Button variant="outline" className="rounded-full">
+                    Message
+                  </Button>
                 </div>
               )}
             </div>
@@ -190,17 +198,28 @@ export function ProfileView() {
           <div className="space-y-4">
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">{user.fullnames}</h1>
+                <h1 className="text-2xl font-bold tracking-tight">
+                  {user.fullnames}
+                </h1>
                 {user.verified && (
-                  <Badge variant="secondary" className="h-5 px-2 bg-primary/10 text-primary border-none">
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary h-5 border-none px-2"
+                  >
                     ✓
                   </Badge>
                 )}
               </div>
-              <p className="text-muted-foreground font-medium opacity-80">@{user.username}</p>
+              <p className="text-muted-foreground font-medium opacity-80">
+                @{user.username}
+              </p>
             </div>
 
-            {user.bio && <p className="whitespace-pre-wrap text-foreground/90 leading-relaxed font-normal">{user.bio}</p>}
+            {user.bio && (
+              <p className="text-foreground/90 whitespace-pre-wrap font-normal leading-relaxed">
+                {user.bio}
+              </p>
+            )}
 
             <div className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium opacity-80">
               {user.location && (
@@ -233,17 +252,21 @@ export function ProfileView() {
             </div>
 
             <div className="flex gap-6 pb-2">
-              <button className="hover:underline flex items-center gap-1.5">
-                <span className="font-bold text-foreground">
+              <button className="flex items-center gap-1.5 hover:underline">
+                <span className="text-foreground font-bold">
                   {user.following?.toLocaleString() || 0}
                 </span>{' '}
-                <span className="text-muted-foreground text-sm font-medium">Following</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  Following
+                </span>
               </button>
-              <button className="hover:underline flex items-center gap-1.5">
-                <span className="font-bold text-foreground">
+              <button className="flex items-center gap-1.5 hover:underline">
+                <span className="text-foreground font-bold">
                   {user.followers?.toLocaleString() || 0}
                 </span>{' '}
-                <span className="text-muted-foreground text-sm font-medium">Followers</span>
+                <span className="text-muted-foreground text-sm font-medium">
+                  Followers
+                </span>
               </button>
             </div>
           </div>
@@ -254,19 +277,19 @@ export function ProfileView() {
           <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger
               value="posts"
-              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
             >
               Posts
             </TabsTrigger>
             <TabsTrigger
               value="media"
-              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
             >
               Media
             </TabsTrigger>
             <TabsTrigger
               value="likes"
-              className="data-[state=active]:border-primary px-8 py-4 rounded-none border-b-2 border-transparent data-[state=active]:bg-transparent font-bold text-sm"
+              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
             >
               Likes
             </TabsTrigger>
@@ -275,9 +298,9 @@ export function ProfileView() {
           <TabsContent value="posts" className="mt-0">
             {posts.length > 0 ? (
               posts.map(post => (
-                <PostCard 
-                  key={post._id} 
-                  post={post} 
+                <PostCard
+                  key={post._id}
+                  post={post}
                   onPostClick={() => setSelectedPostId(post._id)}
                   onDeleted={handlePostDeleted}
                 />
@@ -295,12 +318,14 @@ export function ProfileView() {
                 {mediaPosts.map(post => (
                   <div
                     key={post._id}
-                    className="bg-accent/20 aspect-square overflow-hidden hover:opacity-90 transition-opacity cursor-pointer border border-border/50"
+                    className="bg-accent/20 border-border/50 aspect-square cursor-pointer overflow-hidden border transition-opacity hover:opacity-90"
                     onClick={() => setSelectedPostId(post._id)}
                   >
                     {post.media[0].type === 'VIDEO' ? (
-                      <div className="w-full h-full flex items-center justify-center bg-black">
-                         <span className="text-white text-xs font-bold uppercase tracking-widest">Video</span>
+                      <div className="flex h-full w-full items-center justify-center bg-black">
+                        <span className="text-xs font-bold uppercase tracking-widest text-white">
+                          Video
+                        </span>
                       </div>
                     ) : (
                       <img
@@ -322,9 +347,9 @@ export function ProfileView() {
           <TabsContent value="likes" className="mt-0">
             {likedPosts.length > 0 ? (
               likedPosts.map(post => (
-                <PostCard 
-                  key={post._id} 
-                  post={post} 
+                <PostCard
+                  key={post._id}
+                  post={post}
                   onPostClick={() => setSelectedPostId(post._id)}
                   onDeleted={handlePostDeleted}
                 />
@@ -339,8 +364,8 @@ export function ProfileView() {
       </div>
 
       {selectedPostId && (
-        <PostDetailModal 
-          postId={selectedPostId} 
+        <PostDetailModal
+          postId={selectedPostId}
           onClose={() => setSelectedPostId(null)}
           onDeleted={handlePostDeleted}
         />

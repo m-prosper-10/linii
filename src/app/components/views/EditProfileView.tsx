@@ -14,10 +14,12 @@ import {
 import { useApp } from '@/context/AppContext';
 import { authService } from '@/services/auth';
 import AIService from '@/services/ai';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export function EditProfileView() {
-  const { currentUser, loading, setCurrentUser, setCurrentView } = useApp();
+  const router = useRouter();
+  const { currentUser, loading, setCurrentUser } = useApp();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -111,7 +113,7 @@ export function EditProfileView() {
       });
       setCurrentUser(updatedUser);
       toast.success('Profile updated successfully!');
-      setCurrentView('profile');
+      router.back();
     } catch (error: any) {
       toast.error(error.message || 'Failed to update profile');
     } finally {
@@ -120,7 +122,7 @@ export function EditProfileView() {
   };
 
   const handleCancel = () => {
-    setCurrentView('profile');
+    router.back();
   };
 
   return (
