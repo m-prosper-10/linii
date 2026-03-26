@@ -155,4 +155,9 @@ export class PostService {
   static async deletePost(postId: string): Promise<void> {
     await apiClient.delete(`/posts/${postId}`);
   }
+
+  static async searchPosts(query: string, page = 1, limit = 20): Promise<PostsResponse> {
+    const response = await apiClient.get<PostsResponse>(`/posts/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+    return response.data!;
+  }
 }

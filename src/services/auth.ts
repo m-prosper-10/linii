@@ -6,9 +6,9 @@
 import { apiClient } from '../lib/api';
 
 export interface User {
-  id: string;
+  _id: string;
   username: string;
-  displayName: string;
+  fullnames: string;
   avatar: string;
   bio: string;
   coverImage: string;
