@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from '../ui/skeleton';
 
 const MessageSkeleton = () => (
   <div className="border-border border-b p-4">

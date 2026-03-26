@@ -3,6 +3,8 @@
 import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
 import { EmojiPicker } from '@/app/components/messages/EmojiPicker';
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
+import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
+import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
 import {
   Avatar,
   AvatarFallback,
@@ -16,7 +18,6 @@ import { chatService, Conversation, Message } from '@/services/chat';
 import { cn } from '@/app/components/ui/utils';
 import {
   ArrowLeft,
-  Loader2,
   MoreVertical,
   Paperclip,
   Phone,
@@ -211,8 +212,10 @@ export function MessagesView() {
 
         <ScrollArea className="flex-1">
           {loading ? (
-            <div className="flex h-32 items-center justify-center">
-              <Loader2 className="text-primary h-6 w-6 animate-spin" />
+            <div className="flex flex-col">
+              {[...Array(6)].map((_, i) => (
+                <ConversationSkeleton key={i} />
+              ))}
             </div>
           ) : filteredConversations.length > 0 ? (
             filteredConversations.map(conversation => {
@@ -321,8 +324,10 @@ export function MessagesView() {
           {/* Messages */}
           <ScrollArea className="flex-1 p-4">
             {messagesLoading && messages.length === 0 ? (
-              <div className="flex h-full items-center justify-center">
-                <Loader2 className="text-primary h-8 w-8 animate-spin" />
+              <div className="mx-auto max-w-4xl space-y-4 pt-4">
+                {[...Array(8)].map((_, i) => (
+                  <MessageSkeleton key={i} />
+                ))}
               </div>
             ) : (
               <div className="mx-auto max-w-4xl space-y-4">

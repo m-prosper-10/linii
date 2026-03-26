@@ -1,4 +1,4 @@
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from '../ui/skeleton';
 
 const NotificationSkeleton = () => (
   <div className="border-border border-b p-4">
@@ -15,4 +15,4 @@ const NotificationSkeleton = () => (
   </div>
 );
 
-export default NotificationSkeleton
+export default NotificationSkeleton;
