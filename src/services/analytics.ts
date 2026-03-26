@@ -1,4 +1,10 @@
 import { apiClient } from '../lib/api';
+import { PostApiType } from './post';
+
+export interface TrendingTopic {
+  hashtag: string;
+  posts: number;
+}
 
 export interface ContentAnalytics {
   totalViews: number;
@@ -53,8 +59,16 @@ class AnalyticsService {
     throw new Error(response.message || 'Failed to fetch content analytics');
   }
 
-  async getTrendingTopics(limit: number = 10): Promise<Array<{ hashtag: string; posts: number }>> {
-    const response = await apiClient.get<{ topics: Array<{ hashtag: string; posts: number }> }>(`/analytics/topics?limit=${limit}`);
+  async getTrendingContent(limit: number = 10): Promise<PostApiType[]> {
+    const response = await apiClient.get<{ trending: PostApiType[] }>(`/analytics/trending?limit=${limit}`);
+    if (response.success && response.data) {
+      return response.data.trending;
+    }
+    throw new Error(response.message || 'Failed to fetch trending content');
+  }
+
+  async getTrendingTopics(limit: number = 10): Promise<TrendingTopic[]> {
+    const response = await apiClient.get<{ topics: TrendingTopic[] }>(`/analytics/topics?limit=${limit}`);
     if (response.success && response.data) {
       return response.data.topics;
     }
