@@ -17,6 +17,7 @@ export interface User {
   coverImage: string;
   verified: boolean;
   followers: number;
+  followersCount?: number;
   following: number;
   postsCount: number;
   website?: string;

@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/api";
+import { User } from "./auth";
 
 export interface FollowStatus {
   isFollowing: boolean;
@@ -73,5 +74,16 @@ export const socialService = {
       return response.data;
     }
     throw new Error(response.message || 'Failed to get user stats');
+  },
+
+  /**
+   * Get suggested users to follow
+   */
+  async getSuggestedUsers(limit: number = 5): Promise<Partial<User>[]> {
+    const response = await apiClient.get<{ users: Partial<User>[] }>(`/social/suggested?limit=${limit}`);
+    if (response.success && response.data) {
+      return response.data.users;
+    }
+    throw new Error(response.message || 'Failed to get suggested users');
   }
 };
