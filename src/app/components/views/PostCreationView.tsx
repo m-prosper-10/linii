@@ -7,7 +7,6 @@ import {
 } from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
 import { Textarea } from '@/app/components/ui/textarea';
 import {
   ArrowLeft,
@@ -22,11 +21,16 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
+
+// New Components
+import { PostPollCreator } from '@/app/components/post/PostPollCreator';
+import { PostMediaPreview } from '@/app/components/post/PostMediaPreview';
+import { PostEmojiPicker } from '@/app/components/post/PostEmojiPicker';
 
 export function PostCreationView() {
   const router = useRouter();
@@ -46,6 +50,11 @@ export function PostCreationView() {
   const [locationName, setLocationName] = useState('');
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const removeMedia = useCallback(() => {
+    setSelectedMedia(null);
+    setSelectedMediaFiles([]);
+  }, []);
 
   if (loading) {
     return (
@@ -165,27 +174,8 @@ export function PostCreationView() {
     }
   };
 
-  const removeMedia = () => {
-    setSelectedMedia(null);
-    setSelectedMediaFiles([]);
-  };
-
-  const handleAddOption = () => {
-    if (pollOptions.length < 4) {
-      setPollOptions([...pollOptions, '']);
-    }
-  };
-
-  const handleRemoveOption = (index: number) => {
-    if (pollOptions.length > 2) {
-      setPollOptions(pollOptions.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleOptionChange = (index: number, value: string) => {
-    const newOptions = [...pollOptions];
-    newOptions[index] = value;
-    setPollOptions(newOptions);
+  const onEmojiSelect = (emoji: string) => {
+    setContent(prev => prev + emoji);
   };
 
   const characterCount = content.length;
@@ -240,63 +230,22 @@ export function PostCreationView() {
               />
 
               {isPollMode && (
-                <div className="bg-accent/20 space-y-3 rounded-2xl p-4 border border-border/50">
-                  <Input
-                    placeholder="Ask a question..."
-                    value={pollQuestion}
-                    onChange={e => setPollQuestion(e.target.value)}
-                    className="bg-background border-border/50 font-bold"
-                  />
-                  <div className="space-y-2">
-                    {pollOptions.map((option, index) => (
-                      <div key={index} className="flex gap-2">
-                        <Input
-                          placeholder={`Option ${index + 1}`}
-                          value={option}
-                          onChange={e => handleOptionChange(index, e.target.value)}
-                          className="bg-background border-border/50"
-                        />
-                        {pollOptions.length > 2 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveOption(index)}
-                            className="text-destructive hover:bg-destructive/10"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {pollOptions.length < 4 && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleAddOption}
-                      className="w-full border-dashed border-border/50 hover:bg-accent/50 text-xs font-bold uppercase tracking-widest"
-                    >
-                      + Add Option
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsPollMode(false)}
-                    className="w-full text-muted-foreground text-xs font-bold"
-                  >
-                    Remove Poll
-                  </Button>
-                </div>
+                <PostPollCreator
+                  question={pollQuestion}
+                  setQuestion={setPollQuestion}
+                  options={pollOptions}
+                  setOptions={setPollOptions}
+                  onRemove={() => setIsPollMode(false)}
+                />
               )}
 
               {locationName && (
-                <div className="flex items-center gap-2 px-1">
-                  <Badge variant="secondary" className="bg-primary/10 text-primary gap-1 pl-1 pr-2">
+                <div className="flex items-center gap-2 px-1 animate-in slide-in-from-left duration-300">
+                  <Badge variant="secondary" className="bg-primary/10 text-primary gap-1 pl-1 pr-2 rounded-lg py-1">
                     <MapPin className="h-3 w-3" />
-                    {locationName}
+                    <span className="text-xs font-bold">{locationName}</span>
                     <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                      className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-1" 
                       onClick={() => setLocationName('')}
                     />
                   </Badge>
@@ -304,43 +253,22 @@ export function PostCreationView() {
               )}
 
               {scheduledDate && (
-                <div className="flex items-center gap-2 px-1">
-                  <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 gap-1 pl-1 pr-2">
+                <div className="flex items-center gap-2 px-1 animate-in slide-in-from-left duration-300">
+                  <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 gap-1 pl-1 pr-2 rounded-lg py-1">
                     <Calendar className="h-3 w-3" />
-                    Scheduled for {new Date(scheduledDate).toLocaleString()}
+                    <span className="text-xs font-bold">Scheduled for {new Date(scheduledDate).toLocaleString()}</span>
                     <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive" 
+                      className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-1" 
                       onClick={() => setScheduledDate(null)}
                     />
                   </Badge>
                 </div>
               )}
 
-              {selectedMedia && (
-                <div className="relative group">
-                  {selectedMedia.type === 'IMAGE' ? (
-                    <img
-                      src={selectedMedia.url}
-                      alt="Upload preview"
-                      className="border-border max-h-96 w-full rounded-2xl border object-cover shadow-lg transition-all group-hover:brightness-90"
-                    />
-                  ) : (
-                    <video
-                      src={selectedMedia.url}
-                      controls
-                      className="border-border max-h-96 w-full rounded-2xl border object-cover shadow-lg transition-all group-hover:brightness-90"
-                    />
-                  )}
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    className="absolute right-3 top-3 h-8 w-8 rounded-full p-0 opacity-0 transition-opacity group-hover:opacity-100 shadow-xl"
-                    onClick={removeMedia}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
+              <PostMediaPreview 
+                media={selectedMedia} 
+                onRemove={removeMedia} 
+              />
 
             <div className="border-border flex items-center justify-between border-t pt-4">
               <div className="flex items-center gap-2">
@@ -393,8 +321,10 @@ export function PostCreationView() {
                   }}
                 >
                   <Calendar className="h-4 w-4 text-orange-500" />
-                  Schedule
+                  <span className="hidden sm:inline">Schedule</span>
                 </Button>
+
+                <PostEmojiPicker onEmojiSelect={onEmojiSelect} />
 
                 <Button
                   variant="ghost"
