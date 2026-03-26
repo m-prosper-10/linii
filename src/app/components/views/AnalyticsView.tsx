@@ -10,9 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card';
+import { format } from 'date-fns';
 import { useApp } from '@/context/AppContext';
 import { analyticsService, UserAnalytics } from '@/services/analytics';
-import { postService, PostApiType } from '@/services/post';
+import { PostService, PostApiType } from '@/services/post';
 import { Eye, Heart, MessageCircle, TrendingUp, Users, Loader2 } from 'lucide-react';
 import {
   Area,
@@ -43,8 +44,8 @@ export function AnalyticsView() {
       
       // Fetch details for top performing posts
       if (data.topPerformingPosts?.length > 0) {
-        const postPromises = data.topPerformingPosts.map(p => 
-          postService.getPost(p.postId).catch(() => null)
+        const postPromises = data.topPerformingPosts.map((p: { postId: string }) => 
+          PostService.getPost(p.postId).catch(() => null)
         );
         const posts = await Promise.all(postPromises);
         setTopPosts(posts.filter((p): p is PostApiType => p !== null));
@@ -171,7 +172,7 @@ export function AnalyticsView() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={mockAnalytics.postPerformance}
+                data={analytics.growthMetrics.engagementGrowth}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <CartesianGrid
@@ -196,7 +197,7 @@ export function AnalyticsView() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={value => value.toLocaleString()}
+                  tickFormatter={value => `${value}%`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -234,28 +235,10 @@ export function AnalyticsView() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="views"
+                  dataKey="rate"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
-                  name="Views"
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="engagement"
-                  stroke="hsl(var(--accent-foreground))"
-                  strokeWidth={3}
-                  name="Engagement"
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="likes"
-                  stroke="rgb(239, 68, 68)"
-                  strokeWidth={3}
-                  name="Likes"
+                  name="Engagement Rate"
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
@@ -278,7 +261,7 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockAnalytics.audienceGrowth}>
+                <AreaChart data={analytics.growthMetrics.followersGrowth}>
                   <defs>
                     <linearGradient
                       id="colorFollowers"
@@ -305,10 +288,11 @@ export function AnalyticsView() {
                     opacity={0.2}
                   />
                   <XAxis
-                    dataKey="month"
+                    dataKey="date"
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={11}
                     fontWeight={600}
+                    tickFormatter={str => format(new Date(str), 'MMM d')}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
@@ -319,7 +303,7 @@ export function AnalyticsView() {
                   <Tooltip />
                   <Area
                     type="monotone"
-                    dataKey="followers"
+                    dataKey="count"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     fillOpacity={1}

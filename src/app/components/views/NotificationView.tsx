@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
 import { socialService } from '@/services/social';
+import NotificationSkeleton from '../skeletons/NotificationSkeleton';
 
 const notificationIcons: Record<string, LucideIcon> = {
   LIKE: Heart,
@@ -315,7 +316,13 @@ export function NotificationsView() {
       </div>
 
       <div className="flex flex-col">
-        {getFilteredNotifications().length > 0 ? (
+        {loading && notifications.length === 0 ? (
+          <div className="flex flex-col">
+            {[...Array(6)].map((_, i) => (
+              <NotificationSkeleton key={i} />
+            ))}
+          </div>
+        ) : getFilteredNotifications().length > 0 ? (
           <>
             {getFilteredNotifications().map(notification => (
               <NotificationItem
@@ -333,9 +340,10 @@ export function NotificationsView() {
                   className="text-primary hover:bg-primary/5 w-full font-bold"
                 >
                   {loading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    </>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading more...
+                    </div>
                   ) : (
                     'Load more'
                   )}
