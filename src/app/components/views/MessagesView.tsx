@@ -29,9 +29,11 @@ import {
 import { useEffect, useRef, useState, useCallback } from 'react';
 
 export function MessagesView() {
-  const { user: currentUser } = useApp();
+  const { currentUser } = useApp();
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -39,7 +41,7 @@ export function MessagesView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -99,7 +101,9 @@ export function MessagesView() {
       otherParticipant?.fullnames
         .toLowerCase()
         .includes(searchQuery.toLowerCase()) ||
-      conv.lastMessage?.content.toLowerCase().includes(searchQuery.toLowerCase())
+      conv.lastMessage?.content
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
     );
   });
 
@@ -135,9 +139,13 @@ export function MessagesView() {
         });
         setMessages(prev => [...prev, newMessage]);
         // Update last message in conversations list
-        setConversations(prev => prev.map(c => 
-          c._id === selectedConversationId ? { ...c, lastMessage: newMessage } : c
-        ));
+        setConversations(prev =>
+          prev.map(c =>
+            c._id === selectedConversationId
+              ? { ...c, lastMessage: newMessage }
+              : c
+          )
+        );
       } catch (error) {
         console.error('Failed to send message:', error);
       }
@@ -172,7 +180,7 @@ export function MessagesView() {
   };
 
   return (
-    <div className="mx-2 flex h-[calc(100vh-4rem)] max-w-full flex-row">
+    <div className="flex h-full w-full flex-row">
       {/* Conversations List */}
       <div
         className={cn(
@@ -204,17 +212,22 @@ export function MessagesView() {
         <ScrollArea className="flex-1">
           {loading ? (
             <div className="flex h-32 items-center justify-center">
-              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              <Loader2 className="text-primary h-6 w-6 animate-spin" />
             </div>
           ) : filteredConversations.length > 0 ? (
             filteredConversations.map(conversation => {
               const otherParticipant = conversation.participants.find(
                 p => p._id !== currentUser?._id
               );
-              
+
               // Simple unread count for now - backend could provide this properly
-              const unreadCount = conversation.lastMessage?.sender._id !== currentUser?._id && 
-                                 !conversation.lastMessage?.readBy.some(r => r.userId === currentUser?._id) ? 1 : 0;
+              const unreadCount =
+                conversation.lastMessage?.sender._id !== currentUser?._id &&
+                !conversation.lastMessage?.readBy.some(
+                  r => r.userId === currentUser?._id
+                )
+                  ? 1
+                  : 0;
 
               return (
                 <ConversationListItem
@@ -264,9 +277,7 @@ export function MessagesView() {
                   {otherUser?.fullnames}
                   {/* Verified logic could be more robust */}
                   {otherUser?.username === 'verified_user' && (
-                    <Verified
-                      className="h-4 w-4 fill-blue-600"
-                    />
+                    <Verified className="h-4 w-4 fill-blue-600" />
                   )}
                 </div>
                 <div className="text-muted-foreground text-sm">
@@ -311,14 +322,16 @@ export function MessagesView() {
           <ScrollArea className="flex-1 p-4">
             {messagesLoading && messages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <Loader2 className="text-primary h-8 w-8 animate-spin" />
               </div>
             ) : (
               <div className="mx-auto max-w-4xl space-y-4">
                 {messages.map((message, index) => {
                   const isCurrentUser = message.sender._id === currentUser?._id;
                   const isGrouped = shouldGroupMessage(index);
-                  const isRead = message.readBy.some(r => r.userId !== message.sender._id);
+                  const isRead = message.readBy.some(
+                    r => r.userId !== message.sender._id
+                  );
                   return (
                     <MessageBubble
                       key={message._id}
