@@ -91,7 +91,7 @@ export function NavigationSidebar() {
                 key={item.href}
                 variant={isActive ? 'secondary' : 'ghost'}
                 className={cn(
-                  "w-full justify-start gap-4 h-10 rounded-lg px-3 font-light transition-all duration-200",
+                  "w-full justify-start gap-4 h-10 rounded-lg px-3 font-medium transition-all duration-200",
                   isActive && "bg-primary/10 text-primary hover:bg-primary/20 font-semibold",
                   isCollapsed && "justify-center px-0"
                 )}
@@ -110,7 +110,7 @@ export function NavigationSidebar() {
                   <TooltipTrigger asChild>
                     {content}
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="font-semibold px-3 py-1.5 bg-foreground text-background">
+                  <TooltipContent side="right" className="font-semibold px-4 py-2 bg-primary text-primary-foreground">
                     {item.label}
                   </TooltipContent>
                 </Tooltip>
@@ -126,7 +126,7 @@ export function NavigationSidebar() {
             <TooltipTrigger asChild>
               <Button 
                 className={cn(
-                  "w-full h-12 rounded-xl font-bold shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all",
+                  "w-full h-12 rounded-xl font-semibold transition-all",
                   isCollapsed ? "px-0" : "gap-3"
                 )}
                 asChild
@@ -176,9 +176,9 @@ export function NavigationSidebar() {
                   </Link>
                 </TooltipTrigger>
                 {isCollapsed && (
-                  <TooltipContent side="right" className="p-3 bg-card border-border shadow-xl">
-                    <div className="font-bold text-sm">{currentUser.displayName}</div>
-                    <div className="text-xs text-muted-foreground">@{currentUser.username}</div>
+                  <TooltipContent side="right" className="p-3 bg-primary text-primary-foreground border-none">
+                    <div className="font-semibold text-md">{currentUser.displayName}</div>
+                    <div className="text-sm text-muted-foreground">@{currentUser.username}</div>
                   </TooltipContent>
                 )}
               </Tooltip>

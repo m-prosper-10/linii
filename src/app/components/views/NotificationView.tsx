@@ -1,9 +1,11 @@
-import { Heart, MessageCircle, UserPlus, AtSign, Info, Share2, Vote, Calendar, MoreHorizontal, Check, CheckCheck, Trash2, Bell } from 'lucide-react';
+"use client";
+
+import { Heart, MessageCircle, UserPlus, AtSign, Info, Share2, Vote, Calendar, MoreHorizontal, Check, CheckCheck, Trash2, Bell, LucideIcon } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { cn } from '@/app/components/ui/utils';
-import { useEffect, useState, useCallback, FC } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { notificationService, Notification } from '@/services/notification';
 import { formatDistanceToNow } from 'date-fns';
 import { 
@@ -14,7 +16,7 @@ import {
 } from '@/app/components/ui/dropdown-menu';
 import { socialService } from '@/services/social';
 
-const notificationIcons: Record<string, FC<any>> = {
+const notificationIcons: Record<string, LucideIcon> = {
   LIKE: Heart,
   COMMENT: MessageCircle,
   FOLLOW: UserPlus,
