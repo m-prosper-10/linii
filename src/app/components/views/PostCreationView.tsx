@@ -38,7 +38,7 @@ export function PostCreationView() {
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -54,9 +54,10 @@ export function PostCreationView() {
     try {
       const enhanced = await AIService.suggestPostEnhancement(content);
       setContent(enhanced);
-      toast.success("Post enhanced by AI!");
+      toast.success('Post enhanced by AI!');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "AI enhancement failed";
+      const message =
+        error instanceof Error ? error.message : 'AI enhancement failed';
       alert(message);
     } finally {
       setIsAiLoading(false);
@@ -74,9 +75,9 @@ export function PostCreationView() {
         // For simplicity, if content is empty, fill it. Else, append.
         setContent(prev => `${prev}\n\n[AI Description: ${description}]`);
       }
-      toast.success("Image analyzed by AI!");
+      toast.success('Image analyzed by AI!');
     } catch (error: unknown) {
-      console.error("Image analysis failed:", error);
+      console.error('Image analysis failed:', error);
     } finally {
       setIsAiLoading(false);
     }
@@ -90,8 +91,13 @@ export function PostCreationView() {
     try {
       await PostService.createPost({
         content: content.trim(),
-        postType: selectedMediaFiles.length > 0 ? (selectedMediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE') : 'TEXT',
-        mediaFiles: selectedMediaFiles
+        postType:
+          selectedMediaFiles.length > 0
+            ? selectedMediaFiles[0].type.startsWith('video/')
+              ? 'VIDEO'
+              : 'IMAGE'
+            : 'TEXT',
+        mediaFiles: selectedMediaFiles,
       });
       toast.success('Post created successfully!');
       setContent('');
@@ -115,7 +121,7 @@ export function PostCreationView() {
         setSelectedImage(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-      
+
       // Trigger AI analysis (Disabled per user request)
       // handleImageAnalysis(file);
     }
@@ -146,7 +152,14 @@ export function PostCreationView() {
             <h2 className="text-xl font-semibold">Create Post</h2>
           </div>
           <Button onClick={handlePost} disabled={!canPost} className="px-6">
-            {isPosting ? 'Posting...' : 'Post'}
+            {isPosting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Posting...
+              </>
+            ) : (
+              'Post'
+            )}
           </Button>
         </div>
       </div>
@@ -166,7 +179,7 @@ export function PostCreationView() {
               placeholder="What's on your mind?"
               value={content}
               onChange={e => setContent(e.target.value)}
-              className="min-h-[120px] resize-none border-none bg-transparent p-0 text-lg focus-visible:ring-0"
+              className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
               maxLength={maxCharacters + 50} // Allow typing over limit to show warning
             />
 
@@ -230,16 +243,21 @@ export function PostCreationView() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="gap-2 text-primary"
+                  className="text-primary gap-2"
                   onClick={handleAiEnhance}
                   disabled={isAiLoading || !content.trim()}
                 >
                   {isAiLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Enhancing...
+                    </>
                   ) : (
-                    <Sparkles className="h-4 w-4" />
+                    <>
+                      <Sparkles className="h-4 w-4" />
+                      AI Enhance
+                    </>
                   )}
-                  AI Enhance
                 </Button>
               </div>
 

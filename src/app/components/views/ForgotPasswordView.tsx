@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -11,29 +11,33 @@ export function ForgotPasswordView() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     setSubmitted(true);
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="bg-background flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-primary rounded-2xl mb-4">
-            <span className="text-primary-foreground font-bold text-2xl">S</span>
+          <div className="bg-primary mb-4 inline-flex h-16 w-16 items-center justify-center rounded-2xl">
+            <span className="text-primary-foreground text-2xl font-bold">
+              S
+            </span>
           </div>
-          <h1 className="text-3xl font-semibold mb-2">Reset your password</h1>
+          <h1 className="mb-2 text-3xl font-semibold">Reset your password</h1>
           <p className="text-muted-foreground">
-            {submitted 
+            {submitted
               ? 'Check your email for a password reset link'
-              : 'Enter your email to receive a password reset link'
-            }
+              : 'Enter your email to receive a password reset link'}
           </p>
         </div>
 
-        <div className="bg-card border border-border rounded-xl p-8 space-y-6">
+        <div className="bg-card border-border space-y-6 rounded-xl border p-8">
           {!submitted ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
@@ -43,33 +47,56 @@ export function ForgotPasswordView() {
                   type="email"
                   placeholder="you@example.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   required
                   className="bg-accent/50"
                 />
               </div>
-
-              <Button type="submit" className="w-full">
-                Send reset link
-              </Button>
+              {!isSubmitting ? (
+                <Button type="submit" className="w-full">
+                  Send reset link
+                </Button>
+              ) : (
+                <Button type="submit" className="w-full" disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </Button>
+              )}
             </form>
           ) : (
-            <div className="text-center space-y-4">
-              <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            <div className="space-y-4 text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 text-green-500">
+                <svg
+                  className="h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
               </div>
               <p className="text-muted-foreground">
-                We've sent a password reset link to <strong>{email}</strong>
+                We&apos;ve sent a password reset link to <strong>{email}</strong>
               </p>
-              <Button 
-                variant="outline" 
-                className="w-full"
-                onClick={() => setSubmitted(false)}
-              >
-                Resend link
-              </Button>
+              {!isSubmitting ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setSubmitted(false)}
+                >
+                  Resend link
+                </Button>
+              ) : (
+                <Button type="submit" className="w-full" disabled>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Sending...
+                </Button>
+              )}
             </div>
           )}
 

@@ -8,7 +8,7 @@ import {
 } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Heart, Repeat2, Bookmark, X, ArrowLeft } from 'lucide-react';
+import { Heart, Repeat2, Bookmark, X, ArrowLeft, Loader2 } from 'lucide-react';
 import { PostService, PostApiType } from '@/services/post';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
@@ -105,7 +105,7 @@ export function PostDetailModal({
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="border-primary h-12 w-12 animate-spin rounded-full border-b-2 border-t-2"></div>
+        <Loader2 />
       </div>
     );
   }

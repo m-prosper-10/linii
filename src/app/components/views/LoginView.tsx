@@ -5,7 +5,7 @@ import { Input } from '@/app/components/ui/input';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
 import { useApp } from '@/context/AppContext';
-import { FacebookIcon } from 'lucide-react';
+import { FacebookIcon, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -49,7 +49,7 @@ export function LoginView() {
         <div className="bg-card border-border w-auto space-y-6 rounded-xl border p-8">
           <form onSubmit={handleLogin} className="space-y-4">
             {error && (
-              <div className="bg-destructive/10 text-destructive rounded-lg p-3 text-sm flex items-center gap-2">
+              <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-lg p-3 text-sm">
                 <span className="flex-1">{error}</span>
               </div>
             )}
@@ -92,7 +92,14 @@ export function LoginView() {
             </div>
 
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                'Sign in'
+              )}
             </Button>
           </form>
 
