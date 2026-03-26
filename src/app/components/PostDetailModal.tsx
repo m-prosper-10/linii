@@ -1,16 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
-import { 
-  Heart, 
-  Repeat2, 
-  Bookmark, 
-  X, 
-  ArrowLeft
-} from 'lucide-react';
+import { Heart, Repeat2, Bookmark, X, ArrowLeft } from 'lucide-react';
 import { PostService, PostApiType } from '@/services/post';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
@@ -22,7 +20,11 @@ interface PostDetailModalProps {
   onDeleted?: (postId: string) => void;
 }
 
-export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalProps) {
+export function PostDetailModal({
+  postId,
+  onClose,
+  onDeleted,
+}: PostDetailModalProps) {
   const [post, setPost] = useState<PostApiType | null>(null);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
@@ -54,12 +56,12 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   const handleLike = async () => {
     if (!post) return;
     const isLiked = post.userReaction?.reactionType === 'LIKE';
-    
+
     // Optimistic update
     setPost({
       ...post,
       likesCount: isLiked ? post.likesCount - 1 : post.likesCount + 1,
-      userReaction: isLiked ? undefined : { reactionType: 'LIKE' }
+      userReaction: isLiked ? undefined : { reactionType: 'LIKE' },
     });
 
     try {
@@ -103,7 +105,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        <div className="border-primary h-12 w-12 animate-spin rounded-full border-b-2 border-t-2"></div>
       </div>
     );
   }
@@ -111,66 +113,70 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   if (!post) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-0 md:p-4 overflow-y-auto">
-      <div className="bg-card w-full max-w-6xl flex flex-col md:flex-row min-h-[500px] max-h-full md:max-h-[90vh] rounded-none md:rounded-xl overflow-hidden shadow-2xl relative">
-        
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-0 backdrop-blur-md md:p-4">
+      <div className="bg-card relative flex max-h-full min-h-[500px] w-full max-w-6xl flex-col overflow-hidden rounded-none shadow-2xl md:max-h-[90vh] md:flex-row md:rounded-xl">
         {/* Mobile Close Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute top-4 left-4 z-10 md:hidden bg-black/20 backdrop-blur-md text-white rounded-full"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 top-4 z-10 rounded-full text-white backdrop-blur-md md:hidden"
           onClick={onClose}
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
 
         {/* Desktop Close Button */}
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          className="absolute top-4 right-4 z-10 hidden md:flex text-muted-foreground hover:text-foreground"
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hover:text-foreground absolute right-4 top-4 z-10 hidden md:flex"
           onClick={onClose}
         >
           <X className="h-6 w-6" />
         </Button>
 
         {/* Media Side (Left) */}
-        <div className="flex-[1.5] bg-black flex items-center justify-center min-h-[300px]">
+        <div className="bg-blur-xs flex min-h-[300px] flex-[1.5] items-center justify-center">
           {post.media && post.media.length > 0 ? (
-            <div className="w-full h-full">
+            <div className="h-full w-full">
               {post.media[0].type === 'VIDEO' ? (
-                <video 
-                  src={post.media[0].url} 
-                  controls 
-                  className="w-full h-full object-contain"
+                <video
+                  src={post.media[0].url}
+                  controls
+                  className="h-full w-full object-contain"
                 />
               ) : (
-                <img 
-                  src={post.media[0].url} 
-                  alt="Post content" 
-                  className="w-full h-full object-contain"
+                <img
+                  src={post.media[0].url}
+                  alt="Post content"
+                  className="h-full w-full object-contain"
                 />
               )}
             </div>
           ) : (
             <div className="text-muted-foreground flex flex-col items-center gap-2">
-               <span className="text-lg font-medium">Text Post</span>
-               <p className="px-8 text-center text-sm opacity-60">This post contains only text content.</p>
+              <span className="text-lg font-medium">Text Post</span>
+              <p className="px-8 text-center text-sm opacity-60">
+                This post contains only text content.
+              </p>
             </div>
           )}
         </div>
 
         {/* Info Side (Right) */}
-        <div className="flex-1 flex flex-col bg-card border-l border-border min-w-0">
+        <div className="bg-card border-border flex min-w-0 flex-1 flex-col border-l">
           {/* Header */}
-          <div className="p-4 border-b border-border flex items-center justify-between shrink-0">
+          <div className="border-border flex shrink-0 items-center justify-between border-b p-4">
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
+                <AvatarImage
+                  src={post.author.avatar}
+                  alt={post.author.fullnames}
+                />
                 <AvatarFallback>{post.author.fullnames[0]}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="font-semibold text-sm hover:underline cursor-pointer">
+                <span className="cursor-pointer text-sm font-semibold hover:underline">
                   {post.author.fullnames}
                 </span>
                 <span className="text-muted-foreground text-xs">
@@ -178,31 +184,39 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
                 </span>
               </div>
             </div>
-            
+
             {currentUser?._id === post.author._id && (
-              <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={handleDelete}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+              >
                 <X className="h-4 w-4" />
               </Button>
             )}
           </div>
 
           {/* Content & Comments (Scrollable) */}
-          <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
             {/* Post Content */}
             <div className="mb-6">
-              <p className="whitespace-pre-wrap wrap-break-word text-sm md:text-base mb-3">
+              <p className="wrap-break-word mb-3 whitespace-pre-wrap text-sm md:text-base">
                 {post.content}
               </p>
-              <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-wider mb-4">
+              <div className="text-muted-foreground mb-4 flex items-center gap-2 text-[10px] uppercase tracking-wider">
                 <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
                 <span>·</span>
                 <span>{post.views} views</span>
               </div>
-              
+
               {post.tags && post.tags.length > 0 && (
-                <div className="flex gap-2 mb-4 flex-wrap">
-                  {post.tags.map((tag) => (
-                    <span key={tag} className="text-primary hover:underline cursor-pointer text-sm">
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {post.tags.map(tag => (
+                    <span
+                      key={tag}
+                      className="text-primary cursor-pointer text-sm hover:underline"
+                    >
                       #{tag}
                     </span>
                   ))}
@@ -210,35 +224,50 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
               )}
             </div>
 
-            <div className="h-px bg-border my-4" />
+            <div className="bg-border my-4 h-px" />
 
             {/* Comments List */}
             <div className="space-y-6 pb-4">
-              <h3 className="text-sm font-semibold mb-4 text-muted-foreground uppercase tracking-tight">Comments ({post.commentsCount})</h3>
+              <h3 className="text-muted-foreground mb-4 text-sm font-semibold uppercase tracking-tight">
+                Comments ({post.commentsCount})
+              </h3>
               {post.comments && post.comments.length > 0 ? (
-                post.comments.map((comment) => (
+                post.comments.map(comment => (
                   <div key={comment._id} className="flex gap-3">
                     <Avatar className="h-8 w-8 shrink-0">
-                      <AvatarImage src={comment.author.avatar} alt={comment.author.fullnames} />
-                      <AvatarFallback>{comment.author.fullnames[0]}</AvatarFallback>
+                      <AvatarImage
+                        src={comment.author.avatar}
+                        alt={comment.author.fullnames}
+                      />
+                      <AvatarFallback>
+                        {comment.author.fullnames[0]}
+                      </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-xs">{comment.author.fullnames}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex items-center gap-2">
+                        <span className="text-xs font-semibold">
+                          {comment.author.fullnames}
+                        </span>
                         <span className="text-muted-foreground text-[10px]">
                           {formatDistanceToNow(new Date(comment.createdAt))}
                         </span>
                       </div>
-                      <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{comment.content}</p>
-                      <div className="flex items-center gap-4 mt-2">
-                        <button className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">Like</button>
-                        <button className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors">Reply</button>
+                      <p className="text-foreground/90 whitespace-pre-wrap text-sm leading-relaxed">
+                        {comment.content}
+                      </p>
+                      <div className="mt-2 flex items-center gap-4">
+                        <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors">
+                          Like
+                        </button>
+                        <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors">
+                          Reply
+                        </button>
                       </div>
                     </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center text-muted-foreground text-sm py-8">
+                <div className="text-muted-foreground py-8 text-center text-sm">
                   No comments yet.
                 </div>
               )}
@@ -246,12 +275,19 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
           </div>
 
           {/* Footer (Actions & Input) */}
-          <div className="p-4 border-t border-border bg-card shrink-0">
+          <div className="border-border bg-card shrink-0 border-t p-4">
             {/* Action Buttons */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="mb-4 flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={handleLike}>
-                  <Heart className={`h-5 w-5 ${post.userReaction?.reactionType === 'LIKE' ? 'fill-red-500 text-red-500' : ''}`} />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={handleLike}
+                >
+                  <Heart
+                    className={`h-5 w-5 ${post.userReaction?.reactionType === 'LIKE' ? 'fill-red-500 text-red-500' : ''}`}
+                  />
                 </Button>
                 <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                   <Repeat2 className="h-5 w-5" />
@@ -260,31 +296,36 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
                   <Bookmark className="h-5 w-5" />
                 </Button>
               </div>
-              <span className="text-xs font-semibold">{post.likesCount} likes</span>
+              <span className="text-xs font-semibold">
+                {post.likesCount} likes
+              </span>
             </div>
 
             {/* Comment Input */}
-            <div className="flex gap-3 items-end">
-              <Avatar className="h-8 w-8 shrink-0 mb-1">
-                <AvatarImage src={currentUser?.avatar} alt={currentUser?.fullnames} />
+            <div className="flex items-end gap-3">
+              <Avatar className="mb-1 h-8 w-8 shrink-0">
+                <AvatarImage
+                  src={currentUser?.avatar}
+                  alt={currentUser?.fullnames}
+                />
                 <AvatarFallback>{currentUser?.fullnames?.[0]}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 flex gap-2">
+              <div className="flex flex-1 gap-2">
                 <Textarea
                   placeholder="Add a comment..."
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[40px] max-h-[120px] resize-none text-sm bg-accent/30 border-none focus-visible:ring-1 focus-visible:ring-primary/50"
-                  onKeyDown={(e) => {
+                  onChange={e => setNewComment(e.target.value)}
+                  className="bg-accent/30 focus-visible:ring-primary/50 max-h-[120px] min-h-[40px] resize-none border-none text-sm focus-visible:ring-1"
+                  onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleAddComment();
                     }
                   }}
                 />
-                <Button 
-                  size="sm" 
-                  className="h-9 px-4 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 rounded-lg px-4 font-medium"
                   disabled={!newComment.trim()}
                   onClick={handleAddComment}
                 >
