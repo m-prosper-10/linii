@@ -16,8 +16,9 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/app/components/ui/tabs';
-import { Hash, Search, TrendingUp, Users, Loader2 } from 'lucide-react';
+import { Hash, Search, TrendingUp, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import ExploreSkeleton from '@/app/components/skeletons/ExploreSkeleton';
 import { PostService, PostApiType } from '@/services/post';
 import { socialService } from '@/services/social';
 import { analyticsService, TrendingTopic } from '@/services/analytics';
@@ -162,10 +163,7 @@ export function ExploreView() {
 
         <TabsContent value="trending" className="mt-0">
           {loading ? (
-            <div className="text-muted-foreground flex items-center justify-center p-12">
-              <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Searching...
-            </div>
+            <ExploreSkeleton />
           ) : posts.length > 0 ? (
             <div>
               {searchQuery && (

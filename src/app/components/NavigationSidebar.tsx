@@ -6,7 +6,7 @@ import { useApp } from '@/context/AppContext';
 import { BarChart3, Bell, Compass, Home, Mail, PenSquare, Settings, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { cn } from '@/app/components/ui/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
 
@@ -23,16 +23,14 @@ const navigationItems = [
 export function NavigationSidebar() {
   const { currentUser, isSidebarCollapsed, setIsSidebarCollapsed } = useApp();
   const pathname = usePathname();
-  const [lastAutoPath, setLastAutoPath] = useState<string | null>(null);
 
-  if (pathname !== lastAutoPath) {
-    setLastAutoPath(pathname || '');
+  useEffect(() => {
     if (pathname?.startsWith('/messages')) {
       setIsSidebarCollapsed(true);
     } else {
       setIsSidebarCollapsed(false);
     }
-  }
+  }, [pathname, setIsSidebarCollapsed]);
 
   const toggleCollapse = () => {
     setIsSidebarCollapsed(!isSidebarCollapsed);

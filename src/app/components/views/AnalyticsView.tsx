@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { PostCard } from '@/app/components/PostCard';
 import { PostDetailModal } from '@/app/components/PostDetailModal';
 import {
@@ -10,9 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/app/components/ui/card';
-import { mockAnalytics } from '@/data/mockData';
+import { format } from 'date-fns';
+import { useApp } from '@/context/AppContext';
+import { analyticsService, UserAnalytics } from '@/services/analytics';
+import { PostService, PostApiType } from '@/services/post';
+import AnalyticsSkeleton from '@/app/components/skeletons/AnalyticsSkeleton';
 import { Eye, Heart, MessageCircle, TrendingUp, Users } from 'lucide-react';
-import { PostApiType } from '@/services/post';
 import {
   Area,
   AreaChart,
@@ -27,33 +30,49 @@ import {
 } from 'recharts';
 
 export function AnalyticsView() {
+  const { currentUser } = useApp();
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [analytics, setAnalytics] = useState<UserAnalytics | null>(null);
+  const [topPosts, setTopPosts] = useState<PostApiType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Map mock top posts to PostApiType for compatibility with updated PostCard
-  const topPosts = mockAnalytics.topPosts.map(
-    post =>
-      ({
-        _id: post.id,
-        author: {
-          _id: post.author.id,
-          fullnames: post.author.displayName,
-          username: post.author.username,
-          avatar: post.author.avatar,
-          verified: post.author.verified,
-        },
-        content: post.content,
-        media: post.image ? [{ url: post.image, type: 'IMAGE' }] : [],
-        likesCount: post.likes,
-        commentsCount: post.comments,
-        sharesCount: post.reposts,
-        views: post.reach,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        tags: post.tags || [],
-        userReaction: post.isLiked ? { reactionType: 'LIKE' } : undefined,
-        userShared: post.isReposted,
-      }) as unknown as PostApiType
-  );
+  const fetchAnalytics = useCallback(async () => {
+    if (!currentUser?._id) return;
+    setLoading(true);
+    try {
+      const data = await analyticsService.getUserAnalytics(currentUser._id);
+      setAnalytics(data);
+      
+      // Fetch details for top performing posts
+      if (data.topPerformingPosts?.length > 0) {
+        const postPromises = data.topPerformingPosts.map((p: { postId: string }) => 
+          PostService.getPost(p.postId).catch(() => null)
+        );
+        const posts = await Promise.all(postPromises);
+        setTopPosts(posts.filter((p): p is PostApiType => p !== null));
+      }
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentUser?._id]);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  if (loading && !analytics) {
+    return <AnalyticsSkeleton />;
+  }
+
+  if (!analytics) {
+    return (
+      <div className="flex h-[calc(100vh-4rem)] items-center justify-center text-muted-foreground">
+        No analytics data available
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl pb-20">
@@ -78,10 +97,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalPosts}
+                {analytics.totalPosts}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +12% from last month
+                Lifetime content
               </p>
             </CardContent>
           </Card>
@@ -95,10 +114,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalLikes.toLocaleString()}
+                {analytics.totalLikesReceived.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +18% from last month
+                Received across posts
               </p>
             </CardContent>
           </Card>
@@ -112,10 +131,10 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalComments.toLocaleString()}
+                {analytics.totalCommentsReceived.toLocaleString()}
               </div>
               <p className="text-muted-foreground text-xs font-semibold opacity-60">
-                +24% from last month
+                Audience engagement
               </p>
             </CardContent>
           </Card>
@@ -129,11 +148,11 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {mockAnalytics.totalFollowers.toLocaleString()}
+                {analytics.totalFollowers.toLocaleString()}
               </div>
               <p className="flex items-center gap-1 text-xs font-bold text-green-500">
-                <TrendingUp className="h-3 w-3" />+
-                {mockAnalytics.followerGrowth}% growth
+                <TrendingUp className="h-3 w-3" />
+                {analytics.engagementRate.toFixed(1)}% ER
               </p>
             </CardContent>
           </Card>
@@ -150,7 +169,7 @@ export function AnalyticsView() {
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
-                data={mockAnalytics.postPerformance}
+                data={analytics.growthMetrics.engagementGrowth}
                 margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
               >
                 <CartesianGrid
@@ -175,7 +194,7 @@ export function AnalyticsView() {
                   tickLine={false}
                   axisLine={false}
                   tickMargin={8}
-                  tickFormatter={value => value.toLocaleString()}
+                  tickFormatter={value => `${value}%`}
                 />
                 <Tooltip
                   contentStyle={{
@@ -213,28 +232,10 @@ export function AnalyticsView() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="views"
+                  dataKey="rate"
                   stroke="hsl(var(--primary))"
                   strokeWidth={3}
-                  name="Views"
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="engagement"
-                  stroke="hsl(var(--accent-foreground))"
-                  strokeWidth={3}
-                  name="Engagement"
-                  dot={false}
-                  activeDot={{ r: 6, strokeWidth: 0 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="likes"
-                  stroke="rgb(239, 68, 68)"
-                  strokeWidth={3}
-                  name="Likes"
+                  name="Engagement Rate"
                   dot={false}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                 />
@@ -257,7 +258,7 @@ export function AnalyticsView() {
             </CardHeader>
             <CardContent className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={mockAnalytics.audienceGrowth}>
+                <AreaChart data={analytics.growthMetrics.followersGrowth}>
                   <defs>
                     <linearGradient
                       id="colorFollowers"
@@ -284,10 +285,11 @@ export function AnalyticsView() {
                     opacity={0.2}
                   />
                   <XAxis
-                    dataKey="month"
+                    dataKey="date"
                     stroke="hsl(var(--muted-foreground))"
                     fontSize={11}
                     fontWeight={600}
+                    tickFormatter={str => format(new Date(str), 'MMM d')}
                   />
                   <YAxis
                     stroke="hsl(var(--muted-foreground))"
@@ -298,7 +300,7 @@ export function AnalyticsView() {
                   <Tooltip />
                   <Area
                     type="monotone"
-                    dataKey="followers"
+                    dataKey="count"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     fillOpacity={1}

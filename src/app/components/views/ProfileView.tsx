@@ -21,13 +21,13 @@ import {
   Edit,
   Link as LinkIcon,
   MapPin,
-  Loader2,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authService, User as ApiUser } from '@/services/auth';
 import { PostService, PostApiType } from '@/services/post';
 import { socialService } from '@/services/social';
+import ProfileSkeleton from '@/app/components/skeletons/ProfileSkeleton';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 
@@ -101,11 +101,7 @@ export function ProfileView() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex min-h-[400px] items-center justify-center">
-        <Loader2 className="text-primary h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <ProfileSkeleton />;
   }
 
   if (!user) {

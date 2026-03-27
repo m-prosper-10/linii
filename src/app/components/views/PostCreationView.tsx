@@ -18,22 +18,43 @@ import {
   X,
   Sparkles,
   Loader2,
+  TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 
+// New Components
+import { PostPollCreator } from '@/app/components/post/PostPollCreator';
+import { PostMediaPreview } from '@/app/components/post/PostMediaPreview';
+import { PostEmojiPicker } from '@/app/components/post/PostEmojiPicker';
+
 export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
   const [content, setContent] = useState('');
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: string }>>([]);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+
+  // Poll state
+  const [isPollMode, setIsPollMode] = useState(false);
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptions, setPollOptions] = useState(['', '']);
+
+  // Additional features
+  const [locationName, setLocationName] = useState('');
+  const [scheduledDate, setScheduledDate] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const removeMedia = useCallback((index: number) => {
+    setSelectedMedia(prev => prev.filter((_, i) => i !== index));
+    setSelectedMediaFiles(prev => prev.filter((_, i) => i !== index));
+  }, []);
 
   if (loading) {
     return (
@@ -84,25 +105,56 @@ export function PostCreationView() {
   };
 
   const handlePost = async () => {
-    if (!content.trim()) return;
+    if (!content.trim() && !selectedMediaFiles.length && !isPollMode) return;
+    if (
+      isPollMode &&
+      (!pollQuestion.trim() || pollOptions.some(opt => !opt.trim()))
+    ) {
+      toast.error('Please fill in the poll question and all options');
+      return;
+    }
 
     setIsPosting(true);
 
     try {
+      const tags =
+        content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
+
+      const postType = isPollMode
+        ? 'POLL'
+        : selectedMediaFiles.length > 0
+          ? selectedMediaFiles[0].type.startsWith('video/')
+            ? 'VIDEO'
+            : 'IMAGE'
+          : 'TEXT';
+
       await PostService.createPost({
-        content: content.trim(),
-        postType:
-          selectedMediaFiles.length > 0
-            ? selectedMediaFiles[0].type.startsWith('video/')
-              ? 'VIDEO'
-              : 'IMAGE'
-            : 'TEXT',
+        content: content.trim() || (isPollMode ? pollQuestion : ''),
+        postType,
         mediaFiles: selectedMediaFiles,
+        poll: isPollMode
+          ? {
+              question: pollQuestion.trim(),
+              options: pollOptions.filter(opt => opt.trim()),
+              allowMultiple: false,
+            }
+          : undefined,
+        location: locationName
+          ? { name: locationName, coordinates: [0, 0] }
+          : undefined,
+        scheduledFor: scheduledDate ? new Date(scheduledDate) : undefined,
+        tags,
       });
+
       toast.success('Post created successfully!');
       setContent('');
-      setSelectedImage(null);
+      setSelectedMedia([]);
       setSelectedMediaFiles([]);
+      setIsPollMode(false);
+      setPollQuestion('');
+      setPollOptions(['', '']);
+      setLocationName('');
+      setScheduledDate(null);
       router.push('/home');
     } catch (error) {
       toast.error((error as Error).message || 'Failed to create post');
@@ -112,46 +164,74 @@ export function PostCreationView() {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedMediaFiles([file]);
+  const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Limit to 4 total items
+    const remainingSlots = 4 - selectedMediaFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      toast.info('Maximum 4 media items allowed');
+    }
+
+    filesToAdd.forEach(file => {
+      const type = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+      setSelectedMediaFiles(prev => [...prev, file]);
+
       const reader = new FileReader();
-      reader.onload = e => {
-        setSelectedImage(e.target?.result as string);
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        setSelectedMedia(prev => [
+          ...prev,
+          {
+            url: e.target?.result as string,
+            type,
+          },
+        ]);
       };
       reader.readAsDataURL(file);
 
-      // Trigger AI analysis (Disabled per user request)
-      // handleImageAnalysis(file);
-    }
+      if (type === 'IMAGE') {
+        handleImageAnalysis(file);
+      }
+    });
+
+    // Reset input
+    e.target.value = '';
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setSelectedMediaFiles([]);
+  const onEmojiSelect = (emoji: string) => {
+    setContent(prev => prev + emoji);
   };
 
   const characterCount = content.length;
   const maxCharacters = 280;
   const isOverLimit = characterCount > maxCharacters;
-  const canPost = content.trim().length > 0 && !isOverLimit && !isPosting;
+  const canPost =
+    (content.trim().length > 0 ||
+      selectedMediaFiles.length > 0 ||
+      (isPollMode &&
+        pollQuestion.trim().length > 0 &&
+        pollOptions.every(opt => opt.trim().length > 0))) &&
+    !isOverLimit &&
+    !isPosting;
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/home')}
-            >
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h2 className="text-xl font-semibold">Create Post</h2>
           </div>
-          <Button onClick={handlePost} disabled={!canPost} className="px-6">
+          <Button
+            onClick={handlePost}
+            disabled={!canPost}
+            className="rounded-full px-6 font-bold"
+          >
             {isPosting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -180,82 +260,128 @@ export function PostCreationView() {
               value={content}
               onChange={e => setContent(e.target.value)}
               className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
-              maxLength={maxCharacters + 50} // Allow typing over limit to show warning
+              maxLength={maxCharacters + 50}
             />
 
-            {selectedImage && (
-              <div className="relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={selectedImage}
-                  alt="Upload preview"
-                  className="border-border max-h-96 w-full rounded-lg border object-cover"
-                />
-                <Button
+            {isPollMode && (
+              <PostPollCreator
+                question={pollQuestion}
+                setQuestion={setPollQuestion}
+                options={pollOptions}
+                setOptions={setPollOptions}
+                onRemove={() => setIsPollMode(false)}
+              />
+            )}
+
+            {locationName && (
+              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
+                <Badge
                   variant="secondary"
-                  size="sm"
-                  className="absolute right-2 top-2 h-8 w-8 p-0"
-                  onClick={removeImage}
+                  className="bg-primary/10 text-primary gap-1 rounded-lg py-1 pl-1 pr-2"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
+                  <MapPin className="h-3 w-3" />
+                  <span className="text-xs font-bold">{locationName}</span>
+                  <X
+                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
+                    onClick={() => setLocationName('')}
+                  />
+                </Badge>
               </div>
             )}
+
+            {scheduledDate && (
+              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-lg bg-orange-500/10 py-1 pl-1 pr-2 text-orange-500"
+                >
+                  <Calendar className="h-3 w-3" />
+                  <span className="text-xs font-bold">
+                    Scheduled for {new Date(scheduledDate).toLocaleString()}
+                  </span>
+                  <X
+                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
+                    onClick={() => setScheduledDate(null)}
+                  />
+                </Badge>
+              </div>
+            )}
+
+            <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
 
             <div className="border-border flex items-center justify-between border-t pt-4">
               <div className="flex items-center gap-2">
                 <input
                   type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
+                  accept="image/*,video/*"
+                  onChange={handleMediaUpload}
                   className="hidden"
-                  id="image-upload"
+                  id="media-upload"
                 />
-                <label htmlFor="image-upload">
+                <label htmlFor="media-upload">
                   <Button variant="ghost" size="sm" className="gap-2" asChild>
-                    <span className="cursor-pointer">
+                    <span className="text-primary hover:bg-primary/10 cursor-pointer">
                       <ImageIcon className="h-4 w-4" />
-                      Photo
+                      Media
                     </span>
                   </Button>
                 </label>
 
-                <Button variant="ghost" size="sm" className="gap-2" disabled>
-                  <Video className="h-4 w-4" />
-                  Video
-                </Button>
-
-                <Button variant="ghost" size="sm" className="gap-2" disabled>
-                  <MapPin className="h-4 w-4" />
-                  Location
-                </Button>
-
-                <Button variant="ghost" size="sm" className="gap-2" disabled>
-                  <Smile className="h-4 w-4" />
-                  Emoji
-                </Button>
-
-                <Button variant="ghost" size="sm" className="gap-2" disabled>
-                  <Calendar className="h-4 w-4" />
-                  Schedule
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`gap-2 ${isPollMode ? 'text-primary bg-primary/10' : ''}`}
+                  onClick={() => setIsPollMode(!isPollMode)}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Poll
                 </Button>
 
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-primary gap-2"
+                  className="hover:bg-accent/50 gap-2"
+                  onClick={() => {
+                    const loc = prompt('Enter location name:');
+                    if (loc) setLocationName(loc);
+                  }}
+                >
+                  <MapPin className="h-4 w-4 text-rose-500" />
+                  Location
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-accent/50 gap-2"
+                  onClick={() => {
+                    const date = prompt(
+                      'Enter schedule date (YYYY-MM-DD HH:MM):'
+                    );
+                    if (date) setScheduledDate(date);
+                  }}
+                >
+                  <Calendar className="h-4 w-4 text-orange-500" />
+                  <span className="hidden sm:inline">Schedule</span>
+                </Button>
+
+                <PostEmojiPicker onEmojiSelect={onEmojiSelect} />
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-primary hover:bg-primary/10 gap-2"
                   onClick={handleAiEnhance}
                   disabled={isAiLoading || !content.trim()}
                 >
                   {isAiLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
-                      Enhancing...
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4" />
-                      AI Enhance
+                      AI
                     </>
                   )}
                 </Button>
