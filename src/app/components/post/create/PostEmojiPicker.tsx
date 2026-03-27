@@ -1,0 +1,46 @@
+'use client';
+
+import { Button } from '@/app/components/ui/button';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/app/components/ui/popover';
+import { Smile } from 'lucide-react';
+
+interface PostEmojiPickerProps {
+  onEmojiSelect: (emoji: string) => void;
+}
+
+const COMMON_EMOJIS = [
+  '😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '😋', '😛', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤙', '🤟', '🤘', '👍', '👎', '👊', '🤜', '🤛', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦵', '🦿', '🦶', '👣', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
+];
+
+export function PostEmojiPicker({ onEmojiSelect }: PostEmojiPickerProps) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="sm" className="gap-2 hover:bg-accent/50 text-muted-foreground hover:text-primary transition-colors">
+          <Smile className="h-5 w-5 text-yellow-500" />
+          <span className="hidden sm:inline">Emoji</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80 p-0 border-border/50 shadow-2xl rounded-2xl overflow-hidden backdrop-blur-md bg-background/95">
+        <div className="bg-accent/10 p-3 border-b border-border/50">
+          <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Recent Emojis</h3>
+        </div>
+        <div className="grid grid-cols-8 gap-1 p-2 max-h-60 overflow-y-auto custom-scrollbar">
+          {COMMON_EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => onEmojiSelect(emoji)}
+              className="h-9 w-9 flex items-center justify-center text-xl hover:bg-accent rounded-xl transition-all hover:scale-125 active:scale-90"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}

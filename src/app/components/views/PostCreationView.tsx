@@ -28,9 +28,9 @@ import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 
 // New Components
-import { PostPollCreator } from '@/app/components/post/PostPollCreator';
-import { PostMediaPreview } from '@/app/components/post/PostMediaPreview';
-import { PostEmojiPicker } from '@/app/components/post/PostEmojiPicker';
+import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
+import { PostMediaPreview } from '@/app/components/post/create/PostMediaPreview';
+import { PostEmojiPicker } from '@/app/components/post/create/PostEmojiPicker';
 
 export function PostCreationView() {
   const router = useRouter();

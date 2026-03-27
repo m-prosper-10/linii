@@ -1,7 +1,7 @@
 "use client";
 
-import { PostCard } from '@/app/components/PostCard';
-import { PostDetailModal } from '@/app/components/PostDetailModal';
+import { PostCard } from '@/app/components/post/PostCard';
+import { PostDetailModal } from '@/app/components/post/PostDetailModal';
 import { Button } from '@/app/components/ui/button';
 import PostSkeleton from '@/app/components/skeletons/PostSkeleton';
 import { Sparkles } from 'lucide-react';

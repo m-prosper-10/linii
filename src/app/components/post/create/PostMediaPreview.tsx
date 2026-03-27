@@ -17,18 +17,18 @@ export function PostMediaPreview({ media, onRemove }: PostMediaPreviewProps) {
   return (
     <div
       className={cn(
-        "grid gap-2 overflow-hidden rounded-2xl border border-border/50 shadow-2xl animate-in zoom-in-95 duration-300",
-        count === 1 ? "grid-cols-1" : "grid-cols-2",
-        count >= 2 ? "aspect-video" : ""
+        'grid gap-2 overflow-hidden rounded-2xl border border-border/50 shadow-2xl animate-in zoom-in-95 duration-300',
+        count === 1 ? 'grid-cols-1' : 'grid-cols-2',
+        count >= 2 ? 'aspect-video' : ''
       )}
     >
       {media.map((item, index) => (
-        <div 
-          key={index} 
+        <div
+          key={index}
           className={cn(
-            "relative group overflow-hidden bg-accent/20",
-            count === 3 && index === 0 ? "row-span-2 h-full" : "h-full w-full",
-            count === 1 ? "aspect-auto max-h-[500px]" : ""
+            'relative group overflow-hidden bg-accent/20',
+            count === 3 && index === 0 ? 'row-span-2 h-full' : 'h-full w-full',
+            count === 1 ? 'aspect-auto max-h-[500px]' : ''
           )}
         >
           {item.type === 'IMAGE' ? (
