@@ -30,8 +30,8 @@ export function PostContent({
               remarkPlugins={[remarkGfm]}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
               components={{
-                p: ({_node, ...props}: any) => <p className="mb-2 last:mb-0 whitespace-pre-wrap break-words" {...props} />,
-                a: ({_node, ...props}: any) => <a className="text-primary hover:underline break-words" target="_blank" rel="noopener noreferrer" {...props} />,
+                p: ({_node, ...props}: any) => <p className="mb-2 last:mb-0 whitespace-pre-wrap wrap-break-word" {...props} />,
+                a: ({_node, ...props}: any) => <a className="text-primary hover:underline wrap-break-word" target="_blank" rel="noopener noreferrer" {...props} />,
                 ul: ({_node, ...props}: any) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
                 ol: ({_node, ...props}: any) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
                 li: ({_node, ...props}: any) => <li className="" {...props} />,

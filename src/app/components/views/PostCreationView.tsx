@@ -8,6 +8,7 @@ import {
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { Calendar as CalendarUI } from '@/app/components/ui/calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
@@ -24,10 +25,14 @@ import {
   Link2,
   Code,
   List,
+  Globe,
+  Users,
+  Lock,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { cn } from '@/app/components/ui/utils';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
@@ -58,6 +63,34 @@ export function PostCreationView() {
   // Additional features
   const [locationName, setLocationName] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('linii_post_draft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.content) setContent(draft.content);
+        if (draft.visibility) setVisibility(draft.visibility);
+      } catch (e) {
+        console.error('Failed to parse draft', e);
+      }
+    }
+  }, []);
+
+  // Save draft on content/visibility change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (content.trim()) {
+        localStorage.setItem('linii_post_draft', JSON.stringify({ content, visibility }));
+      } else {
+        localStorage.removeItem('linii_post_draft');
+      }
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [content, visibility]);
 
   const removeMedia = useCallback((index: number) => {
     setSelectedMedia(prev => prev.filter((_, i) => i !== index));
@@ -169,6 +202,7 @@ export function PostCreationView() {
       await PostService.createPost({
         content: content.trim() || (isPollMode ? pollQuestion : ''),
         postType,
+        visibility,
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
@@ -196,6 +230,8 @@ export function PostCreationView() {
       setPollExpiresAt('1d');
       setLocationName('');
       setScheduledDate(undefined);
+      setVisibility('PUBLIC');
+      localStorage.removeItem('linii_post_draft');
       router.push('/home');
     } catch (error) {
       toast.error((error as Error).message || 'Failed to create post');
@@ -268,8 +304,28 @@ export function PostCreationView() {
             </Button>
             <h2 className="text-xl font-semibold">Create Post</h2>
           </div>
-          <Button
-            onClick={handlePost}
+          <div className="flex items-center gap-2">
+            {(content.trim() || selectedMediaFiles.length > 0 || isPollMode) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (confirm('Are you sure you want to clear this post?')) {
+                    setContent('');
+                    setSelectedMedia([]);
+                    setSelectedMediaFiles([]);
+                    setIsPollMode(false);
+                    setLocationName('');
+                    setScheduledDate(undefined);
+                  }
+                }}
+                className="text-muted-foreground hover:text-destructive hidden sm:flex"
+              >
+                Clear
+              </Button>
+            )}
+            <Button
+              onClick={handlePost}
             disabled={!canPost}
             className="rounded-full px-6 font-bold"
           >
@@ -296,6 +352,27 @@ export function PostCreationView() {
           </Avatar>
 
           <div className="flex-1 space-y-4">
+            {/* User Info & Visibility Selector */}
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-semibold text-[15px]">{currentUser.displayName}</span>
+              <Select value={visibility} onValueChange={(v: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => setVisibility(v)}>
+                <SelectTrigger className="h-6 gap-1 rounded-full border-border/50 bg-transparent px-2 text-xs font-medium focus:ring-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="PUBLIC">
+                    <div className="flex items-center gap-2"><Globe className="h-3 w-3"/> Public</div>
+                  </SelectItem>
+                  <SelectItem value="FRIENDS">
+                    <div className="flex items-center gap-2"><Users className="h-3 w-3"/> Friends</div>
+                  </SelectItem>
+                  <SelectItem value="PRIVATE">
+                    <div className="flex items-center gap-2"><Lock className="h-3 w-3"/> Only me</div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {!isPollMode && (
               <div className="flex flex-col rounded-xl border border-border/40 bg-accent/5 overflow-hidden focus-within:ring-1 focus-within:ring-primary/20 transition-all">
                 {/* Markdown Toolbar */}
@@ -318,6 +395,8 @@ export function PostCreationView() {
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="text-xs">Italic</TooltipContent>
                     </Tooltip>
+
+                    <div className="w-[1px] h-4 bg-border/40 mx-1" />
 
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -345,17 +424,46 @@ export function PostCreationView() {
                       </TooltipTrigger>
                       <TooltipContent side="bottom" className="text-xs">List</TooltipContent>
                     </Tooltip>
+
+                    <div className="w-[1px] h-4 bg-border/40 mx-1" />
+
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant={isPreviewMode ? "secondary" : "ghost"}
+                          size="sm" 
+                          className={cn(
+                            "h-7 px-2 text-[10px] font-bold uppercase tracking-wider rounded-sm",
+                            isPreviewMode ? "text-primary bg-primary/10" : "text-foreground/70 hover:text-foreground hover:bg-accent/40"
+                          )}
+                          onClick={() => setIsPreviewMode(!isPreviewMode)}
+                        >
+                          {isPreviewMode ? "Edit" : "Preview"}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">Toggle Markdown Preview</TooltipContent>
+                    </Tooltip>
                   </TooltipProvider>
                 </div>
                 
-                <Textarea
-                  ref={textareaRef}
-                  placeholder="What's on your mind? (Markdown supported)"
-                  value={content}
-                  onChange={e => setContent(e.target.value)}
-                  className="min-h-[120px] resize-none border-none bg-transparent px-4 py-3 text-[16px] leading-relaxed focus-visible:ring-0 shadow-none"
-                  maxLength={maxCharacters + 50}
-                />
+                {isPreviewMode ? (
+                  <div className="min-h-[120px] px-4 py-3 prose prose-invert max-w-none text-foreground/90 overflow-hidden">
+                    {/* Reuse PostContent rendering logic if possible, or just ReactMarkdown */}
+                    {/* For now, just a placeholder or simple div */}
+                    <div className="text-[16px] leading-relaxed italic text-muted-foreground/60">
+                      {content ? "Markdown Preview (Experimental)" : "Nothing to preview"}
+                    </div>
+                  </div>
+                ) : (
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="What's on your mind? (Markdown supported)"
+                    value={content}
+                    onChange={e => setContent(e.target.value)}
+                    className="min-h-[120px] resize-none border-none bg-transparent px-4 py-3 text-[16px] leading-relaxed focus-visible:ring-0 shadow-none"
+                    maxLength={maxCharacters + 50}
+                  />
+                )}
               </div>
             )}
 
@@ -534,15 +642,55 @@ export function PostCreationView() {
               </TooltipProvider>
 
               <div className="flex items-center gap-3">
-                <div
-                  className={`text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}
-                >
-                  {characterCount}/{maxCharacters}
+                {content.trim() && (
+                  <span className="text-[11px] text-muted-foreground/60 animate-pulse hidden sm:inline">
+                    Draft saved
+                  </span>
+                )}
+                <div className="relative flex items-center justify-center">
+                  <svg className="h-9 w-9 -rotate-90 transform">
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      fill="transparent"
+                      className="text-border/30"
+                    />
+                    <circle
+                      cx="18"
+                      cy="18"
+                      r="14"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      fill="transparent"
+                      strokeDasharray={2 * Math.PI * 14}
+                      strokeDashoffset={(1 - Math.min(characterCount / maxCharacters, 1.25)) * (2 * Math.PI * 14)}
+                      className={cn(
+                        "transition-all duration-300",
+                        characterCount > maxCharacters 
+                          ? "text-destructive" 
+                          : characterCount > maxCharacters - 20 
+                            ? "text-orange-500" 
+                            : "text-primary"
+                      )}
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  {characterCount > maxCharacters - 20 && (
+                    <span className={cn(
+                      "absolute text-[10px] font-bold",
+                      isOverLimit ? "text-destructive" : "text-muted-foreground"
+                    )}>
+                      {maxCharacters - characterCount}
+                    </span>
+                  )}
                 </div>
 
                 {isOverLimit && (
-                  <Badge variant="destructive" className="text-xs">
-                    Over limit
+                  <Badge variant="destructive" className="text-[10px] h-5 px-1.5 uppercase font-bold tracking-tight">
+                    Limit Exceeded
                   </Badge>
                 )}
               </div>
