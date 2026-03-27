@@ -21,9 +21,12 @@ import {
   Sparkles,
   Loader2,
   TrendingUp,
+  Link2,
+  Code,
+  List,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
@@ -42,6 +45,8 @@ export function PostCreationView() {
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Poll state
   const [isPollMode, setIsPollMode] = useState(false);
@@ -105,6 +110,24 @@ export function PostCreationView() {
     } finally {
       setIsAiLoading(false);
     }
+  };
+
+  const insertMarkdown = (prefix: string, suffix: string = '') => {
+    if (!textareaRef.current) return;
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+    const selectedText = content.substring(start, end);
+    const newText = content.substring(0, start) + prefix + (selectedText || (suffix ? 'text' : '')) + suffix + content.substring(end);
+    setContent(newText);
+    
+    // Set cursor position back inside the wrapping
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      textareaRef.current?.setSelectionRange(
+        start + prefix.length,
+        start + prefix.length + (selectedText || (suffix ? 'text' : '')).length
+      );
+    }, 0);
   };
 
   const getExpirationDate = (durationStr: string) => {
@@ -273,13 +296,68 @@ export function PostCreationView() {
           </Avatar>
 
           <div className="flex-1 space-y-4">
-            <Textarea
-              placeholder="What's on your mind?"
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
-              maxLength={maxCharacters + 50}
-            />
+            {!isPollMode && (
+              <div className="flex flex-col rounded-xl border border-border/40 bg-accent/5 overflow-hidden focus-within:ring-1 focus-within:ring-primary/20 transition-all">
+                {/* Markdown Toolbar */}
+                <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/40 bg-accent/10">
+                  <TooltipProvider>
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-foreground/70 hover:text-foreground hover:bg-accent/40" onClick={() => insertMarkdown('**', '**')}>
+                          <span className="font-bold text-[14px]">B</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">Bold</TooltipContent>
+                    </Tooltip>
+                    
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-foreground/70 hover:text-foreground hover:bg-accent/40" onClick={() => insertMarkdown('*', '*')}>
+                          <span className="italic font-serif text-[14px]">I</span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">Italic</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-foreground/70 hover:text-foreground hover:bg-accent/40" onClick={() => insertMarkdown('[', '](url)')}>
+                          <Link2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">Link</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-foreground/70 hover:text-foreground hover:bg-accent/40" onClick={() => insertMarkdown('`', '`')}>
+                          <Code className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">Code</TooltipContent>
+                    </Tooltip>
+
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-sm text-foreground/70 hover:text-foreground hover:bg-accent/40" onClick={() => insertMarkdown('- ')}>
+                          <List className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="text-xs">List</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                
+                <Textarea
+                  ref={textareaRef}
+                  placeholder="What's on your mind? (Markdown supported)"
+                  value={content}
+                  onChange={e => setContent(e.target.value)}
+                  className="min-h-[120px] resize-none border-none bg-transparent px-4 py-3 text-[16px] leading-relaxed focus-visible:ring-0 shadow-none"
+                  maxLength={maxCharacters + 50}
+                />
+              </div>
+            )}
 
             {isPollMode && (
               <PostPollCreator

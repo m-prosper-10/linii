@@ -153,11 +153,13 @@ export function EditProfileView() {
       <div className="space-y-6 p-4">
         {/* Cover Image */}
         <div className="bg-accent group relative h-48 overflow-hidden rounded-lg">
-          <img
-            src={coverPreview || formData.coverImage}
-            alt="Cover"
-            className="h-full w-full object-cover"
-          />
+          {(coverPreview || formData.coverImage) && (
+            <img
+              src={coverPreview || formData.coverImage}
+              alt="Cover"
+              className="h-full w-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
             <label className="cursor-pointer">
               <input

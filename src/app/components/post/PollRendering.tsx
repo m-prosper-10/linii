@@ -32,7 +32,7 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
       const updatedPost = await PostService.votePoll(post._id, optionId);
       onUpdate?.(updatedPost);
       toast.success('Vote recorded!');
-    } catch (_error) {
+    } catch {
       toast.error('Failed to record vote');
     } finally {
       setIsVoting(null);
@@ -41,6 +41,11 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
 
   return (
     <div className="space-y-3 mb-4 bg-accent/5 p-4 rounded-2xl border border-border/40">
+      {poll.question && (
+        <h4 className="font-semibold text-[15px] mb-2 leading-snug text-foreground/90">
+          {poll.question}
+        </h4>
+      )}
       <div className="space-y-2">
         {poll.options.map((option) => {
           const voteCount = option.votes.length;
