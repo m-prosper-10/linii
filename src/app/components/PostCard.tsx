@@ -32,8 +32,7 @@ import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { formatDistanceToNow } from 'date-fns';
-import { MediaGallery } from '@/app/components/post/MediaGallery';
-import { PollRendering } from '@/app/components/post/PollRendering';
+import { PostContent } from '@/app/components/post/PostContent';
 
 interface PostCardProps {
   post: PostApiType;
@@ -73,7 +72,7 @@ export function PostCard({
 
     try {
       await PostService.toggleReaction(post._id, 'LIKE');
-    } catch (_error) {
+    } catch (error) {
       setIsLiked(previousLiked);
       setLikes(previousLiked ? likes : likes - 1);
       toast.error('Failed to update like');
@@ -88,7 +87,7 @@ export function PostCard({
 
     try {
       await PostService.toggleRepost(post._id);
-    } catch (_error) {
+    } catch (error) {
       setIsReposted(previousReposted);
       setReposts(previousReposted ? reposts : reposts - 1);
       toast.error('Failed to update repost');
@@ -111,7 +110,7 @@ export function PostCard({
       await PostService.addComment({ postId: post._id, content });
       setCommentCount(commentCount + 1);
       toast.success('Comment added');
-    } catch (_error) {
+    } catch (error) {
       setNewComment(content);
       toast.error('Failed to add comment');
     }
@@ -213,33 +212,9 @@ export function PostCard({
             </DropdownMenu>
           </div>
 
-          <div className="mb-3">
-            <p className="wrap-break-word text-muted-foreground/90 whitespace-pre-wrap font-normal">
-              {post.content}
-            </p>
-            {post.tags && post.tags.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {post.tags.map(tag => (
-                  <span
-                    key={tag}
-                    className="text-primary/70 cursor-pointer text-sm font-medium hover:underline"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {post.poll && (
-            <PollRendering 
-              post={post} 
-              onUpdate={setPost} 
-            />
-          )}
-
-          <MediaGallery 
-            media={post.media} 
+          <PostContent 
+            post={post} 
+            onUpdate={setPost} 
             onPostClick={() => onPostClick?.(post._id)} 
           />
 
