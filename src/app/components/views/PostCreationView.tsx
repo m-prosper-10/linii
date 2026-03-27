@@ -36,7 +36,7 @@ export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
   const [content, setContent] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<{ url: string; type: 'IMAGE' | 'VIDEO' } | null>(null);
+  const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: 'IMAGE' | 'VIDEO' }>>([]);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -51,9 +51,9 @@ export function PostCreationView() {
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const removeMedia = useCallback(() => {
-    setSelectedMedia(null);
-    setSelectedMediaFiles([]);
+  const removeMedia = useCallback((index: number) => {
+    setSelectedMedia(prev => prev.filter((_, i) => i !== index));
+    setSelectedMediaFiles(prev => prev.filter((_, i) => i !== index));
   }, []);
 
   if (loading) {
@@ -137,7 +137,7 @@ export function PostCreationView() {
 
       toast.success('Post created successfully!');
       setContent('');
-      setSelectedMedia(null);
+      setSelectedMedia([]);
       setSelectedMediaFiles([]);
       setIsPollMode(false);
       setPollQuestion('');
@@ -154,24 +154,37 @@ export function PostCreationView() {
   };
 
   const handleMediaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    // Limit to 4 total items
+    const remainingSlots = 4 - selectedMediaFiles.length;
+    const filesToAdd = files.slice(0, remainingSlots);
+
+    if (files.length > remainingSlots) {
+      toast.info('Maximum 4 media items allowed');
+    }
+
+    filesToAdd.forEach(file => {
       const type = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
-      setSelectedMediaFiles([file]);
+      setSelectedMediaFiles(prev => [...prev, file]);
       
       const reader = new FileReader();
-      reader.onload = e => {
-        setSelectedMedia({
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        setSelectedMedia(prev => [...prev, {
           url: e.target?.result as string,
           type
-        });
+        }]);
       };
       reader.readAsDataURL(file);
 
       if (type === 'IMAGE') {
         handleImageAnalysis(file);
       }
-    }
+    });
+
+    // Reset input
+    e.target.value = '';
   };
 
   const onEmojiSelect = (emoji: string) => {

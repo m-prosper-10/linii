@@ -8,7 +8,16 @@ import {
 } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Textarea } from '@/app/components/ui/textarea';
-import { Heart, Repeat2, Bookmark, X, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  Heart,
+  Repeat2,
+  Bookmark,
+  X,
+  ArrowLeft,
+  Loader2,
+  Reply,
+  Send,
+} from 'lucide-react';
 import { PostService, PostApiType } from '@/services/post';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
@@ -28,6 +37,7 @@ export function PostDetailModal({
   const [post, setPost] = useState<PostApiType | null>(null);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
+  const [isCommenting, setIsCommenting] = useState(false);
   const { currentUser } = useApp();
 
   useEffect(() => {
@@ -79,12 +89,15 @@ export function PostDetailModal({
     setNewComment('');
 
     try {
+      setIsCommenting(true);
       await PostService.addComment({ postId: post._id, content });
       fetchPost(); // Refresh to show new comment
       toast.success('Comment added');
     } catch (_error) {
       setNewComment(content);
       toast.error('Failed to add comment');
+    } finally {
+      setIsCommenting(false);
     }
   };
 
@@ -105,7 +118,7 @@ export function PostDetailModal({
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <Loader2 />
+        <Loader2 className="h-8 w-8" />
       </div>
     );
   }
@@ -257,9 +270,11 @@ export function PostDetailModal({
                       </p>
                       <div className="mt-2 flex items-center gap-4">
                         <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors">
+                          <Heart className="mr-1 inline h-3 w-3" />
                           Like
                         </button>
                         <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors">
+                          <Reply className="mr-1 inline h-3 w-3" />
                           Reply
                         </button>
                       </div>
@@ -315,7 +330,7 @@ export function PostDetailModal({
                   placeholder="Add a comment..."
                   value={newComment}
                   onChange={e => setNewComment(e.target.value)}
-                  className="bg-accent/30 focus-visible:ring-primary/50 max-h-[120px] min-h-[40px] resize-none border-none text-sm focus-visible:ring-1"
+                  className="bg-accent/30 focus-visible:ring-primary/50 border-border max-h-[120px] min-h-[40px] resize-none text-sm focus-visible:ring-1"
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -325,11 +340,15 @@ export function PostDetailModal({
                 />
                 <Button
                   size="sm"
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 rounded-lg px-4 font-medium"
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground h-9 rounded-md px-4 font-medium"
                   disabled={!newComment.trim()}
                   onClick={handleAddComment}
                 >
-                  Post
+                  {isCommenting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
             </div>
