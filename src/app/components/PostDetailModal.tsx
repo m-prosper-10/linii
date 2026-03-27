@@ -25,6 +25,7 @@ import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import useEmblaCarousel from 'embla-carousel-react';
+import { PostContent } from '@/app/components/post/PostContent';
 
 interface PostDetailModalProps {
   postId: string;
@@ -68,7 +69,7 @@ export function PostDetailModal({
       setLoading(true);
       const data = await PostService.getPost(postId);
       setPost(data);
-    } catch (_error) {
+    } catch (error) {
       toast.error('Failed to load post details');
       onClose();
     } finally {
@@ -89,7 +90,7 @@ export function PostDetailModal({
 
     try {
       await PostService.toggleReaction(post._id, 'LIKE');
-    } catch (_error) {
+    } catch (error) {
       // Rollback
       fetchPost();
       toast.error('Failed to update like');
@@ -106,7 +107,7 @@ export function PostDetailModal({
       await PostService.addComment({ postId: post._id, content });
       fetchPost(); // Refresh to show new comment
       toast.success('Comment added');
-    } catch (_error) {
+    } catch (error) {
       setNewComment(content);
       toast.error('Failed to add comment');
     } finally {
@@ -123,7 +124,7 @@ export function PostDetailModal({
       toast.success('Post deleted');
       onDeleted?.(post._id);
       onClose();
-    } catch (_error) {
+    } catch (error) {
       toast.error('Failed to delete post');
     }
   };
@@ -269,29 +270,17 @@ export function PostDetailModal({
 
           {/* Content & Comments (Scrollable) */}
           <div className="custom-scrollbar flex-1 overflow-y-auto p-4">
-            {/* Post Content */}
             <div className="mb-6">
-              <p className="wrap-break-word mb-3 whitespace-pre-wrap text-sm md:text-base">
-                {post.content}
-              </p>
-              <div className="text-muted-foreground mb-4 flex items-center gap-2 text-[10px] uppercase tracking-wider">
+              <PostContent 
+                post={post} 
+                onUpdate={setPost} 
+                hideMedia 
+              />
+              <div className="text-muted-foreground mb-4 mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wider opacity-60">
                 <span>{formatDistanceToNow(new Date(post.createdAt))} ago</span>
                 <span>·</span>
                 <span>{post.views} views</span>
               </div>
-
-              {post.tags && post.tags.length > 0 && (
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {post.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="text-primary cursor-pointer text-sm hover:underline"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="bg-border my-4 h-px" />

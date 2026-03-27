@@ -20,7 +20,9 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
 
   const totalVotes = poll.totalVotes || 0;
   const hasVoted = !!poll.userVotedOptionId;
-  const isExpired = new Date(poll.expiresAt) < new Date();
+  const expiresAtDate = new Date(poll.expiresAt);
+  const isValidDate = !isNaN(expiresAtDate.getTime());
+  const isExpired = isValidDate && expiresAtDate < new Date();
 
   const handleVote = async (optionId: string) => {
     if (hasVoted || isExpired || isVoting) return;
@@ -99,7 +101,9 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
         <span>
           {isExpired 
             ? 'Poll ended' 
-            : `Ends ${formatDistanceToNow(new Date(poll.expiresAt), { addSuffix: true })}`
+            : isValidDate 
+              ? `Ends ${formatDistanceToNow(expiresAtDate, { addSuffix: true })}`
+              : 'Ending soon'
           }
         </span>
       </div>
