@@ -46,6 +46,18 @@ export interface PostApiType {
   };
   userShared?: boolean;
   createdAt: string;
+  poll?: {
+    _id: string;
+    question: string;
+    options: Array<{
+      _id: string;
+      text: string;
+      votes: string[]; // user ids
+    }>;
+    expiresAt: string;
+    totalVotes: number;
+    userVotedOptionId?: string;
+  };
 }
 
 export interface PostsResponse {
@@ -186,5 +198,13 @@ export class PostService {
   static async searchPosts(query: string, page = 1, limit = 20): Promise<PostsResponse> {
     const response = await apiClient.get<PostsResponse>(`/posts/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
     return response.data!;
+  }
+
+  static async votePoll(postId: string, optionId: string): Promise<PostApiType> {
+    const response = await apiClient.post<{ data: { post: PostApiType } }>(
+      `/posts/${postId}/vote`,
+      { optionId }
+    );
+    return response.data!.data.post;
   }
 }

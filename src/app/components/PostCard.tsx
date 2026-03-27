@@ -33,6 +33,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { formatDistanceToNow } from 'date-fns';
 import { MediaGallery } from '@/app/components/post/MediaGallery';
+import { PollRendering } from '@/app/components/post/PollRendering';
 
 interface PostCardProps {
   post: PostApiType;
@@ -42,12 +43,13 @@ interface PostCardProps {
 }
 
 export function PostCard({
-  post,
+  post: initialPost,
   onUserClick,
   onPostClick,
   onDeleted,
 }: PostCardProps) {
   const { currentUser: appUser } = useApp();
+  const [post, setPost] = useState(initialPost);
 
   const [isLiked, setIsLiked] = useState(
     post.userReaction?.reactionType === 'LIKE'
@@ -228,6 +230,13 @@ export function PostCard({
               </div>
             )}
           </div>
+
+          {post.poll && (
+            <PollRendering 
+              post={post} 
+              onUpdate={setPost} 
+            />
+          )}
 
           <MediaGallery 
             media={post.media} 
