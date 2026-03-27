@@ -2,14 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Button } from '@/app/components/ui/button';
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  Loader2,
-  Repeat2,
-  X,
-} from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Repeat2, X } from 'lucide-react';
 import { PostService, PostApiType } from '@/services/post';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
@@ -29,7 +22,11 @@ interface PostDetailModalProps {
   onDeleted?: (postId: string) => void;
 }
 
-export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalProps) {
+export function PostDetailModal({
+  postId,
+  onClose,
+  onDeleted,
+}: PostDetailModalProps) {
   const [post, setPost] = useState<PostApiType | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -44,7 +41,9 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   useEffect(() => {
     fetchPost();
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = 'unset'; };
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
@@ -89,11 +88,11 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-0 backdrop-blur-md md:p-4">
       <div className="bg-card relative flex max-h-full min-h-[500px] w-full max-w-6xl flex-col overflow-hidden rounded-none shadow-2xl md:max-h-[85vh] md:flex-row md:rounded-2xl">
-
         {/* Mobile close */}
         <Button
-          variant="ghost" size="icon"
-          className="absolute left-4 top-4 z-10 rounded-full text-white bg-black/20 hover:bg-black/40 md:hidden"
+          variant="ghost"
+          size="icon"
+          className="absolute left-4 top-4 z-10 rounded-full bg-black/20 text-white hover:bg-black/40 md:hidden"
           onClick={onClose}
         >
           <ArrowLeft className="h-5 w-5" />
@@ -101,25 +100,30 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
 
         {/* Desktop close */}
         <Button
-          variant="ghost" size="icon"
-          className="hover:text-foreground absolute right-4 top-4 z-10 hidden md:flex bg-background/50 backdrop-blur-sm rounded-full h-10 w-10 border border-border/50"
+          variant="ghost"
+          size="icon"
+          className="hover:text-foreground bg-background/50 border-border/50 absolute right-4 top-4 z-10 hidden h-10 w-10 rounded-full border backdrop-blur-sm md:flex"
           onClick={onClose}
         >
           <X className="h-5 w-5" />
         </Button>
 
         {/* Left: Media carousel */}
-        <div className="bg-black/95 relative flex min-h-[300px] flex-[1.6] items-center justify-center group">
+        <div className="group relative flex min-h-[300px] flex-[1.6] items-center justify-center bg-black/95">
           {hasMedia ? (
             <div className="h-full w-full overflow-hidden" ref={emblaRef}>
               <div className="flex h-full w-full">
                 {post.media.map((item, index) => (
                   <div
                     key={index}
-                    className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center bg-black"
+                    className="relative flex h-full min-w-0 flex-[0_0_100%] items-center justify-center bg-black"
                   >
                     {item.type === 'VIDEO' ? (
-                      <video src={item.url} controls className="max-h-full w-full object-contain" />
+                      <video
+                        src={item.url}
+                        controls
+                        className="max-h-full w-full object-contain"
+                      />
                     ) : (
                       <img
                         src={item.url}
@@ -134,22 +138,27 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
               {post.media.length > 1 && emblaApi && (
                 <>
                   <Button
-                    variant="ghost" size="icon"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-3 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border border-white/10 bg-white/10 text-white opacity-0 transition-opacity hover:bg-white/20 group-hover:opacity-100"
                     onClick={scrollPrev}
                   >
                     <ChevronLeft className="h-6 w-6" />
                   </Button>
                   <Button
-                    variant="ghost" size="icon"
-                    className="absolute right-3 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-3 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full border border-white/10 bg-white/10 text-white opacity-0 transition-opacity hover:bg-white/20 group-hover:opacity-100"
                     onClick={scrollNext}
                   >
                     <ChevronRight className="h-6 w-6" />
                   </Button>
-                  <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
+                  <div className="absolute bottom-5 left-1/2 flex -translate-x-1/2 gap-1.5 rounded-full border border-white/10 bg-black/20 px-3 py-1.5 backdrop-blur-md">
                     {post.media.map((_, i) => (
-                      <div key={i} className="h-1.5 w-1.5 rounded-full bg-white/50" />
+                      <div
+                        key={i}
+                        className="h-1.5 w-1.5 rounded-full bg-white/50"
+                      />
                     ))}
                   </div>
                 </>
@@ -157,11 +166,13 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
             </div>
           ) : (
             <div className="text-muted-foreground flex flex-col items-center gap-3">
-              <div className="h-16 w-16 rounded-3xl bg-accent/20 flex items-center justify-center">
-                <Repeat2 className="h-8 w-8 opacity-40 rotate-12" />
+              <div className="bg-accent/20 flex h-16 w-16 items-center justify-center rounded-3xl">
+                <Repeat2 className="h-8 w-8 rotate-12 opacity-40" />
               </div>
-              <span className="text-xl font-bold tracking-tight">Text Post</span>
-              <p className="px-12 text-center text-sm opacity-50 font-medium">
+              <span className="text-xl font-bold tracking-tight">
+                Text Post
+              </span>
+              <p className="px-12 text-center text-sm font-medium opacity-50">
                 This post contains only expressive text content without media.
               </p>
             </div>
@@ -170,7 +181,6 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
 
         {/* Right: Info panel */}
         <div className="bg-card border-border flex min-w-0 flex-1 flex-col border-l">
-
           <div className="border-border shrink-0 border-b p-4">
             <PostHeader
               post={post}
@@ -203,7 +213,7 @@ export function PostDetailModal({ postId, onClose, onDeleted }: PostDetailModalP
             />
           </div>
 
-          <div className="border-border bg-card shrink-0 border-t p-4 space-y-3">
+          <div className="border-border bg-card shrink-0 space-y-3 border-t p-4">
             <PostActions
               post={post}
               commentCount={commentCount}
