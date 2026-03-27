@@ -56,7 +56,7 @@ export interface PostApiType {
     }>;
     expiresAt: string;
     totalVotes: number;
-    userVotedOptionId?: string;
+    userVoted?: string[]; // array of option IDs
   };
 }
 
@@ -203,7 +203,7 @@ export class PostService {
   static async votePoll(postId: string, optionId: string): Promise<PostApiType> {
     const response = await apiClient.post<{ data: { post: PostApiType } }>(
       `/posts/${postId}/vote`,
-      { optionId }
+      { optionIds: [optionId] }
     );
     return response.data!.data.post;
   }

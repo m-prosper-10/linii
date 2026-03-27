@@ -141,7 +141,7 @@ export function PostCard({
     >
       <div className="flex gap-3">
         <div
-          className="cursor-pointer"
+          className="cursor-pointer border"
           onClick={e => {
             e.stopPropagation();
             onUserClick?.(post.author._id);

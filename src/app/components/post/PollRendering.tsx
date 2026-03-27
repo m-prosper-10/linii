@@ -19,7 +19,7 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
   if (!poll) return null;
 
   const totalVotes = poll.totalVotes || 0;
-  const hasVoted = !!poll.userVotedOptionId;
+  const hasVoted = !!poll.userVoted?.length;
   const expiresAtDate = new Date(poll.expiresAt);
   const isValidDate = !isNaN(expiresAtDate.getTime());
   const isExpired = isValidDate && expiresAtDate < new Date();
@@ -32,7 +32,7 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
       const updatedPost = await PostService.votePoll(post._id, optionId);
       onUpdate?.(updatedPost);
       toast.success('Vote recorded!');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to record vote');
     } finally {
       setIsVoting(null);
@@ -45,7 +45,7 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
         {poll.options.map((option) => {
           const voteCount = option.votes.length;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
-          const isSelected = poll.userVotedOptionId === option._id;
+          const isSelected = poll.userVoted?.includes(option._id);
 
           return (
             <button
