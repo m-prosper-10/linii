@@ -57,9 +57,9 @@ export function NavigationSidebar() {
             )}
           </Link>
           {!isSidebarCollapsed && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleCollapse}
               className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
             >
@@ -67,9 +67,9 @@ export function NavigationSidebar() {
             </Button>
           )}
           {isSidebarCollapsed && (
-            <Button 
-              variant="ghost" 
-              size="icon" 
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleCollapse}
               className="absolute -right-4 top-10 h-8 w-8 bg-background border border-border rounded-full shadow-md z-50 text-muted-foreground hover:text-foreground hover:scale-110 transition-all opacity-0 group-hover:opacity-100 flex items-center justify-center"
             >
@@ -82,7 +82,7 @@ export function NavigationSidebar() {
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname?.startsWith(item.href);
-            
+
             const content = (
               <Button
                 key={item.href}
@@ -104,9 +104,7 @@ export function NavigationSidebar() {
             if (isSidebarCollapsed) {
               return (
                 <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>
-                    {content}
-                  </TooltipTrigger>
+                  <TooltipTrigger asChild>{content}</TooltipTrigger>
                   <TooltipContent side="right" className="font-semibold px-4 py-2 bg-primary text-primary-foreground">
                     {item.label}
                   </TooltipContent>
@@ -121,7 +119,7 @@ export function NavigationSidebar() {
         <div className="mt-auto space-y-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
+              <Button
                 className={cn(
                   "w-full h-12 rounded-xl font-semibold transition-all",
                   isSidebarCollapsed ? "px-0" : "gap-3"
@@ -148,7 +146,7 @@ export function NavigationSidebar() {
             {currentUser ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link 
+                  <Link
                     href="/profile"
                     className={cn(
                       "flex items-center gap-3 p-2 rounded-xl hover:bg-accent/50 group transition-all duration-300",

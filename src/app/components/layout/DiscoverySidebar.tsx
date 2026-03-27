@@ -20,8 +20,8 @@ export function DiscoverySidebar() {
     <div className="sticky top-0 h-screen flex flex-col p-4 space-y-4">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input 
-          placeholder="Search..." 
+        <Input
+          placeholder="Search..."
           className="pl-9 bg-accent/50 border-0"
         />
       </div>
@@ -33,8 +33,8 @@ export function DiscoverySidebar() {
         </h3>
         <div className="space-y-3">
           {mockTrendingTopics.map((topic) => (
-            <div 
-              key={topic.id} 
+            <div
+              key={topic.id}
               className="cursor-pointer hover:bg-accent/50 p-2 rounded-md transition-colors"
             >
               <div className="flex items-start justify-between">
@@ -59,17 +59,14 @@ export function DiscoverySidebar() {
         <div className="space-y-4">
           {mockUsers.slice(0, 3).map((user) => (
             <div key={user.id} className="flex items-center gap-3">
-              <div 
-                className="cursor-pointer"
-                onClick={() => handleUserClick(user.id)}
-              >
+              <div className="cursor-pointer" onClick={() => handleUserClick(user.id)}>
                 <Avatar className="w-10 h-10">
                   <AvatarImage src={user.avatar} alt={user.displayName} />
                   <AvatarFallback>{user.displayName[0]}</AvatarFallback>
                 </Avatar>
               </div>
               <div className="flex-1 min-w-0">
-                <div 
+                <div
                   className="flex items-center gap-1 cursor-pointer hover:underline"
                   onClick={() => handleUserClick(user.id)}
                 >
@@ -80,9 +77,7 @@ export function DiscoverySidebar() {
                 </div>
                 <div className="text-sm text-muted-foreground truncate">@{user.username}</div>
               </div>
-              <Button size="sm" variant="outline">
-                Follow
-              </Button>
+              <Button size="sm" variant="outline">Follow</Button>
             </div>
           ))}
         </div>

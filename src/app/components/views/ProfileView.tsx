@@ -1,7 +1,7 @@
 'use client';
 
-import { PostCard } from '@/app/components/PostCard';
-import { PostDetailModal } from '@/app/components/PostDetailModal';
+import { PostCard } from '@/app/components/post/PostCard';
+import { PostDetailModal } from '@/app/components/post/PostDetailModal';
 import {
   Avatar,
   AvatarFallback,

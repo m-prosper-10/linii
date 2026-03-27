@@ -1,10 +1,10 @@
 'use client';
 
-import { DiscoverySidebar } from '@/app/components/DiscoverySidebar';
-import { FloatingActionButton } from '@/app/components/FloatingActionBar';
-import { MobileBottomNav } from '@/app/components/MobileBottomNav';
-import { MobileHeader } from '@/app/components/MobileHeader';
-import { NavigationSidebar } from '@/app/components/NavigationSidebar';
+import { DiscoverySidebar } from '@/app/components/layout/DiscoverySidebar';
+import { FloatingActionButton } from '@/app/components/layout/FloatingActionBar';
+import { MobileBottomNav } from '@/app/components/layout/MobileBottomNav';
+import { MobileHeader } from '@/app/components/layout/MobileHeader';
+import { NavigationSidebar } from '@/app/components/layout/NavigationSidebar';
 import { useApp } from '@/context/AppContext';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
