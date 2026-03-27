@@ -17,9 +17,9 @@ export function MediaGallery({ media, onPostClick }: MediaGalleryProps) {
       className={cn(
         'border-border/50 mb-3 grid cursor-pointer gap-1 overflow-hidden rounded-xl border bg-black/5',
         count === 1 ? 'grid-cols-1' : 'grid-cols-2',
-        count === 2 ? 'aspect-[16/9]' : '',
-        count === 3 ? 'aspect-[16/9]' : '',
-        count >= 4 ? 'aspect-[16/9]' : ''
+        count === 2 ? 'aspect-video' : '',
+        count === 3 ? 'aspect-video' : '',
+        count >= 4 ? 'aspect-video' : ''
       )}
       onClick={e => {
         e.stopPropagation();
