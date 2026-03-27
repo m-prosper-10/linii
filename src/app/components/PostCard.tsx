@@ -32,6 +32,7 @@ import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { formatDistanceToNow } from 'date-fns';
+import { MediaGallery } from '@/app/components/post/MediaGallery';
 
 interface PostCardProps {
   post: PostApiType;
@@ -228,27 +229,10 @@ export function PostCard({
             )}
           </div>
 
-          {post.media && post.media.length > 0 && (
-            <div
-              className="border-border mb-3 overflow-hidden rounded-xl border bg-black/5"
-              onClick={e => e.stopPropagation()}
-            >
-              {post.media[0].type === 'VIDEO' ? (
-                <video
-                  src={post.media[0].url}
-                  className="max-h-[512px] w-full object-contain"
-                  controls
-                />
-              ) : (
-                <img
-                  src={post.media[0].url}
-                  alt="Post content"
-                  className="max-h-[512px] w-full object-cover transition-transform duration-300 hover:scale-[1.01]"
-                  onClick={() => onPostClick?.(post._id)}
-                />
-              )}
-            </div>
-          )}
+          <MediaGallery 
+            media={post.media} 
+            onPostClick={() => onPostClick?.(post._id)} 
+          />
 
           <div className="text-muted-foreground mb-3 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider opacity-60">
             <span>{post.views.toLocaleString()} views</span>

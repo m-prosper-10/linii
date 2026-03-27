@@ -36,16 +36,16 @@ export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
   const [content, setContent] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: 'IMAGE' | 'VIDEO' }>>([]);
+  const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: string }>>([]);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-  
+
   // Poll state
   const [isPollMode, setIsPollMode] = useState(false);
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
-  
+
   // Additional features
   const [locationName, setLocationName] = useState('');
   const [scheduledDate, setScheduledDate] = useState<string | null>(null);
@@ -106,7 +106,10 @@ export function PostCreationView() {
 
   const handlePost = async () => {
     if (!content.trim() && !selectedMediaFiles.length && !isPollMode) return;
-    if (isPollMode && (!pollQuestion.trim() || pollOptions.some(opt => !opt.trim()))) {
+    if (
+      isPollMode &&
+      (!pollQuestion.trim() || pollOptions.some(opt => !opt.trim()))
+    ) {
       toast.error('Please fill in the poll question and all options');
       return;
     }
@@ -114,25 +117,33 @@ export function PostCreationView() {
     setIsPosting(true);
 
     try {
-      const tags = content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
-      
-      const postType = isPollMode ? 'POLL' 
-        : selectedMediaFiles.length > 0 
-          ? selectedMediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+      const tags =
+        content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
+
+      const postType = isPollMode
+        ? 'POLL'
+        : selectedMediaFiles.length > 0
+          ? selectedMediaFiles[0].type.startsWith('video/')
+            ? 'VIDEO'
+            : 'IMAGE'
           : 'TEXT';
 
       await PostService.createPost({
         content: content.trim() || (isPollMode ? pollQuestion : ''),
         postType,
         mediaFiles: selectedMediaFiles,
-        poll: isPollMode ? {
-          question: pollQuestion.trim(),
-          options: pollOptions.filter(opt => opt.trim()),
-          allowMultiple: false
-        } : undefined,
-        location: locationName ? { name: locationName, coordinates: [0, 0] } : undefined,
+        poll: isPollMode
+          ? {
+              question: pollQuestion.trim(),
+              options: pollOptions.filter(opt => opt.trim()),
+              allowMultiple: false,
+            }
+          : undefined,
+        location: locationName
+          ? { name: locationName, coordinates: [0, 0] }
+          : undefined,
         scheduledFor: scheduledDate ? new Date(scheduledDate) : undefined,
-        tags
+        tags,
       });
 
       toast.success('Post created successfully!');
@@ -168,13 +179,16 @@ export function PostCreationView() {
     filesToAdd.forEach(file => {
       const type = file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
       setSelectedMediaFiles(prev => [...prev, file]);
-      
+
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
-        setSelectedMedia(prev => [...prev, {
-          url: e.target?.result as string,
-          type
-        }]);
+        setSelectedMedia(prev => [
+          ...prev,
+          {
+            url: e.target?.result as string,
+            type,
+          },
+        ]);
       };
       reader.readAsDataURL(file);
 
@@ -194,23 +208,30 @@ export function PostCreationView() {
   const characterCount = content.length;
   const maxCharacters = 280;
   const isOverLimit = characterCount > maxCharacters;
-  const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && pollQuestion.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isOverLimit && !isPosting;
+  const canPost =
+    (content.trim().length > 0 ||
+      selectedMediaFiles.length > 0 ||
+      (isPollMode &&
+        pollQuestion.trim().length > 0 &&
+        pollOptions.every(opt => opt.trim().length > 0))) &&
+    !isOverLimit &&
+    !isPosting;
 
   return (
     <div className="mx-auto max-w-2xl">
       <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => router.push('/home')}
-            >
+            <Button variant="ghost" size="sm" onClick={() => router.back()}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <h2 className="text-xl font-semibold">Create Post</h2>
           </div>
-          <Button onClick={handlePost} disabled={!canPost} className="px-6 rounded-full font-bold">
+          <Button
+            onClick={handlePost}
+            disabled={!canPost}
+            className="rounded-full px-6 font-bold"
+          >
             {isPosting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -234,54 +255,59 @@ export function PostCreationView() {
           </Avatar>
 
           <div className="flex-1 space-y-4">
-              <Textarea
-                placeholder="What's on your mind?"
-                value={content}
-                onChange={e => setContent(e.target.value)}
-                className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
-                maxLength={maxCharacters + 50}
+            <Textarea
+              placeholder="What's on your mind?"
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
+              maxLength={maxCharacters + 50}
+            />
+
+            {isPollMode && (
+              <PostPollCreator
+                question={pollQuestion}
+                setQuestion={setPollQuestion}
+                options={pollOptions}
+                setOptions={setPollOptions}
+                onRemove={() => setIsPollMode(false)}
               />
+            )}
 
-              {isPollMode && (
-                <PostPollCreator
-                  question={pollQuestion}
-                  setQuestion={setPollQuestion}
-                  options={pollOptions}
-                  setOptions={setPollOptions}
-                  onRemove={() => setIsPollMode(false)}
-                />
-              )}
+            {locationName && (
+              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
+                <Badge
+                  variant="secondary"
+                  className="bg-primary/10 text-primary gap-1 rounded-lg py-1 pl-1 pr-2"
+                >
+                  <MapPin className="h-3 w-3" />
+                  <span className="text-xs font-bold">{locationName}</span>
+                  <X
+                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
+                    onClick={() => setLocationName('')}
+                  />
+                </Badge>
+              </div>
+            )}
 
-              {locationName && (
-                <div className="flex items-center gap-2 px-1 animate-in slide-in-from-left duration-300">
-                  <Badge variant="secondary" className="bg-primary/10 text-primary gap-1 pl-1 pr-2 rounded-lg py-1">
-                    <MapPin className="h-3 w-3" />
-                    <span className="text-xs font-bold">{locationName}</span>
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-1" 
-                      onClick={() => setLocationName('')}
-                    />
-                  </Badge>
-                </div>
-              )}
+            {scheduledDate && (
+              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
+                <Badge
+                  variant="secondary"
+                  className="gap-1 rounded-lg bg-orange-500/10 py-1 pl-1 pr-2 text-orange-500"
+                >
+                  <Calendar className="h-3 w-3" />
+                  <span className="text-xs font-bold">
+                    Scheduled for {new Date(scheduledDate).toLocaleString()}
+                  </span>
+                  <X
+                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
+                    onClick={() => setScheduledDate(null)}
+                  />
+                </Badge>
+              </div>
+            )}
 
-              {scheduledDate && (
-                <div className="flex items-center gap-2 px-1 animate-in slide-in-from-left duration-300">
-                  <Badge variant="secondary" className="bg-orange-500/10 text-orange-500 gap-1 pl-1 pr-2 rounded-lg py-1">
-                    <Calendar className="h-3 w-3" />
-                    <span className="text-xs font-bold">Scheduled for {new Date(scheduledDate).toLocaleString()}</span>
-                    <X 
-                      className="h-3 w-3 cursor-pointer hover:text-destructive transition-colors ml-1" 
-                      onClick={() => setScheduledDate(null)}
-                    />
-                  </Badge>
-                </div>
-              )}
-
-              <PostMediaPreview 
-                media={selectedMedia} 
-                onRemove={removeMedia} 
-              />
+            <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
 
             <div className="border-border flex items-center justify-between border-t pt-4">
               <div className="flex items-center gap-2">
@@ -294,16 +320,16 @@ export function PostCreationView() {
                 />
                 <label htmlFor="media-upload">
                   <Button variant="ghost" size="sm" className="gap-2" asChild>
-                    <span className="cursor-pointer text-primary hover:bg-primary/10">
+                    <span className="text-primary hover:bg-primary/10 cursor-pointer">
                       <ImageIcon className="h-4 w-4" />
                       Media
                     </span>
                   </Button>
                 </label>
 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className={`gap-2 ${isPollMode ? 'text-primary bg-primary/10' : ''}`}
                   onClick={() => setIsPollMode(!isPollMode)}
                 >
@@ -311,10 +337,10 @@ export function PostCreationView() {
                   Poll
                 </Button>
 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-2 hover:bg-accent/50"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-accent/50 gap-2"
                   onClick={() => {
                     const loc = prompt('Enter location name:');
                     if (loc) setLocationName(loc);
@@ -324,12 +350,14 @@ export function PostCreationView() {
                   Location
                 </Button>
 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="gap-2 hover:bg-accent/50"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-accent/50 gap-2"
                   onClick={() => {
-                    const date = prompt('Enter schedule date (YYYY-MM-DD HH:MM):');
+                    const date = prompt(
+                      'Enter schedule date (YYYY-MM-DD HH:MM):'
+                    );
                     if (date) setScheduledDate(date);
                   }}
                 >
@@ -342,7 +370,7 @@ export function PostCreationView() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-primary gap-2 hover:bg-primary/10"
+                  className="text-primary hover:bg-primary/10 gap-2"
                   onClick={handleAiEnhance}
                   disabled={isAiLoading || !content.trim()}
                 >
