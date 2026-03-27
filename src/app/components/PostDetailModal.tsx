@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Avatar,
   AvatarFallback,
@@ -17,11 +17,14 @@ import {
   Loader2,
   Reply,
   Send,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { PostService, PostApiType } from '@/services/post';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import useEmblaCarousel from 'embla-carousel-react';
 
 interface PostDetailModalProps {
   postId: string;
@@ -39,6 +42,16 @@ export function PostDetailModal({
   const [newComment, setNewComment] = useState('');
   const [isCommenting, setIsCommenting] = useState(false);
   const { currentUser } = useApp();
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+
+  const scrollPrev = useCallback(() => {
+    if (emblaApi) emblaApi.scrollPrev();
+  }, [emblaApi]);
+
+  const scrollNext = useCallback(() => {
+    if (emblaApi) emblaApi.scrollNext();
+  }, [emblaApi]);
 
   useEffect(() => {
     fetchPost();
@@ -118,7 +131,7 @@ export function PostDetailModal({
   if (loading) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-        <Loader2 className="h-8 w-8" />
+        <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
@@ -127,12 +140,12 @@ export function PostDetailModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-0 backdrop-blur-md md:p-4">
-      <div className="bg-card relative flex max-h-full min-h-[500px] w-full max-w-6xl flex-col overflow-hidden rounded-none shadow-2xl md:max-h-[90vh] md:flex-row md:rounded-xl">
+      <div className="bg-card relative flex max-h-full min-h-[500px] w-full max-w-6xl flex-col overflow-hidden rounded-none shadow-2xl md:max-h-[85vh] md:flex-row md:rounded-2xl">
         {/* Mobile Close Button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute left-4 top-4 z-10 rounded-full text-white backdrop-blur-md md:hidden"
+          className="absolute left-4 top-4 z-10 rounded-full text-white backdrop-blur-md md:hidden bg-black/20 hover:bg-black/40"
           onClick={onClose}
         >
           <ArrowLeft className="h-6 w-6" />
@@ -142,35 +155,79 @@ export function PostDetailModal({
         <Button
           variant="ghost"
           size="icon"
-          className="hover:text-foreground absolute right-4 top-4 z-10 hidden md:flex"
+          className="hover:text-foreground absolute right-4 top-4 z-10 hidden md:flex bg-background/50 backdrop-blur-sm rounded-full h-10 w-10 border border-border/50"
           onClick={onClose}
         >
           <X className="h-6 w-6" />
         </Button>
 
-        {/* Media Side (Left) */}
-        <div className="bg-blur-xs flex min-h-[300px] flex-[1.5] items-center justify-center">
+        {/* Media Side (Left) - Carousel */}
+        <div className="bg-black/95 relative flex min-h-[350px] flex-[1.6] items-center justify-center group">
           {post.media && post.media.length > 0 ? (
-            <div className="h-full w-full">
-              {post.media[0].type === 'VIDEO' ? (
-                <video
-                  src={post.media[0].url}
-                  controls
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <img
-                  src={post.media[0].url}
-                  alt="Post content"
-                  className="h-full w-full object-contain"
-                />
+            <div className="h-full w-full overflow-hidden" ref={emblaRef}>
+              <div className="flex h-full w-full">
+                {post.media.map((item, index) => (
+                  <div key={index} className="relative flex-[0_0_100%] min-w-0 h-full flex items-center justify-center bg-black">
+                    {item.type === 'VIDEO' ? (
+                      <video
+                        src={item.url}
+                        controls
+                        className="max-h-full w-full object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={item.url}
+                        alt={`Post content ${index + 1}`}
+                        className="max-h-full w-full object-contain"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* Carousel Navigation */}
+              {post.media.length > 1 && emblaApi && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={scrollPrev}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 h-10 w-10 rounded-full bg-white/10 hover:bg-white/20 text-white border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={scrollNext}
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </Button>
+                  
+                  {/* Indicators */}
+                  <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 px-3 py-1.5 rounded-full bg-black/20 backdrop-blur-md border border-white/10">
+                    {post.media.map((_, i) => (
+                      <div 
+                        key={i} 
+                        className={`h-1.5 w-1.5 rounded-full transition-all ${
+                          // Embla current index needs more complex state for visual indicators, but we can just use 100% loop
+                          "bg-white/50"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </>
               )}
             </div>
           ) : (
-            <div className="text-muted-foreground flex flex-col items-center gap-2">
-              <span className="text-lg font-medium">Text Post</span>
-              <p className="px-8 text-center text-sm opacity-60">
-                This post contains only text content.
+            <div className="text-muted-foreground flex flex-col items-center gap-3">
+              <div className="h-16 w-16 rounded-3xl bg-accent/20 flex items-center justify-center mb-2">
+                <Repeat2 className="h-8 w-8 opacity-40 rotate-12" />
+              </div>
+              <span className="text-xl font-bold tracking-tight">Text Post</span>
+              <p className="px-12 text-center text-sm opacity-50 font-medium">
+                This post contains only expressive text content without media.
               </p>
             </div>
           )}

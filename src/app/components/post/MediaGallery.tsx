@@ -17,7 +17,9 @@ export function MediaGallery({ media, onPostClick }: MediaGalleryProps) {
       className={cn(
         'border-border/50 mb-3 grid cursor-pointer gap-1 overflow-hidden rounded-xl border bg-black/5',
         count === 1 ? 'grid-cols-1' : 'grid-cols-2',
-        count === 3 ? 'grid-rows-2' : ''
+        count === 2 ? 'aspect-[16/9]' : '',
+        count === 3 ? 'aspect-[16/9]' : '',
+        count >= 4 ? 'aspect-[16/9]' : ''
       )}
       onClick={e => {
         e.stopPropagation();
@@ -29,8 +31,8 @@ export function MediaGallery({ media, onPostClick }: MediaGalleryProps) {
           key={index}
           className={cn(
             'group relative overflow-hidden',
-            count === 1 ? 'aspect-auto max-h-[512px]' : 'aspect-square',
-            count === 3 && index === 0 ? 'row-span-2 h-full' : ''
+            count === 1 ? 'aspect-auto max-h-[512px]' : 'h-full w-full',
+            count === 3 && index === 0 ? 'row-span-2' : ''
           )}
         >
           {item.type === 'IMAGE' ? (

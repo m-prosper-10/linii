@@ -89,7 +89,7 @@ export class PostService {
     return response.data!;
   }
 
-  static  async createPost(data: Omit<CreatePostPayload, 'media'> & { mediaFiles?: File[] }): Promise<PostApiType> {
+  static async createPost(data: Omit<CreatePostPayload, 'media'> & { mediaFiles?: File[] }): Promise<PostApiType> {
     const formData = new FormData();
     formData.append('content', data.content);
 
