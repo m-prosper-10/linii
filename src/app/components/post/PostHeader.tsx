@@ -15,6 +15,7 @@ import {
 import { Copy, Flag, Loader2, MoreHorizontal, Trash2, CheckCircle2, Globe, Users, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
+import { cn } from '@/app/components/ui/utils';
 import type { PostApiType } from '@/services/post';
 
 interface PostHeaderProps {
@@ -47,10 +48,30 @@ export function PostHeader({
           onUserClick?.(post.author._id);
         }}
       >
-        <Avatar className={variant === 'feed' ? 'h-11 w-11 shrink-0' : 'h-10 w-10 shrink-0'}>
-          <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
-          <AvatarFallback>{post.author.fullnames[0]}</AvatarFallback>
-        </Avatar>
+        <div className="relative flex items-center">
+          <Avatar className={cn(variant === 'feed' ? 'h-11 w-11' : 'h-10 w-10', "shrink-0 ring-2 ring-background z-20")}>
+            <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
+            <AvatarFallback>{post.author.fullnames[0]}</AvatarFallback>
+          </Avatar>
+          
+          {post.mentions && post.mentions.length > 0 && (
+            <div className="flex -ml-4 z-10">
+              {post.mentions.slice(0, 2).filter((m): m is Exclude<typeof m, string> => typeof m !== 'string').map((mention, i) => (
+                <Avatar 
+                  key={mention._id} 
+                  className={cn(
+                    variant === 'feed' ? 'h-9 w-9' : 'h-8 w-8', 
+                    "shrink-0 ring-2 ring-background -ml-3",
+                    i === 0 ? "z-10" : "z-0"
+                  )}
+                >
+                  <AvatarImage src={mention.avatar} alt={mention.fullnames} />
+                  <AvatarFallback className="text-[10px]">{mention.fullnames[0]}</AvatarFallback>
+                </Avatar>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="flex min-w-0 flex-col">
           <div className="flex items-center gap-1.5 flex-wrap">
@@ -70,41 +91,30 @@ export function PostHeader({
             {post.mentions && post.mentions.length > 0 && (
               <>
                 <span className="text-muted-foreground text-xs font-normal">and</span>
-                {post.mentions.length === 1 ? (
-                  <span 
-                    className="font-semibold text-sm hover:underline truncate underline-offset-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const mention = post.mentions![0];
-                      if (typeof mention !== 'string') {
-                        onUserClick?.(mention._id);
-                      }
-                    }}
-                  >
-                    {typeof post.mentions[0] !== 'string' ? post.mentions[0].fullnames : ''}
-                  </span>
-                ) : (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="font-semibold text-sm hover:underline truncate underline-offset-2 cursor-pointer">
-                          {post.mentions.length} others
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent className="p-2 space-y-1 rounded-xl shadow-xl border-border/50">
-                        {post.mentions.filter((m): m is Exclude<typeof m, string> => typeof m !== 'string').map((mention) => (
-                          <div key={mention._id} className="flex items-center gap-2 px-1 py-0.5">
-                            <Avatar className="h-5 w-5">
-                              <AvatarImage src={mention.avatar} />
-                              <AvatarFallback className="text-[8px]">{mention.fullnames[0]}</AvatarFallback>
-                            </Avatar>
-                            <span className="text-[10px] font-bold">{mention.fullnames}</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="font-semibold text-sm hover:underline truncate underline-offset-2 cursor-pointer">
+                        {post.mentions.length} {post.mentions.length === 1 ? 'other' : 'others'}
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="p-3 space-y-2 rounded-2xl shadow-2xl border-border/50 bg-card/95 backdrop-blur-md">
+                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1 px-1">Collaborators</div>
+                      {post.mentions.filter((m): m is Exclude<typeof m, string> => typeof m !== 'string').map((mention) => (
+                        <div key={mention._id} className="flex items-center gap-2.5 px-1 py-1 hover:bg-accent/50 rounded-lg transition-colors">
+                          <Avatar className="h-6 w-6 ring-1 ring-border/10">
+                            <AvatarImage src={mention.avatar} />
+                            <AvatarFallback className="text-[10px] font-bold">{mention.fullnames[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col">
+                            <span className="text-[11px] font-bold leading-none">{mention.fullnames}</span>
+                            <span className="text-[9px] text-muted-foreground leading-none">@{mention.username || 'collab'}</span>
                           </div>
-                        ))}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
+                        </div>
+                      ))}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </>
             )}
           </div>

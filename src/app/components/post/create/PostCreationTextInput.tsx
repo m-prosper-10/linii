@@ -9,6 +9,8 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { cn } from '@/app/components/ui/utils';
 import { Badge } from '@/app/components/ui/badge';
+import { HashtagSuggestions } from './HashtagSuggestions';
+import { analyticsService, TrendingTopic } from '@/services/analytics';
 
 
 interface PostCreationTextInputProps {
@@ -29,6 +31,67 @@ export function PostCreationTextInput({
   setIsPreviewMode
 }: PostCreationTextInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [suggestions, setSuggestions] = React.useState<TrendingTopic[]>([]);
+  const [showSuggestions, setShowSuggestions] = React.useState(false);
+  const [activeIndex, setActiveIndex] = React.useState(0);
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const fetchSuggestions = React.useCallback(async (query: string) => {
+    setIsLoading(true);
+    try {
+      const topTags = await analyticsService.getTrendingTopics(10);
+      // Filter trending tags by search query if any
+      const filtered = query 
+        ? topTags.filter(t => t.hashtag.toLowerCase().includes(query.toLowerCase()))
+        : topTags;
+      setSuggestions(filtered);
+    } catch (error) {
+      console.error('Failed to fetch tags:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev + 1) % suggestions.length);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActiveIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
+      } else if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        insertHashtag(suggestions[activeIndex].hashtag);
+      } else if (e.key === 'Escape') {
+        setShowSuggestions(false);
+      }
+    }
+  };
+
+  const insertHashtag = (tag: string) => {
+    if (!textareaRef.current) return;
+    const start = textareaRef.current.selectionStart;
+    const textBefore = content.substring(0, start);
+    
+    // Find the last '#' before cursor
+    const lastHashIndex = textBefore.lastIndexOf('#');
+    if (lastHashIndex === -1) return;
+
+    const newText = 
+      content.substring(0, lastHashIndex) + 
+      '#' + tag + ' ' + 
+      content.substring(start);
+    
+    setContent(newText);
+    setShowSuggestions(false);
+    
+    setTimeout(() => {
+      textareaRef.current?.focus();
+      const newPos = lastHashIndex + tag.length + 2; // +1 for #, +1 for space
+      textareaRef.current?.setSelectionRange(newPos, newPos);
+    }, 0);
+  };
 
   const insertMarkdown = (prefix: string, suffix: string = '') => {
     if (!textareaRef.current) return;
@@ -163,11 +226,36 @@ export function PostCreationTextInput({
           </div>
         ) : (
           <div className="relative">
+            <HashtagSuggestions
+              isVisible={showSuggestions}
+              suggestions={suggestions}
+              onSelect={insertHashtag}
+              activeIndex={activeIndex}
+              isLoading={isLoading}
+            />
             <Textarea
               ref={textareaRef}
               placeholder={placeholder}
               value={content}
-              onChange={e => setContent(e.target.value)}
+              onChange={e => {
+                const newValue = e.target.value;
+                setContent(newValue);
+                
+                // Detect hashtag typing
+                const cursorPosition = e.target.selectionStart;
+                const textBeforeCursor = newValue.substring(0, cursorPosition);
+                const match = textBeforeCursor.match(/#(\w*)$/);
+                
+                if (match) {
+                  const query = match[1];
+                  setShowSuggestions(true);
+                  setActiveIndex(0);
+                  fetchSuggestions(query);
+                } else {
+                  setShowSuggestions(false);
+                }
+              }}
+              onKeyDown={handleKeyDown}
               className="min-h-[160px] resize-none border-none bg-transparent px-5 py-4 text-[16px] leading-relaxed focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/40"
               maxLength={maxCharacters + 50}
             />

@@ -61,7 +61,13 @@ export function PostPreCreationPreview({
     } : undefined,
     visibility,
     tags: [],
-    mentions: mentions.map(m => m.id),
+    mentions: mentions.map(m => ({
+      _id: m.id,
+      fullnames: m.name,
+      username: '', // Not strictly needed for names in header
+      email: '',
+      avatar: m.avatar,
+    })),
     likesCount: 0,
     commentsCount: 0,
     sharesCount: 0,
