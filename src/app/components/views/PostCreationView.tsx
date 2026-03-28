@@ -41,6 +41,8 @@ import { toast } from 'sonner';
 import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
 import { PostMediaPreview } from '@/app/components/post/create/PostMediaPreview';
 import { PostEmojiPicker } from '@/app/components/post/create/PostEmojiPicker';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 export function PostCreationView() {
   const router = useRouter();
@@ -295,7 +297,7 @@ export function PostCreationView() {
     !isPosting;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="">
       <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
@@ -340,6 +342,7 @@ export function PostCreationView() {
           </Button>
         </div>
       </div>
+    </div>
 
       <div className="p-4">
         <div className="flex gap-3">
@@ -353,10 +356,12 @@ export function PostCreationView() {
 
           <div className="flex-1 space-y-4">
             {/* User Info & Visibility Selector */}
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-semibold text-[15px]">{currentUser.displayName}</span>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2 w-full">
+                <span className="">{currentUser.displayName}</span>
+              </div>
               <Select value={visibility} onValueChange={(v: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => setVisibility(v)}>
-                <SelectTrigger className="h-6 gap-1 rounded-full border-border/50 bg-transparent px-2 text-xs font-medium focus:ring-0">
+                <SelectTrigger className="h-6 gap-1 rounded-md border-border/50 bg-transparent px-2 text-xs font-medium focus:ring-0">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -396,7 +401,7 @@ export function PostCreationView() {
                       <TooltipContent side="bottom" className="text-xs">Italic</TooltipContent>
                     </Tooltip>
 
-                    <div className="w-[1px] h-4 bg-border/40 mx-1" />
+                    <div className="w-px h-4 bg-border/40 mx-1" />
 
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -425,7 +430,7 @@ export function PostCreationView() {
                       <TooltipContent side="bottom" className="text-xs">List</TooltipContent>
                     </Tooltip>
 
-                    <div className="w-[1px] h-4 bg-border/40 mx-1" />
+                    <div className="w-px h-4 bg-border/40 mx-1" />
 
                     <Tooltip delayDuration={300}>
                       <TooltipTrigger asChild>
@@ -447,12 +452,30 @@ export function PostCreationView() {
                 </div>
                 
                 {isPreviewMode ? (
-                  <div className="min-h-[120px] px-4 py-3 prose prose-invert max-w-none text-foreground/90 overflow-hidden">
-                    {/* Reuse PostContent rendering logic if possible, or just ReactMarkdown */}
-                    {/* For now, just a placeholder or simple div */}
-                    <div className="text-[16px] leading-relaxed italic text-muted-foreground/60">
-                      {content ? "Markdown Preview (Experimental)" : "Nothing to preview"}
-                    </div>
+                  <div className="min-h-[160px] max-h-[400px] overflow-y-auto px-5 py-4 prose prose-invert max-w-none text-[15px] leading-relaxed bg-accent/5 backdrop-blur-sm">
+                    {content ? (
+                      <div className="opacity-90">
+                        <div className="text-muted-foreground/50 italic text-[11px] mb-3 uppercase tracking-widest font-bold">
+                          Markdown Preview
+                        </div>
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            p: ({...props}) => <p className="mb-2 last:mb-0 whitespace-pre-wrap wrap-break-word" {...props} />,
+                            a: ({...props}) => <a className="text-primary hover:underline wrap-break-word" target="_blank" rel="noopener noreferrer" {...props} />,
+                            ul: ({...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
+                            ol: ({...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
+                          }}
+                        >
+                          {content}
+                        </ReactMarkdown>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center h-full text-muted-foreground/30 space-y-2 py-8">
+                        <Sparkles className="h-6 w-6 opacity-20" />
+                        <span className="text-xs italic">Nothing to preview yet</span>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Textarea
