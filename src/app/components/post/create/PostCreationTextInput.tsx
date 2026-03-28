@@ -20,6 +20,8 @@ interface PostCreationTextInputProps {
   placeholder?: string;
   isPreviewMode: boolean;
   setIsPreviewMode: (value: boolean) => void;
+  /** Bump after a successful post (or full reset) to remount the textarea so the DOM matches cleared state. */
+  resetNonce?: number;
 }
 
 export function PostCreationTextInput({
@@ -28,7 +30,8 @@ export function PostCreationTextInput({
   maxCharacters = 280,
   placeholder = "What's on your mind? (Markdown supported)",
   isPreviewMode,
-  setIsPreviewMode
+  setIsPreviewMode,
+  resetNonce = 0,
 }: PostCreationTextInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [suggestions, setSuggestions] = React.useState<TrendingTopic[]>([]);
@@ -234,6 +237,7 @@ export function PostCreationTextInput({
               isLoading={isLoading}
             />
             <Textarea
+              key={`post-compose-${resetNonce}`}
               ref={textareaRef}
               placeholder={placeholder}
               value={content}
