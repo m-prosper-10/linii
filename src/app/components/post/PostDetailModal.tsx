@@ -89,12 +89,6 @@ export function PostDetailModal({
 
   return (
     <>
-      <style>{`
-        .modal-scroll::-webkit-scrollbar { width: 4px; }
-        .modal-scroll::-webkit-scrollbar-track { background: white; }
-        .modal-scroll::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 10px; }
-        .modal-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.3); }
-      `}</style>
     <EditPostDialog
       post={post}
       open={editOpen}
@@ -210,7 +204,7 @@ export function PostDetailModal({
             />
           </div>
 
-          <div className="modal-scroll flex-1 overflow-y-auto p-4">
+          <div className="scrollbar-thin flex-1 overflow-y-auto p-4">
             <div className="mb-4">
               <PostContent post={post} onUpdate={setPost} hideMedia />
               <div className="text-muted-foreground mt-2 flex items-center gap-2 text-[10px] uppercase tracking-wider opacity-60">
