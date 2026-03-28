@@ -43,7 +43,7 @@ export function ConversationListItem({
         <div className="relative shrink-0">
           <Avatar className="hover:ring-primary/20 h-12 w-12 ring-2 ring-transparent transition-all duration-200">
             <AvatarImage src={otherUser.avatar} />
-            <AvatarFallback>{otherUser.displayName[0]}</AvatarFallback>
+            <AvatarFallback>{otherUser.fullnames?.[0]}</AvatarFallback>
           </Avatar>
           {isOnline && (
             <div className="border-background absolute bottom-0 right-0 h-3.5 w-3.5 animate-pulse rounded-full border-2 bg-green-500" />
@@ -60,7 +60,7 @@ export function ConversationListItem({
                   unreadCount > 0 && 'text-foreground font-semibold'
                 )}
               >
-                {otherUser.displayName}
+                {otherUser.fullnames}
               </span>
               {otherUser.verified && (
                 <Verified className="h-4 w-4 fill-blue-600" />

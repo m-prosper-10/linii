@@ -29,7 +29,12 @@ export function PostContent({
             <ReactMarkdown 
               remarkPlugins={[remarkGfm]}
               components={{
-                p: ({...props}: any) => <p className="mb-2 last:mb-0 whitespace-pre-wrap wrap-break-word" {...props} />,
+                p: ({node, children, ...props}: any) => {
+                  // If p contains block-level elements (code blocks etc), render as div to avoid nesting violations
+                  const hasBlock = node?.children?.some((c: any) => c.type === 'element' && ['div', 'pre', 'ul', 'ol', 'blockquote', 'h1', 'h2', 'h3'].includes(c.tagName));
+                  if (hasBlock) return <div className="mb-2 last:mb-0" {...props}>{children}</div>;
+                  return <p className="mb-2 last:mb-0 whitespace-pre-wrap wrap-break-word" {...props}>{children}</p>;
+                },
                 a: ({...props}: any) => <a className="text-primary hover:underline wrap-break-word" target="_blank" rel="noopener noreferrer" {...props} />,
                 ul: ({...props}: any) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
                 ol: ({...props}: any) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
