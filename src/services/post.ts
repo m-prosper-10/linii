@@ -8,7 +8,7 @@ export interface PostApiType {
     username: string;
     email: string;
     avatar?: string;
-    verified?: boolean;
+    isVerified?: boolean;
   };
   content: string;
   postType: string;
@@ -25,7 +25,7 @@ export interface PostApiType {
       username: string;
       email: string;
       avatar?: string;
-      verified?: boolean;
+      isVerified?: boolean;
     };
     content: string;
     createdAt: string;
@@ -42,7 +42,7 @@ export interface PostApiType {
     username: string; 
     email: string; 
     avatar?: string;
-    verified?: boolean;
+    isVerified?: boolean;
   }>;
   likesCount: number;
   commentsCount: number;
@@ -52,6 +52,8 @@ export interface PostApiType {
     reactionType: string;
   };
   userShared?: boolean;
+  /** Server: whether the current user saved this post */
+  userSaved?: boolean;
   createdAt: string;
   poll?: {
     _id: string;
@@ -102,9 +104,48 @@ export interface CreateCommentPayload {
   content: string;
 }
 
+export type FeedTypeFilter = 'ALL' | 'FOLLOWING' | 'TRENDING' | 'NEARBY';
+export type FeedTimeFilter = 'ALL' | 'TODAY' | 'WEEK' | 'MONTH';
+
+/** Sent as query params when using NEARBY feed; `radiusKm` maps to backend `radius` (kilometers). */
+export interface NearbyQuery {
+  latitude: number;
+  longitude: number;
+  radiusKm: number;
+}
+
+export interface FeedQueryOptions {
+  type?: FeedTypeFilter;
+  postType?: string;
+  timeRange?: FeedTimeFilter;
+  nearby?: NearbyQuery;
+}
+
 export class PostService {
-  static async getFeed(page = 1, limit = 20): Promise<PostsResponse> {
-    const response = await apiClient.get<PostsResponse>(`/posts?page=${page}&limit=${limit}`);
+  static async getFeed(
+    page = 1,
+    limit = 20,
+    options?: FeedQueryOptions
+  ): Promise<PostsResponse> {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+    });
+    if (options?.type && options.type !== 'ALL') {
+      params.set('type', options.type);
+    }
+    if (options?.postType) {
+      params.set('postType', options.postType);
+    }
+    if (options?.timeRange && options.timeRange !== 'ALL') {
+      params.set('timeRange', options.timeRange);
+    }
+    if (options?.nearby) {
+      params.set('latitude', String(options.nearby.latitude));
+      params.set('longitude', String(options.nearby.longitude));
+      params.set('radius', String(options.nearby.radiusKm));
+    }
+    const response = await apiClient.get<PostsResponse>(`/posts?${params.toString()}`);
     return response.data!;
   }
 
@@ -204,6 +245,24 @@ export class PostService {
 
   static async deletePost(postId: string): Promise<void> {
     await apiClient.delete(`/posts/${postId}`);
+  }
+
+  static async updatePost(
+    postId: string,
+    body: {
+      content?: string;
+      visibility?: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
+      tags?: string[];
+      isPinned?: boolean;
+    }
+  ): Promise<PostApiType> {
+    const response = await apiClient.put<{ post: PostApiType }>(`/posts/${postId}`, body);
+    return response.data!.post;
+  }
+
+  static async toggleSavePost(postId: string): Promise<{ saved: boolean }> {
+    const response = await apiClient.post<{ saved: boolean }>(`/posts/${postId}/save`, {});
+    return response.data!;
   }
 
   static async searchPosts(query: string, page = 1, limit = 20): Promise<PostsResponse> {

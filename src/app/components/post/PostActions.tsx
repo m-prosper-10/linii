@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Bookmark, Heart, MessageCircle, Repeat2 } from 'lucide-react';
 import { PostService } from '@/services/post';
@@ -24,22 +24,47 @@ export function PostActions({
   commentCount,
   showLikesCount = false,
 }: PostActionsProps) {
-  const [isLiked, setIsLiked] = useState(post.userReaction?.reactionType === 'LIKE');
+  const likedFromServer = useMemo(() => {
+    const t = post.userReaction?.reactionType;
+    return Boolean(
+      t && ['LIKE', 'LOVE', 'LAUGH', 'WOW', 'SAD', 'ANGRY'].includes(t)
+    );
+  }, [post.userReaction?.reactionType]);
+
+  const [isLiked, setIsLiked] = useState(likedFromServer);
   const [likes, setLikes] = useState(post.likesCount);
   const [isReposted, setIsReposted] = useState(post.userShared ?? false);
   const [reposts, setReposts] = useState(post.sharesCount);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(post.userSaved ?? false);
+
+  useEffect(() => {
+    setIsLiked(likedFromServer);
+  }, [post._id, likedFromServer]);
+
+  useEffect(() => {
+    setLikes(post.likesCount);
+  }, [post._id, post.likesCount]);
+
+  useEffect(() => {
+    setIsReposted(post.userShared ?? false);
+    setReposts(post.sharesCount);
+  }, [post._id, post.userShared, post.sharesCount]);
+
+  useEffect(() => {
+    setIsSaved(post.userSaved ?? false);
+  }, [post._id, post.userSaved]);
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const prev = isLiked;
-    setIsLiked(!isLiked);
-    setLikes(isLiked ? likes - 1 : likes + 1);
+    const prevLiked = isLiked;
+    const prevCount = likes;
+    setIsLiked(!prevLiked);
+    setLikes(c => (prevLiked ? c - 1 : c + 1));
     try {
       await PostService.toggleReaction(post._id, 'LIKE');
     } catch (_err) {
-      setIsLiked(prev);
-      setLikes(prev ? likes : likes - 1);
+      setIsLiked(prevLiked);
+      setLikes(prevCount);
       toast.error('Failed to update like');
     }
   };
@@ -58,9 +83,17 @@ export function PostActions({
     }
   };
 
-  const handleSave = (e: React.MouseEvent) => {
+  const handleSave = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    const prev = isSaved;
     setIsSaved(!isSaved);
+    try {
+      const { saved } = await PostService.toggleSavePost(post._id);
+      setIsSaved(saved);
+    } catch (_err) {
+      setIsSaved(prev);
+      toast.error('Failed to update bookmark');
+    }
   };
 
   return (

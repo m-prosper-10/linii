@@ -15,6 +15,7 @@ import { PostCommentList } from './PostCommentList';
 import { PostCommentInput } from './PostCommentInput';
 
 import PostDetailsSkeleton from '../skeletons/PostDetailsSkeleton';
+import { EditPostDialog } from './EditPostDialog';
 
 interface PostDetailModalProps {
   postId: string;
@@ -31,6 +32,7 @@ export function PostDetailModal({
   const [loading, setLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [commentCount, setCommentCount] = useState(0);
+  const [editOpen, setEditOpen] = useState(false);
   const { currentUser } = useApp();
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -86,6 +88,16 @@ export function PostDetailModal({
   const hasMedia = post.media && post.media.length > 0;
 
   return (
+    <>
+    <EditPostDialog
+      post={post}
+      open={editOpen}
+      onOpenChange={setEditOpen}
+      onSaved={p => {
+        setPost(p);
+        setCommentCount(p.commentsCount);
+      }}
+    />
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/80 p-0 backdrop-blur-md md:p-4">
       <div className="bg-card relative flex max-h-full min-h-[500px] w-full max-w-6xl flex-col overflow-hidden rounded-none shadow-2xl md:max-h-[85vh] md:flex-row md:rounded-2xl">
         {/* Mobile close */}
@@ -186,6 +198,7 @@ export function PostDetailModal({
               post={post}
               currentUserId={currentUser?._id}
               variant="modal"
+              onEdit={() => setEditOpen(true)}
               onDelete={handleDelete}
               isDeleting={isDeleting}
             />
@@ -232,5 +245,6 @@ export function PostDetailModal({
         </div>
       </div>
     </div>
+    </>
   );
 }

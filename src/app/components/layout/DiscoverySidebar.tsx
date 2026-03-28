@@ -7,8 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Badge } from '@/app/components/ui/badge';
 import React, { useEffect, useState } from 'react';
 import { analyticsService, TrendingTopic } from '@/services/analytics';
-import { socialService } from '@/services/social';
 import { User } from '@/services/auth';
+import { socialService, type SuggestedUser } from '@/services/social';
 import { toast } from 'sonner';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
@@ -17,7 +17,7 @@ import { cn } from '@/app/components/ui/utils';
 export function DiscoverySidebar() {
   const router = useRouter();
   const [topics, setTopics] = useState<TrendingTopic[]>([]);
-  const [suggestedUsers, setSuggestedUsers] = useState<Partial<User>[]>([]);
+  const [suggestedUsers, setSuggestedUsers] = useState<SuggestedUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   
@@ -37,7 +37,7 @@ export function DiscoverySidebar() {
         setTopics(trendingTopics);
         setSuggestedUsers(suggestions);
       } catch {
-        // Error handling
+        toast.error('Could not load suggestions');
       } finally {
         setLoading(false);
       }
@@ -213,10 +213,13 @@ export function DiscoverySidebar() {
         </div>
 
         <div className="bg-accent/10 border border-border/5 rounded-2xl p-4">
-          <h3 className="font-bold mb-4 flex items-center gap-2 text-sm">
+          <h3 className="font-bold mb-1 flex items-center gap-2 text-sm">
             <UserPlus className="h-4 w-4 text-primary" />
-            Suggested Accounts
+            Who to follow
           </h3>
+          <p className="text-muted-foreground mb-4 text-[11px] leading-snug">
+            Based on your network, who&apos;s posting, and what&apos;s popular.
+          </p>
           <div className="space-y-4">
             {loading ? (
               <UserSkeleton />
@@ -246,7 +249,14 @@ export function DiscoverySidebar() {
                         </Badge>
                       )}
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate font-medium">@{user.username}</div>
+                    <div className="text-[10px] text-muted-foreground truncate font-medium">
+                      @{user.username}
+                    </div>
+                    {user.suggestionLabel && (
+                      <div className="text-primary/80 mt-0.5 line-clamp-2 text-[10px] font-medium leading-snug">
+                        {user.suggestionLabel}
+                      </div>
+                    )}
                   </div>
                   <Button 
                     size="sm" 

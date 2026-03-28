@@ -7,8 +7,9 @@ import {
   PopoverTrigger,
 } from '@/app/components/ui/popover';
 import { Smile } from 'lucide-react';
+import { useState } from 'react';
 
-interface PostEmojiPickerProps {
+interface EmojiPickerProps {
   onEmojiSelect: (emoji: string) => void;
 }
 
@@ -16,13 +17,19 @@ const COMMON_EMOJIS = [
   '😀', '😂', '🤣', '😊', '😍', '🥰', '😘', '😋', '😛', '😜', '🤪', '🤨', '🧐', '🤓', '😎', '🤩', '🥳', '😏', '😒', '😞', '😔', '😟', '😕', '🙁', '☹️', '😮', '😯', '😲', '😳', '🥺', '😧', '😨', '😰', '😥', '😢', '😭', '😱', '😖', '😣', '😞', '😓', '😩', '😫', '🥱', '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '☠️', '💩', '🤡', '👹', '👺', '👻', '👽', '👾', '🤖', '👋', '🤚', '🖐️', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤙', '🤟', '🤘', '👍', '👎', '👊', '🤜', '🤛', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💅', '🤳', '💪', '🦾', '🦵', '🦿', '🦶', '👣', '👂', '🦻', '👃', '🧠', '🫀', '🫁', '🦷', '🦴', '👀', '👁️', '👅', '👄'
 ];
 
-export function PostEmojiPicker({ onEmojiSelect }: PostEmojiPickerProps) {
+export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 hover:bg-accent/50 text-muted-foreground hover:text-primary transition-colors">
-          <Smile className="h-5 w-5 text-yellow-500" />
-          <span className="hidden sm:inline">Emoji</span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => setIsOpen(!isOpen)}
+          className="h-9 w-9 p-0"
+        >
+          <Smile className="h-5 w-5" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-0 border-border/50 shadow-2xl rounded-2xl overflow-hidden backdrop-blur-md bg-background/95">

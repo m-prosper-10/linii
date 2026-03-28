@@ -12,11 +12,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import { Copy, Flag, Loader2, MoreHorizontal, Trash2, CheckCircle2, Globe, Users, Lock } from 'lucide-react';
+import {
+  Copy,
+  Flag,
+  Loader2,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+  Globe,
+  Users,
+  Lock,
+  CheckCircle,
+} from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/app/components/ui/tooltip';
 import { cn } from '@/app/components/ui/utils';
 import type { PostApiType } from '@/services/post';
+import { useRouter } from 'next/navigation';
 
 interface PostHeaderProps {
   post: PostApiType;
@@ -26,6 +43,7 @@ interface PostHeaderProps {
   onUserClick?: (userId: string) => void;
   onDelete?: () => void;
   isDeleting?: boolean;
+  onEdit?: () => void;
 }
 
 export function PostHeader({
@@ -35,97 +53,144 @@ export function PostHeader({
   onUserClick,
   onDelete,
   isDeleting = false,
+  onEdit,
 }: PostHeaderProps) {
   const isOwner = currentUserId === post.author._id;
-  const timeAgo = formatDistanceToNow(new Date(post.createdAt), { addSuffix: true });
-
+  const timeAgo = formatDistanceToNow(new Date(post.createdAt), {
+    addSuffix: true,
+  });
+  const router = useRouter();
   return (
     <div className="flex items-center justify-between gap-3">
       <div
-        className="flex cursor-pointer items-center gap-3 min-w-0"
+        className="flex min-w-0 cursor-pointer items-center gap-3"
         onClick={e => {
           e.stopPropagation();
           onUserClick?.(post.author._id);
         }}
       >
-        <div className="relative flex items-center">
-          <Avatar className={cn(variant === 'feed' ? 'h-11 w-11' : 'h-10 w-10', "shrink-0 ring-2 ring-background z-20")}>
+        <div className="border-background flex items-center rounded-full border-2">
+          <Avatar
+            className={cn(
+              variant === 'feed' ? 'h-11 w-11' : 'h-10 w-10',
+              'ring-background z-20 shrink-0 ring-2'
+            )}
+          >
             <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
-            <AvatarFallback>{post.author.fullnames[0]}</AvatarFallback>
+            <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+              {post.author.fullnames[0]}
+            </AvatarFallback>
           </Avatar>
-          
+
           {post.mentions && post.mentions.length > 0 && (
-            <div className="flex -ml-4 z-10">
-              {post.mentions.slice(0, 2).filter((m): m is Exclude<typeof m, string> => typeof m !== 'string').map((mention, i) => (
-                <Avatar 
-                  key={mention._id} 
-                  className={cn(
-                    variant === 'feed' ? 'h-9 w-9' : 'h-8 w-8', 
-                    "shrink-0 ring-2 ring-background -ml-3",
-                    i === 0 ? "z-10" : "z-0"
-                  )}
-                >
-                  <AvatarImage src={mention.avatar} alt={mention.fullnames} />
-                  <AvatarFallback className="text-[10px]">{mention.fullnames[0]}</AvatarFallback>
-                </Avatar>
-              ))}
+            <div className="z-10 -ml-4 flex">
+              {post.mentions
+                .slice(0, 2)
+                .filter(
+                  (m): m is Exclude<typeof m, string> => typeof m !== 'string'
+                )
+                .map((mention, i) => (
+                  <Avatar
+                    key={mention._id}
+                    className={cn(
+                      variant === 'feed' ? 'h-9 w-9' : 'h-8 w-8',
+                      'ring-background -ml-1 shrink-0 ring-2',
+                      i === 0 ? 'z-10' : 'z-0'
+                    )}
+                  >
+                    <AvatarImage src={mention.avatar} alt={mention.fullnames} />
+                    <AvatarFallback className="text-[10px]">
+                      {mention.fullnames[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                ))}
             </div>
           )}
         </div>
 
+        {/**  */}
         <div className="flex min-w-0 flex-col">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span 
-              className="font-semibold text-sm hover:underline truncate underline-offset-2"
-              onClick={(e) => {
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className="truncate text-sm font-semibold underline-offset-2 hover:underline"
+              onClick={e => {
                 e.stopPropagation();
                 onUserClick?.(post.author._id);
               }}
             >
               {post.author.fullnames}
             </span>
-            {post.author.verified && (
-              <CheckCircle2 className="h-3.5 w-3.5 fill-primary text-background shrink-0" />
+            {post.author.isVerified && (
+              <>
+                <span className="text-muted-foreground text-xs font-normal">
+                  ·
+                </span>
+                <CheckCircle className="fill-primary-foreground text-primary h-3.5 w-3.5 shrink-0" />
+              </>
             )}
-            
+
             {post.mentions && post.mentions.length > 0 && (
               <>
-                <span className="text-muted-foreground text-xs font-normal">and</span>
+                <span className="text-muted-foreground text-xs font-normal">
+                  and
+                </span>
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="font-semibold text-sm hover:underline truncate underline-offset-2 cursor-pointer">
-                        {post.mentions.length} {post.mentions.length === 1 ? 'other' : 'others'}
+                      <span className="cursor-pointer truncate text-sm font-semibold underline-offset-2 hover:underline">
+                        {post.mentions.length}{' '}
+                        {post.mentions.length === 1 ? 'other' : 'others'}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent className="p-3 space-y-2 rounded-2xl shadow-2xl border-border/50 bg-card/95 backdrop-blur-md">
-                      <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 mb-1 px-1">Collaborators</div>
-                      {post.mentions.filter((m): m is Exclude<typeof m, string> => typeof m !== 'string').map((mention) => (
-                        <div key={mention._id} className="flex items-center gap-2.5 px-1 py-1 hover:bg-accent/50 rounded-lg transition-colors">
-                          <Avatar className="h-6 w-6 ring-1 ring-border/10">
-                            <AvatarImage src={mention.avatar} />
-                            <AvatarFallback className="text-[10px] font-bold">{mention.fullnames[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="flex flex-col">
-                            <span className="text-[11px] font-bold leading-none">{mention.fullnames}</span>
-                            <span className="text-[9px] text-muted-foreground leading-none">@{mention.username || 'collab'}</span>
+                    <TooltipContent className="border-border/50 bg-primary text-primary-foreground space-y-2 rounded-md p-3 shadow-2xl backdrop-blur-lg">
+                      <div className="text-muted-foreground/60 mb-1 px-1 text-[10px] font-bold uppercase tracking-widest">
+                        Collaborators
+                      </div>
+                      {post.mentions
+                        .filter(
+                          (m): m is Exclude<typeof m, string> =>
+                            typeof m !== 'string'
+                        )
+                        .map(mention => (
+                          <div
+                            key={mention._id}
+                            className="hover:bg-primary-foreground/10 flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1 transition-colors"
+                            onClick={e => {
+                              e.stopPropagation();
+                              router.push(`/profile/${mention._id}`);
+                            }}
+                          >
+                            <Avatar className="ring-border/10 h-6 w-6 ring-1">
+                              <AvatarImage src={mention.avatar} />
+                              <AvatarFallback className="text-[10px] font-bold">
+                                {mention.fullnames[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-bold leading-none">
+                                {mention.fullnames}
+                              </span>
+                              <span className="text-muted-foreground/70 text-[9px] leading-none">
+                                @{mention.username || 'collab'}
+                              </span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </>
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[11px] font-medium opacity-70">
+          <div className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-medium opacity-70">
             <span>@{post.author.username}</span>
             <span>·</span>
             <span>{timeAgo}</span>
             <span>·</span>
             {post.visibility === 'PUBLIC' && <Globe className="h-3 w-3" />}
             {post.visibility === 'FRIENDS' && <Users className="h-3 w-3" />}
-            {(post.visibility === 'PRIVATE' || post.visibility === 'CUSTOM') && <Lock className="h-3 w-3" />}
+            {(post.visibility === 'PRIVATE' ||
+              post.visibility === 'CUSTOM') && <Lock className="h-3 w-3" />}
           </div>
         </div>
       </div>
@@ -138,9 +203,13 @@ export function PostHeader({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" onClick={e => e.stopPropagation()}>
-          <DropdownMenuItem onSelect={() => {
-            navigator.clipboard.writeText(window.location.origin + '/post/' + post._id);
-          }}>
+          <DropdownMenuItem
+            onSelect={() => {
+              navigator.clipboard.writeText(
+                window.location.origin + '/post/' + post._id
+              );
+            }}
+          >
             <Copy className="mr-2 h-4 w-4" />
             Copy link
           </DropdownMenuItem>
@@ -148,17 +217,28 @@ export function PostHeader({
             <Flag className="mr-2 h-4 w-4" />
             Report
           </DropdownMenuItem>
+          {isOwner && onEdit && (
+            <DropdownMenuItem onSelect={onEdit}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit post
+            </DropdownMenuItem>
+          )}
           {isOwner && onDelete && (
             <DropdownMenuItem
               className="text-destructive focus:text-destructive"
               onSelect={onDelete}
             >
               {isDeleting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting post...
+                </>
               ) : (
-                <Trash2 className="mr-2 h-4 w-4" />
+                <>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete post
+                </>
               )}
-              Delete post
             </DropdownMenuItem>
           )}
         </DropdownMenuContent>
