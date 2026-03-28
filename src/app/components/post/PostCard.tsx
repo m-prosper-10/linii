@@ -10,6 +10,7 @@ import { PostHeader } from './PostHeader';
 import { PostActions } from './PostActions';
 import { PostCommentList } from './PostCommentList';
 import { PostCommentInput } from './PostCommentInput';
+import { EditPostDialog } from './EditPostDialog';
 
 interface PostCardProps {
   post: PostApiType;
@@ -29,9 +30,9 @@ export function PostCard({
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentsCount);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   const handleDelete = async () => {
-    if (!confirm('Delete this post?')) return;
     try {
       setIsDeleting(true);
       await PostService.deletePost(post._id);
@@ -77,9 +78,16 @@ export function PostCard({
         commentCount={commentCount}
       />
 
+      <EditPostDialog
+        post={post}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSaved={setPost}
+      />
+
       {showComments && (
         <div
-          className="border-border mt-4 border-t pt-4 space-y-4"
+          className="border-border mt-4 space-y-4 border-t pt-4"
           onClick={e => e.stopPropagation()}
         >
           <PostCommentInput
