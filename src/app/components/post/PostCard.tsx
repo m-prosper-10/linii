@@ -78,13 +78,6 @@ export function PostCard({
         commentCount={commentCount}
       />
 
-      <EditPostDialog
-        post={post}
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        onSaved={setPost}
-      />
-
       {showComments && (
         <div
           className="border-border mt-4 space-y-4 border-t pt-4"

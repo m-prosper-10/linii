@@ -22,7 +22,7 @@ export function HashtagSuggestions({
   if (!isVisible || (suggestions.length === 0 && !isLoading)) return null;
 
   return (
-    <div className="absolute z-[60] bottom-full left-0 mb-2 w-64 bg-card/95 backdrop-blur-xl border border-primary/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+    <div className="absolute z-60 bottom-full left-0 mb-2 w-64 bg-card/95 backdrop-blur-xl border border-primary/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
       <div className="p-3 border-b border-border/40 bg-primary/5 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-3.5 w-3.5 text-primary" />

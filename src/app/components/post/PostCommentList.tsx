@@ -1,13 +1,9 @@
 'use client';
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/app/components/ui/avatar';
-import { Button } from '@/app/components/ui/button';
-import { Heart, Reply } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import { Heart, Reply, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/app/components/ui/utils';
 import type { PostApiType } from '@/services/post';
 
 type Comment = PostApiType['comments'][number];
@@ -15,13 +11,10 @@ type Comment = PostApiType['comments'][number];
 interface PostCommentListProps {
   comments: Comment[];
   totalCount: number;
-  /** Max comments to show before "view all". Undefined = show all */
   limit?: number;
   onUserClick?: (userId: string) => void;
   onViewAll?: () => void;
-  /** Show Like / Reply action buttons per comment */
   showActions?: boolean;
-  /** Additional class for the container */
   className?: string;
 }
 
@@ -32,67 +25,77 @@ export function PostCommentList({
   onUserClick,
   onViewAll,
   showActions = false,
-  className = '',
+  className,
 }: PostCommentListProps) {
   const visible = limit ? comments.slice(0, limit) : comments;
+  const hiddenCount = totalCount - visible.length;
 
   if (totalCount === 0) {
     return (
-      <div className={`text-muted-foreground py-6 text-center text-sm italic ${className}`}>
-        No comments yet.
-      </div>
+      <p className={cn('py-6 text-center text-sm text-muted-foreground/50 italic', className)}>
+        No comments yet. Be the first.
+      </p>
     );
   }
 
   return (
-    <div className={`space-y-4 ${className}`}>
+    <div className={cn('space-y-3', className)}>
       {visible.map(comment => (
-        <div key={comment._id} className="flex gap-3">
+        <div key={comment._id} className="flex gap-2.5 group/comment">
           <Avatar
-            className="h-8 w-8 shrink-0 cursor-pointer"
+            className="h-7 w-7 shrink-0 mt-0.5 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all"
             onClick={() => onUserClick?.(comment.author._id)}
           >
             <AvatarImage src={comment.author.avatar} alt={comment.author.fullnames} />
-            <AvatarFallback>{comment.author.fullnames[0]}</AvatarFallback>
+            <AvatarFallback className="text-[10px]">{comment.author.fullnames[0]}</AvatarFallback>
           </Avatar>
 
           <div className="min-w-0 flex-1">
-            <div className="mb-0.5 flex items-center gap-2">
-              <span
-                className="cursor-pointer text-xs font-semibold hover:underline"
+            <div className="inline-block max-w-full rounded-2xl rounded-tl-sm bg-muted/40 px-3.5 py-2.5">
+              <button
+                className="text-xs font-semibold text-foreground/90 hover:text-primary transition-colors mb-0.5 block"
                 onClick={() => onUserClick?.(comment.author._id)}
               >
                 {comment.author.fullnames}
-              </span>
-              <span className="text-muted-foreground text-[10px]">
-                {formatDistanceToNow(new Date(comment.createdAt))} ago
-              </span>
+              </button>
+              <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap wrap-break-word">
+                {comment.content}
+              </p>
             </div>
-            <p className="text-foreground/80 whitespace-pre-wrap text-sm leading-relaxed">
-              {comment.content}
-            </p>
-            {showActions && (
-              <div className="mt-1.5 flex items-center gap-3">
-                <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors flex items-center gap-1">
-                  <Heart className="h-3 w-3" /> Like
-                </button>
-                <button className="text-muted-foreground hover:text-foreground text-[10px] font-medium transition-colors flex items-center gap-1">
-                  <Reply className="h-3 w-3" /> Reply
-                </button>
-              </div>
-            )}
+
+            <div className="flex items-center gap-3 mt-1 px-1">
+              <span className="text-[10px] text-muted-foreground/40 font-medium">
+                {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+              </span>
+              {showActions && (
+                <>
+                  <button className={cn(
+                    'text-[10px] font-semibold text-muted-foreground/50 hover:text-rose-500 transition-colors',
+                    'flex items-center gap-1 opacity-0 group-hover/comment:opacity-100'
+                  )}>
+                    <Heart className="h-3 w-3" /> Like
+                  </button>
+                  <button className={cn(
+                    'text-[10px] font-semibold text-muted-foreground/50 hover:text-primary transition-colors',
+                    'flex items-center gap-1 opacity-0 group-hover/comment:opacity-100'
+                  )}>
+                    <Reply className="h-3 w-3" /> Reply
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
       ))}
 
-      {limit && totalCount > limit && onViewAll && (
-        <Button
-          variant="link"
-          className="text-primary h-auto p-0 text-xs font-semibold opacity-80 hover:no-underline hover:opacity-100"
+      {hiddenCount > 0 && onViewAll && (
+        <button
           onClick={onViewAll}
+          className="flex items-center gap-1.5 text-xs font-semibold text-primary/70 hover:text-primary transition-colors pl-9"
         >
-          View all {totalCount} comments
-        </Button>
+          <ChevronDown className="h-3.5 w-3.5" />
+          View {hiddenCount} more {hiddenCount === 1 ? 'comment' : 'comments'}
+        </button>
       )}
     </div>
   );

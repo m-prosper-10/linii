@@ -15,7 +15,7 @@ export function MediaGallery({ media, onPostClick }: MediaGalleryProps) {
   return (
     <div
       className={cn(
-        'border-border/50 mb-3 grid cursor-pointer gap-1 overflow-hidden rounded-xl border bg-black/5',
+        'border-border/50 mb-3 grid cursor-pointer gap-1 overflow-hidden rounded-md border bg-black/5',
         count === 1 ? 'grid-cols-1' : 'grid-cols-2',
         count === 2 ? 'aspect-video' : '',
         count === 3 ? 'aspect-video' : '',

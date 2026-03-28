@@ -113,7 +113,7 @@ export function PostPollCreator({
             variant="ghost"
             size="sm"
             onClick={onRemove}
-            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 px-4 rounded-xl transition-all flex items-center gap-2"
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 px-4 rounded-md transition-all flex items-center gap-2"
           >
             <Trash2 className="h-3.5 w-3.5" />
             <span className="text-[10px] font-bold uppercase tracking-widest">Discard Poll</span>

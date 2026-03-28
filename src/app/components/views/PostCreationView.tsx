@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 // New Components
 import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
 import { PostMediaPreview } from '@/app/components/post/create/PostMediaPreview';
-import { PostEmojiPicker } from '@/app/components/post/create/EmojiPicker';
+import { EmojiPicker } from '@/app/components/post/EmojiPicker';
 import { PostCreationHeader } from '@/app/components/post/create/PostCreationHeader';
 import { PostCreationTextInput } from '@/app/components/post/create/PostCreationTextInput';
 import { PostPreCreationPreview } from '@/app/components/post/create/PostPreCreationPreview';
@@ -35,7 +35,7 @@ import { PostPreCreationPreview } from '@/app/components/post/create/PostPreCrea
 export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
-  
+
   // State
   const [content, setContent] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: string }>>([]);
@@ -43,7 +43,7 @@ export function PostCreationView() {
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isFullPreview, setIsFullPreview] = useState(false);
-  
+
   // Poll state
   const [isPollMode, setIsPollMode] = useState(false);
   const [pollOptions, setPollOptions] = useState(['', '']);
@@ -209,11 +209,11 @@ export function PostCreationView() {
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
-              question: content.trim(),
-              options: pollOptions.filter(opt => opt.trim()),
-              allowMultiple: pollAllowMultiple,
-              expiresAt: getExpirationDate(pollExpiresAt)
-            }
+            question: content.trim(),
+            options: pollOptions.filter(opt => opt.trim()),
+            allowMultiple: pollAllowMultiple,
+            expiresAt: getExpirationDate(pollExpiresAt)
+          }
           : undefined,
         location: locationName ? { name: locationName, coordinates: [0, 0] } : undefined,
         scheduledFor: scheduledDate ? scheduledDate : undefined,
@@ -323,7 +323,7 @@ export function PostCreationView() {
                 Clear
               </Button>
             )}
-            
+
             <Button
               variant={isFullPreview ? "outline" : "ghost"}
               size="sm"
@@ -452,7 +452,7 @@ export function PostCreationView() {
                       id="media-upload"
                       multiple
                     />
-                    
+
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -496,11 +496,11 @@ export function PostCreationView() {
                         <PopoverContent className="w-80 p-4 rounded-2xl shadow-2xl" align="start">
                           <div className="space-y-3">
                             <h4 className="font-bold text-xs uppercase tracking-wider text-rose-500">Location</h4>
-                            <Input 
-                              value={locationName} 
-                              onChange={(e) => setLocationName(e.target.value)} 
-                              placeholder="Where are you?" 
-                              className="bg-accent/50 rounded-xl" 
+                            <Input
+                              value={locationName}
+                              onChange={(e) => setLocationName(e.target.value)}
+                              placeholder="Where are you?"
+                              className="bg-accent/50 rounded-xl"
                             />
                           </div>
                         </PopoverContent>
@@ -531,7 +531,7 @@ export function PostCreationView() {
                         </PopoverContent>
                       </Popover>
 
-                      <PostEmojiPicker onEmojiSelect={onEmojiSelect} />
+                      <EmojiPicker onEmojiSelect={onEmojiSelect} />
 
                       <Tooltip>
                         <TooltipTrigger asChild>
