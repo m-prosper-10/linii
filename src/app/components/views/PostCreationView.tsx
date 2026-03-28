@@ -55,6 +55,21 @@ export function PostCreationView() {
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
   const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [mentions, setMentions] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+
+  const toggleMention = (user: { id: string; name: string; avatar?: string }) => {
+    setMentions(prev => {
+      const exists = prev.some(m => m.id === user.id);
+      if (exists) {
+        return prev.filter(m => m.id !== user.id);
+      }
+      return [...prev, user];
+    });
+  };
+
+  const removeMention = (userId: string) => {
+    setMentions(prev => prev.filter(m => m.id !== userId));
+  };
 
   // Constants
   const maxCharacters = 280;
@@ -168,6 +183,7 @@ export function PostCreationView() {
         content: content.trim(),
         postType,
         visibility,
+        mentions: mentions.map(m => m.id),
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
@@ -193,6 +209,7 @@ export function PostCreationView() {
       setLocationName('');
       setScheduledDate(undefined);
       setVisibility('PUBLIC');
+      setMentions([]);
       localStorage.removeItem('linii_post_draft');
       router.push('/home');
     } catch (error) {
@@ -320,6 +337,8 @@ export function PostCreationView() {
               expiresAt: getExpirationDate(pollExpiresAt)
             } : undefined}
             visibility={visibility}
+            currentUser={currentUser}
+            mentions={mentions}
           />
         ) : (
           <div className="flex gap-4">
@@ -331,8 +350,9 @@ export function PostCreationView() {
                 }}
                 visibility={visibility}
                 onVisibilityChange={setVisibility}
-                mentions={[]} 
-                onAddMention={() => toast.info('Mentions feature coming soon!')}
+                mentions={mentions}
+                onSelectMention={toggleMention}
+                onRemoveMention={removeMention}
               />
 
               {isPollMode ? (
