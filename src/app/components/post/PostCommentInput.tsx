@@ -1,26 +1,19 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/app/components/ui/avatar';
-import { Button } from '@/app/components/ui/button';
-import { Textarea } from '@/app/components/ui/textarea';
+import { useState, useRef, useEffect } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Loader2, Send } from 'lucide-react';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { EmojiPicker } from '@/app/components/post/EmojiPicker';
+import { cn } from '@/app/components/ui/utils';
 
 interface PostCommentInputProps {
   postId: string;
   onCommentAdded?: () => void;
-  /** Keyboard shortcut: 'ctrl+enter' (feed) | 'enter' (modal) */
   submitMode?: 'ctrl-enter' | 'enter';
   placeholder?: string;
-  /** Additional class for the wrapper */
   className?: string;
 }
 
@@ -29,14 +22,25 @@ export function PostCommentInput({
   onCommentAdded,
   submitMode = 'ctrl-enter',
   placeholder = 'Write a comment…',
-  className = '',
+  className,
 }: PostCommentInputProps) {
   const { currentUser } = useApp();
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 120)}px`;
+  }, [value]);
 
   const handleEmojiSelect = (emoji: string) => {
-    setValue(value + emoji);
+    setValue(v => v + emoji);
+    textareaRef.current?.focus();
   };
 
   const handleSubmit = async () => {
@@ -48,7 +52,7 @@ export function PostCommentInput({
       await PostService.addComment({ postId, content });
       toast.success('Comment added');
       onCommentAdded?.();
-    } catch (_err) {
+    } catch {
       setValue(content);
       toast.error('Failed to add comment');
     } finally {
@@ -60,46 +64,56 @@ export function PostCommentInput({
     if (submitMode === 'enter' && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
-    } else if (
-      submitMode === 'ctrl-enter' &&
-      e.key === 'Enter' &&
-      (e.metaKey || e.ctrlKey)
-    ) {
+    } else if (submitMode === 'ctrl-enter' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
       handleSubmit();
     }
   };
 
+  const canSubmit = !!value.trim() && !loading;
+
   return (
-    <div
-      className={`flex items-center justify-between gap-2 ${className}`}
-    >
-      <Avatar className="h-10 w-10 shrink-0">
+    <div className={cn('flex items-start gap-2.5', className)}>
+      <Avatar className="h-8 w-8 shrink-0 mt-1">
         <AvatarImage src={currentUser?.avatar} alt={currentUser?.fullnames} />
-        <AvatarFallback>{currentUser?.fullnames?.[0]}</AvatarFallback>
+        <AvatarFallback className="text-xs">{currentUser?.fullnames?.[0]}</AvatarFallback>
       </Avatar>
-      <div className="flex flex-1 items-center justify-between gap-2">
-        <div className="flex w-full items-center gap-2">
-          <input
-            placeholder={placeholder}
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            className="bg-accent/20 focus-visible:ring-primary/20 max-h-[120px] min-h-[44px] w-full max-w-100 text-sm pl-2 border-border"
-            onKeyDown={handleKeyDown}
-          />
+
+      <div className={cn(
+        'flex flex-1 items-end gap-1.5 rounded-md border px-3 py-2 transition-all duration-200',
+        focused
+          ? 'border-primary/30 bg-primary/5 shadow-sm shadow-primary/5'
+          : 'border-border/40 bg-muted/30 hover:border-border/60'
+      )}>
+        <textarea
+          ref={textareaRef}
+          rows={1}
+          placeholder={placeholder}
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          className="flex-1 resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none min-h-[24px] max-h-[120px]"
+        />
+
+        <div className="flex items-center gap-1 shrink-0 pb-0.5">
           <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+          <button
+            disabled={!canSubmit}
+            onClick={handleSubmit}
+            className={cn(
+              'flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200',
+              canSubmit
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
+                : 'text-muted-foreground/30 cursor-not-allowed'
+            )}
+          >
+            {loading
+              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              : <Send className="h-3.5 w-3.5" />
+            }
+          </button>
         </div>
-        <Button
-          size="sm"
-          disabled={!value.trim() || loading}
-          onClick={handleSubmit}
-          className="h-10 self-end rounded-lg border"
-        >
-          {loading ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <Send className="h-6 w-6" />
-          )}
-        </Button>
       </div>
     </div>
   );
