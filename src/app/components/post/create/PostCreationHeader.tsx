@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
 import { Globe, Users, Lock, UserPlus } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
+import { UserSearchPicker } from '@/app/components/shared/UserSearchPicker';
 
 interface PostCreationHeaderProps {
   user: {
@@ -14,7 +14,8 @@ interface PostCreationHeaderProps {
   visibility: 'PUBLIC' | 'FRIENDS' | 'PRIVATE';
   onVisibilityChange: (value: 'PUBLIC' | 'FRIENDS' | 'PRIVATE') => void;
   mentions?: Array<{ id: string; name: string; avatar?: string }>;
-  onAddMention?: () => void;
+  onSelectMention: (user: { id: string; name: string; avatar?: string }) => void;
+  onRemoveMention: (userId: string) => void;
 }
 
 export function PostCreationHeader({
@@ -22,7 +23,8 @@ export function PostCreationHeader({
   visibility,
   onVisibilityChange,
   mentions = [],
-  onAddMention
+  onSelectMention,
+  onRemoveMention
 }: PostCreationHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-3 mb-4">
@@ -61,23 +63,20 @@ export function PostCreationHeader({
                 </span>
               )}
             </span>
-            {onAddMention && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-5 w-5 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
-                      onClick={onAddMention}
-                    >
-                      <UserPlus className="h-3 w-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent className="text-[10px]">Add Collaborators</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+            <UserSearchPicker
+              selectedUsers={mentions}
+              onSelect={onSelectMention}
+              onRemove={onRemoveMention}
+            >
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-5 w-5 rounded-full hover:bg-primary/10 hover:text-primary transition-colors"
+                title="Add Collaborators"
+              >
+                <UserPlus className="h-3 w-3" />
+              </Button>
+            </UserSearchPicker>
           </div>
           
           <Select value={visibility} onValueChange={onVisibilityChange}>

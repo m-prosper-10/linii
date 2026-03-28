@@ -39,7 +39,6 @@ export function PostHeader({
 
   return (
     <div className="flex items-center justify-between gap-3">
-      {/* Left: Avatar + Author info */}
       <div
         className="flex cursor-pointer items-center gap-3 min-w-0"
         onClick={e => {

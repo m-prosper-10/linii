@@ -20,6 +20,7 @@ interface PostPreCreationPreviewProps {
     expiresAt: Date;
   };
   visibility: string;
+  mentions?: Array<{ id: string; name: string; avatar?: string }>;
 }
 
 export function PostPreCreationPreview({
@@ -27,7 +28,8 @@ export function PostPreCreationPreview({
   content,
   media,
   poll,
-  visibility
+  visibility,
+  mentions = []
 }: PostPreCreationPreviewProps) {
   // Mock a post object for PostContent
   const mockPost = {
@@ -59,7 +61,7 @@ export function PostPreCreationPreview({
     } : undefined,
     visibility,
     tags: [],
-    mentions: [],
+    mentions: mentions.map(m => m.id),
     likesCount: 0,
     commentsCount: 0,
     sharesCount: 0,
@@ -94,7 +96,7 @@ export function PostPreCreationPreview({
 
           {/* Content Rendering */}
             <PostContent
-              post={mockPost as PostApiType}
+              post={mockPost as unknown as PostApiType}
               onPostClick={() => {}}
               onUpdate={() => {}}
             />
