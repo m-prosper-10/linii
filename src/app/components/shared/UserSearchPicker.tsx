@@ -6,8 +6,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/app/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { socialService } from '@/services/social';
-import { User } from '@/services/auth';import { toast } from 'sonner';
+import { User } from '@/services/auth';
+import { toast } from 'sonner';
 import { Skeleton } from '@/app/components/ui/skeleton';
+import { useApp } from '@/context/AppContext';
 
 interface UserSearchPickerProps {
   selectedUsers: Array<{ id: string; name: string; avatar?: string }>;
@@ -42,6 +44,7 @@ export function UserSearchPicker({
   const [query, setQuery] = React.useState('');
   const [results, setResults] = React.useState<Partial<User>[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const { currentUser } = useApp();
 
   const searchUsers = React.useCallback(async (q: string) => {
     if (!q.trim()) {
@@ -51,14 +54,15 @@ export function UserSearchPicker({
     setLoading(true);
     try {
       const { users } = await socialService.searchUsers(q);
-      setResults(users);
+      // Filter out current user from results
+      setResults(users.filter(user => user._id !== currentUser?._id && user._id !== currentUser?.id));
     } catch (error) {
       console.error('Search failed:', error);
       toast.error('Failed to search users');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentUser?._id, currentUser?.id]);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
