@@ -15,17 +15,14 @@ import {
   Sparkles,
   Loader2,
   TrendingUp,
-  Heart, MessageCircle, Share2, MoreHorizontal,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/app/components/ui/utils';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 // New Components
 import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
@@ -34,7 +31,6 @@ import { PostEmojiPicker } from '@/app/components/post/create/PostEmojiPicker';
 import { PostCreationHeader } from '@/app/components/post/create/PostCreationHeader';
 import { PostCreationTextInput } from '@/app/components/post/create/PostCreationTextInput';
 import { PostPreCreationPreview } from '@/app/components/post/create/PostPreCreationPreview';
-import { PostContent } from '@/app/components/post/PostContent'; // Assuming this component exists and is needed for the mock
 
 export function PostCreationView() {
   const router = useRouter();
@@ -61,36 +57,20 @@ export function PostCreationView() {
   const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
-  // Mock post for preview, assuming structure based on PostContent props
-  const mockPost = {
-    id: 'preview-post',
-    author: {
-      id: currentUser?.id || 'mock-id',
-      username: currentUser?.username || currentUser?.displayName?.toLowerCase().replace(/\s+/g, '_') || 'preview_user',
-      displayName: currentUser?.displayName || 'Preview User',
-      avatar: currentUser?.avatar || '/default-avatar.png',
-    },
-    content: content,
-    media: selectedMedia.map(m => ({ url: m.url, type: m.type === 'IMAGE' ? 'IMAGE' : 'VIDEO' })),
-    postType: isPollMode ? 'POLL' : (selectedMedia.length > 0 ? (selectedMedia[0].type === 'VIDEO' ? 'VIDEO' : 'IMAGE') : 'TEXT'),
-    createdAt: new Date().toISOString(),
-    likesCount: 0,
-    commentsCount: 0,
-    repostsCount: 0,
-    isLiked: false,
-    isReposted: false,
-    visibility: visibility,
-    poll: isPollMode ? {
-      question: pollQuestion,
-      options: pollOptions.filter(o => o.trim()).map((opt, index) => ({ id: `opt-${index}`, text: opt, votes: 0 })),
-      allowMultiple: pollAllowMultiple,
-      expiresAt: getExpirationDate(pollExpiresAt).toISOString(),
-      totalVotes: 0,
-      userVoted: false,
-    } : undefined,
-    location: locationName ? { name: locationName, coordinates: [0, 0] } : undefined,
-    scheduledFor: scheduledDate ? scheduledDate.toISOString() : undefined,
-    tags: content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [],
+  // Constants
+  const maxCharacters = 280;
+
+  // Helper functions
+  const getExpirationDate = (durationStr: string) => {
+    const date = new Date();
+    switch (durationStr) {
+      case '1h': date.setHours(date.getHours() + 1); break;
+      case '1d': date.setDate(date.getDate() + 1); break;
+      case '3d': date.setDate(date.getDate() + 3); break;
+      case '7d': date.setDate(date.getDate() + 7); break;
+      default: date.setDate(date.getDate() + 1);
+    }
+    return date;
   };
 
   // Load draft on mount
@@ -167,18 +147,6 @@ export function PostCreationView() {
     } finally {
       setIsAiLoading(false);
     }
-  };
-
-  const getExpirationDate = (durationStr: string) => {
-    const date = new Date();
-    switch (durationStr) {
-      case '1h': date.setHours(date.getHours() + 1); break;
-      case '1d': date.setDate(date.getDate() + 1); break;
-      case '3d': date.setDate(date.getDate() + 3); break;
-      case '7d': date.setDate(date.getDate() + 7); break;
-      default: date.setDate(date.getDate() + 1);
-    }
-    return date;
   };
 
   const handlePost = async () => {
@@ -276,7 +244,6 @@ export function PostCreationView() {
   };
 
   const characterCount = content.length;
-  const maxCharacters = 280;
   const isOverLimit = characterCount > maxCharacters;
   const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && pollQuestion.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isPosting;
 
@@ -342,10 +309,20 @@ export function PostCreationView() {
 
       <div className="p-4 sm:p-6">
         {isFullPreview ? (
-          <PostContent
-            post={mockPost}
-            onPostClick={() => {}}
-            onUpdate={() => {}}
+          <PostPreCreationPreview
+            user={{
+              displayName: currentUser.displayName,
+              username: currentUser.username || currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+              avatar: currentUser.avatar
+            }}
+            content={content}
+            media={selectedMedia}
+            poll={isPollMode ? {
+              question: pollQuestion,
+              options: pollOptions.filter(o => o.trim()),
+              expiresAt: getExpirationDate(pollExpiresAt)
+            } : undefined}
+            visibility={visibility}
           />
         ) : (
           <div className="flex gap-4">
@@ -356,7 +333,7 @@ export function PostCreationView() {
                   avatar: currentUser.avatar
                 }}
                 visibility={visibility}
-                onVisibilityChange={(v) => setVisibility(v)}
+                onVisibilityChange={setVisibility}
                 mentions={[]} 
                 onAddMention={() => toast.info('Mentions feature coming soon!')}
               />
@@ -546,9 +523,6 @@ export function PostCreationView() {
           <p className="flex items-center gap-2 text-foreground/80 font-semibold mb-2">
             <Sparkles className="h-3.5 w-3.5 text-primary" />
             Tips for your next masterpiece:
-          </p>
-          <p className="text-[11px] text-primary/70 leading-relaxed italic text-center">
-            &quot;This is how your post will look to your followers. Review carefully before sharing.&quot;
           </p>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none">
             <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Keep it engaging and authentic</li>

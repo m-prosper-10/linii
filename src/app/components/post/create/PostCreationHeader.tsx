@@ -26,7 +26,7 @@ export function PostCreationHeader({
 }: PostCreationHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-3 mb-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-row items-center gap-3 w-full border">
         <div className="flex -space-x-2 overflow-hidden">
           <Avatar className="h-10 w-10 border-2 border-background ring-1 ring-border/20 shrink-0">
             <AvatarImage src={user.avatar} alt={user.displayName} />

@@ -10,6 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { cn } from '@/app/components/ui/utils';
 import { Badge } from '@/app/components/ui/badge';
 
+
 interface PostCreationTextInputProps {
   content: string;
   setContent: (value: string) => void;
@@ -144,8 +145,8 @@ export function PostCreationTextInput({
                 <ReactMarkdown 
                   remarkPlugins={[remarkGfm]}
                   components={{
-                    p: ({...props}) => <p className="mb-2 last:mb-0 whitespace-pre-wrap break-words" {...props} />,
-                    a: ({...props}) => <a className="text-primary hover:underline break-words" target="_blank" rel="noopener noreferrer" {...props} />,
+                    p: ({...props}) => <p className="mb-2 last:mb-0 whitespace-pre-wrap wrap-break-word" {...props} />,
+                    a: ({...props}) => <a className="text-primary hover:underline wrap-break-word" target="_blank" rel="noopener noreferrer" {...props} />,
                     ul: ({...props}) => <ul className="list-disc pl-5 mb-2 space-y-1" {...props} />,
                     ol: ({...props}) => <ol className="list-decimal pl-5 mb-2 space-y-1" {...props} />,
                   }}
