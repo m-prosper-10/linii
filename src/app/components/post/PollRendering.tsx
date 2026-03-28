@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { cn } from '@/app/components/ui/utils';
 import { PostService, PostApiType } from '@/services/post';
 import { toast } from 'sonner';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, Clock, Users } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface PollRenderingProps {
@@ -23,15 +23,15 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
   const expiresAtDate = new Date(poll.expiresAt);
   const isValidDate = !isNaN(expiresAtDate.getTime());
   const isExpired = isValidDate && expiresAtDate < new Date();
+  const showResults = hasVoted || isExpired;
 
   const handleVote = async (optionId: string) => {
     if (hasVoted || isExpired || isVoting) return;
-
     try {
       setIsVoting(optionId);
       const updatedPost = await PostService.votePoll(post._id, optionId);
       onUpdate?.(updatedPost);
-      toast.success('Vote recorded!');
+      toast.success('Vote recorded');
     } catch {
       toast.error('Failed to record vote');
     } finally {
@@ -40,77 +40,105 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
   };
 
   return (
-    <div className="space-y-3 mb-4 bg-accent/5 p-4 rounded-2xl border border-border/40">
+    <div className="my-3 rounded-md border border-border/30 bg-card overflow-hidden">
+      {/* Header */}
       {poll.question && (
-        <h4 className="font-semibold text-[15px] mb-2 leading-snug text-foreground/90">
-          {poll.question}
-        </h4>
+        <div className="px-4 pt-4 pb-3 border-b border-border/20">
+          <p className="font-semibold text-[15px] leading-snug text-foreground">
+            {poll.question}
+          </p>
+        </div>
       )}
-      <div className="space-y-2">
+
+      {/* Options */}
+      <div className="p-3 space-y-2">
         {poll.options.map((option) => {
           const voteCount = option.votes.length;
           const percentage = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
           const isSelected = poll.userVoted?.includes(option._id);
+          const isLeading = showResults && poll.options.every(o => o.votes.length <= voteCount) && voteCount > 0;
 
           return (
             <button
               key={option._id}
-              disabled={hasVoted || isExpired || !!isVoting}
+              disabled={showResults || !!isVoting}
               onClick={() => handleVote(option._id)}
               className={cn(
-                "relative w-full overflow-hidden rounded-xl border p-3 text-left transition-all duration-300 group/option",
-                isSelected 
-                  ? "border-primary/50 bg-primary/5 shadow-sm" 
-                  : "border-border/50 hover:border-border hover:bg-accent/20",
-                (hasVoted || isExpired) ? "cursor-default" : "cursor-pointer active:scale-[0.98]"
+                'relative w-full overflow-hidden rounded-xl text-left transition-all duration-200',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+                showResults
+                  ? 'cursor-default'
+                  : 'cursor-pointer hover:scale-[1.01] active:scale-[0.99]',
+                isSelected
+                  ? 'border border-primary/40 bg-primary/5'
+                  : showResults
+                    ? 'border border-border/30 bg-muted/30'
+                    : 'border border-border/40 bg-muted/20 hover:border-primary/30 hover:bg-primary/5'
               )}
             >
-              {/* Progress Bar Background */}
-              {(hasVoted || isExpired) && (
-                <div 
+              {/* Animated fill bar */}
+              {showResults && (
+                <div
                   className={cn(
-                    "absolute inset-y-0 left-0 transition-all duration-1000 ease-out opacity-20",
-                    isSelected ? "bg-primary" : "bg-muted-foreground"
+                    'absolute inset-y-0 left-0 transition-all duration-700 ease-out rounded-xl',
+                    isSelected ? 'bg-primary/15' : isLeading ? 'bg-muted-foreground/10' : 'bg-muted/40'
                   )}
                   style={{ width: `${percentage}%` }}
                 />
               )}
 
-              <div className="relative flex items-center justify-between gap-3">
+              <div className="relative flex items-center justify-between gap-3 px-3.5 py-2.5">
                 <div className="flex items-center gap-2 min-w-0">
+                  {/* Vote indicator dot / check */}
+                  {!showResults && (
+                    <span className="h-4 w-4 shrink-0 rounded-full border-2 border-border/60 group-hover:border-primary/50 transition-colors" />
+                  )}
+                  {isSelected && showResults && (
+                    <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                  )}
                   <span className={cn(
-                    "font-medium truncate",
-                    isSelected ? "text-primary" : "text-foreground/90"
+                    'text-sm font-medium truncate',
+                    isSelected ? 'text-primary' : 'text-foreground/85'
                   )}>
                     {option.text}
                   </span>
-                  {isSelected && <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />}
                 </div>
 
-                {(hasVoted || isExpired) && (
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold tabular-nums">
+                <div className="flex items-center gap-2 shrink-0">
+                  {isVoting === option._id && (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                  )}
+                  {showResults && (
+                    <span className={cn(
+                      'text-xs font-bold tabular-nums',
+                      isSelected ? 'text-primary' : 'text-muted-foreground'
+                    )}>
                       {percentage}%
                     </span>
-                    {isVoting === option._id && <Loader2 className="h-3 w-3 animate-spin" />}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </button>
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-1">
-        <span>{totalVotes.toLocaleString()} votes</span>
-        <span>
-          {isExpired 
-            ? 'Poll ended' 
-            : isValidDate 
-              ? `Ends ${formatDistanceToNow(expiresAtDate, { addSuffix: true })}`
-              : 'Ending soon'
-          }
-        </span>
+      {/* Footer */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-border/20 bg-muted/10">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-medium">
+          <Users className="h-3 w-3" />
+          <span>{totalVotes.toLocaleString()} {totalVotes === 1 ? 'vote' : 'votes'}</span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60 font-medium">
+          <Clock className="h-3 w-3" />
+          <span>
+            {isExpired
+              ? 'Poll ended'
+              : isValidDate
+                ? `Ends ${formatDistanceToNow(expiresAtDate, { addSuffix: true })}`
+                : 'Ending soon'}
+          </span>
+        </div>
       </div>
     </div>
   );
