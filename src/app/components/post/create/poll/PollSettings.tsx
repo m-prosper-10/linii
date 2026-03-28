@@ -18,18 +18,17 @@ export function PollSettings({
   setExpiresAt
 }: PollSettingsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-6 py-2 px-1">
+    <div className="flex flex-wrap items-center justify-between gap-6 py-2 px-1">
       <div className="flex items-center gap-3">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/5 text-primary">
-          <Clock className="w-4 h-4" />
+        <div className="flex items-center justify-center rounded-full bg-primary/5 text-primary">
+          <Clock className="w-6 h-6" />
         </div>
         <div className="flex flex-col">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Poll Duration</span>
           <Select value={expiresAt} onValueChange={setExpiresAt}>
-            <SelectTrigger className="h-7 w-fit min-w-[100px] border-none bg-transparent p-0 text-xs font-bold focus:ring-0">
+            <SelectTrigger className="min-w-[100px] px-2 text-xs font-bold focus:ring-0">
               <SelectValue placeholder="Duration" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl border-border/40 shadow-2xl">
+            <SelectContent className="rounded-md border-border/40 px-2">
               <SelectItem value="1h">1 Hour</SelectItem>
               <SelectItem value="1d">1 Day</SelectItem>
               <SelectItem value="3d">3 Days</SelectItem>
@@ -47,9 +46,9 @@ export function PollSettings({
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Multiple Answers</span>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="text-xs font-bold">{allowMultiple ? 'On' : 'Off'}</span>
-            <Switch 
-              checked={allowMultiple} 
-              onCheckedChange={setAllowMultiple} 
+            <Switch
+              checked={allowMultiple}
+              onCheckedChange={setAllowMultiple}
               className="scale-75 origin-left"
             />
           </div>
