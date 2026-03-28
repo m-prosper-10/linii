@@ -17,7 +17,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useApp } from '@/context/AppContext';
 import { cn } from '@/app/components/ui/utils';
 import AIService from '@/services/ai';
@@ -56,6 +56,9 @@ export function PostCreationView() {
   const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [mentions, setMentions] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+  /** Remount markdown textarea after submit/clear so value and DOM stay in sync. */
+  const [editorResetNonce, setEditorResetNonce] = useState(0);
+  const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const toggleMention = (user: { id: string; name: string; avatar?: string }) => {
     setMentions(prev => {
@@ -101,21 +104,37 @@ export function PostCreationView() {
     }
   }, []);
 
-  // Save draft on content/visibility change
+  // Save draft on content/visibility change (cancelled on successful post to avoid re-saving old text mid-request)
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
+    if (draftSaveTimeoutRef.current) {
+      clearTimeout(draftSaveTimeoutRef.current);
+    }
+    draftSaveTimeoutRef.current = setTimeout(() => {
+      draftSaveTimeoutRef.current = null;
       if (content.trim()) {
         localStorage.setItem('linii_post_draft', JSON.stringify({ content, visibility }));
       } else {
         localStorage.removeItem('linii_post_draft');
       }
     }, 1000);
-    return () => clearTimeout(timeoutId);
+    return () => {
+      if (draftSaveTimeoutRef.current) {
+        clearTimeout(draftSaveTimeoutRef.current);
+        draftSaveTimeoutRef.current = null;
+      }
+    };
   }, [content, visibility]);
 
   const removeMedia = useCallback((index: number) => {
     setSelectedMedia(prev => prev.filter((_, i) => i !== index));
     setSelectedMediaFiles(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const clearPendingDraftSave = useCallback(() => {
+    if (draftSaveTimeoutRef.current) {
+      clearTimeout(draftSaveTimeoutRef.current);
+      draftSaveTimeoutRef.current = null;
+    }
   }, []);
 
   if (loading) {
@@ -170,6 +189,9 @@ export function PostCreationView() {
       return;
     }
 
+    // Stop debounced draft writes during the request (avoids saving old text while posting)
+    clearPendingDraftSave();
+
     setIsPosting(true);
     try {
       const tags = content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
@@ -210,7 +232,10 @@ export function PostCreationView() {
       setScheduledDate(undefined);
       setVisibility('PUBLIC');
       setMentions([]);
+      setIsPreviewMode(false);
+      setIsFullPreview(false);
       localStorage.removeItem('linii_post_draft');
+      setEditorResetNonce(n => n + 1);
       router.push('/home');
     } catch (error) {
       toast.error((error as Error).message || 'Failed to create post');
@@ -279,6 +304,8 @@ export function PostCreationView() {
                 size="sm"
                 onClick={() => {
                   if (confirm('Are you sure you want to clear this post?')) {
+                    clearPendingDraftSave();
+                    localStorage.removeItem('linii_post_draft');
                     setContent('');
                     setSelectedMedia([]);
                     setSelectedMediaFiles([]);
@@ -286,6 +313,9 @@ export function PostCreationView() {
                     setPollOptions(['', '']);
                     setLocationName('');
                     setScheduledDate(undefined);
+                    setIsPreviewMode(false);
+                    setIsFullPreview(false);
+                    setEditorResetNonce(n => n + 1);
                   }
                 }}
                 className="text-muted-foreground hover:text-destructive hidden sm:flex h-9 rounded-full px-4"
@@ -373,6 +403,7 @@ export function PostCreationView() {
                   isPreviewMode={isPreviewMode}
                   setIsPreviewMode={setIsPreviewMode}
                   maxCharacters={maxCharacters}
+                  resetNonce={editorResetNonce}
                 />
               )}
 

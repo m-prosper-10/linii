@@ -1,6 +1,19 @@
 import { apiClient } from "@/lib/api";
 import { User } from "./auth";
 
+/** Matches backend `SuggestedUser` for discovery / who to follow. */
+export interface SuggestedUser {
+  _id: string;
+  fullnames: string;
+  username: string;
+  email?: string;
+  avatar?: string;
+  bio?: string;
+  verified?: boolean;
+  suggestionLabel?: string;
+  mutualFollowsCount?: number;
+}
+
 export interface FollowStatus {
   isFollowing: boolean;
   isFollowedBy: boolean;
@@ -77,10 +90,12 @@ export const socialService = {
   },
 
   /**
-   * Get suggested users to follow
+   * Get suggested users to follow (friends-of-friends, active posters, popularity).
    */
-  async getSuggestedUsers(limit: number = 5): Promise<Partial<User>[]> {
-    const response = await apiClient.get<{ users: Partial<User>[] }>(`/social/suggested?limit=${limit}`);
+  async getSuggestedUsers(limit: number = 5): Promise<SuggestedUser[]> {
+    const response = await apiClient.get<{ users: SuggestedUser[] }>(
+      `/social/suggested?limit=${limit}`
+    );
     if (response.success && response.data) {
       return response.data.users;
     }
