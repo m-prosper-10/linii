@@ -35,15 +35,7 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <>
-      <style>{`
-        .emoji-scroll::-webkit-scrollbar { width: 4px; }
-        .emoji-scroll::-webkit-scrollbar-track { background: transparent; }
-        .emoji-scroll::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 99px; }
-        .emoji-scroll::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.4); }
-      `}</style>
-
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             type="button"
@@ -67,7 +59,7 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
             </span>
           </div>
 
-          <div className="emoji-scroll grid grid-cols-8 gap-0.5 p-2 max-h-52 overflow-y-auto">
+          <div className="scrollbar-thin grid grid-cols-8 gap-0.5 p-2 max-h-52 overflow-y-auto">
             {COMMON_EMOJIS.map((emoji, i) => (
               <button
                 key={`${i}`}
@@ -83,6 +75,5 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
           </div>
         </PopoverContent>
       </Popover>
-    </>
   );
 }
