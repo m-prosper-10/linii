@@ -46,7 +46,6 @@ export function PostCreationView() {
   
   // Poll state
   const [isPollMode, setIsPollMode] = useState(false);
-  const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
   const [pollExpiresAt, setPollExpiresAt] = useState('1d');
@@ -151,7 +150,7 @@ export function PostCreationView() {
 
   const handlePost = async () => {
     if (!content.trim() && !selectedMediaFiles.length && !isPollMode) return;
-    if (isPollMode && (!pollQuestion.trim() || pollOptions.some(opt => !opt.trim()))) {
+    if (isPollMode && (!content.trim() || pollOptions.some(opt => !opt.trim()))) {
       toast.error('Please fill in the poll question and all options');
       return;
     }
@@ -166,13 +165,13 @@ export function PostCreationView() {
           : 'TEXT';
 
       await PostService.createPost({
-        content: content.trim() || (isPollMode ? pollQuestion : ''),
+        content: content.trim(),
         postType,
         visibility,
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
-              question: pollQuestion.trim(),
+              question: content.trim(),
               options: pollOptions.filter(opt => opt.trim()),
               allowMultiple: pollAllowMultiple,
               expiresAt: getExpirationDate(pollExpiresAt)
@@ -188,7 +187,6 @@ export function PostCreationView() {
       setSelectedMedia([]);
       setSelectedMediaFiles([]);
       setIsPollMode(false);
-      setPollQuestion('');
       setPollOptions(['', '']);
       setPollAllowMultiple(false);
       setPollExpiresAt('1d');
@@ -245,7 +243,7 @@ export function PostCreationView() {
 
   const characterCount = content.length;
   const isOverLimit = characterCount > maxCharacters;
-  const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && pollQuestion.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isPosting;
+  const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && content.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isPosting;
 
   return (
     <div className="mx-auto max-w-2xl bg-background min-h-screen sm:min-h-0 border-x border-border/10">
@@ -268,7 +266,6 @@ export function PostCreationView() {
                     setSelectedMedia([]);
                     setSelectedMediaFiles([]);
                     setIsPollMode(false);
-                    setPollQuestion('');
                     setPollOptions(['', '']);
                     setLocationName('');
                     setScheduledDate(undefined);
@@ -318,7 +315,7 @@ export function PostCreationView() {
             content={content}
             media={selectedMedia}
             poll={isPollMode ? {
-              question: pollQuestion,
+              question: content,
               options: pollOptions.filter(o => o.trim()),
               expiresAt: getExpirationDate(pollExpiresAt)
             } : undefined}
@@ -338,18 +335,10 @@ export function PostCreationView() {
                 onAddMention={() => toast.info('Mentions feature coming soon!')}
               />
 
-              <PostCreationTextInput
-                content={content}
-                setContent={setContent}
-                isPreviewMode={isPreviewMode}
-                setIsPreviewMode={setIsPreviewMode}
-                maxCharacters={maxCharacters}
-              />
-
-              {isPollMode && (
+              {isPollMode ? (
                 <PostPollCreator
-                  question={pollQuestion}
-                  setQuestion={setPollQuestion}
+                  question={content}
+                  setQuestion={setContent}
                   options={pollOptions}
                   setOptions={setPollOptions}
                   allowMultiple={pollAllowMultiple}
@@ -357,6 +346,14 @@ export function PostCreationView() {
                   expiresAt={pollExpiresAt}
                   setExpiresAt={setPollExpiresAt}
                   onRemove={() => setIsPollMode(false)}
+                />
+              ) : (
+                <PostCreationTextInput
+                  content={content}
+                  setContent={setContent}
+                  isPreviewMode={isPreviewMode}
+                  setIsPreviewMode={setIsPreviewMode}
+                  maxCharacters={maxCharacters}
                 />
               )}
 
