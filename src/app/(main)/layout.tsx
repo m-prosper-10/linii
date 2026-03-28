@@ -31,7 +31,9 @@ export default function MainLayout({
 
   const showThreeColumnLayout =
     pathname &&
-    ['home', 'explore', 'profile'].some(route => pathname.includes(route));
+    ['home', 'explore', 'profile', 'post/create'].some(route =>
+      pathname.includes(route)
+    );
   const showMessagesLayout = pathname?.includes('messages');
   const hideFloatingButton =
     pathname?.includes('post/create') || pathname?.includes('edit-profile');

@@ -1,10 +1,11 @@
 'use client';
 
+import React, { useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Switch } from '@/app/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { X, Plus, Clock, CheckSquare } from 'lucide-react';
+import { Textarea } from '@/app/components/ui/textarea';
+import { Plus, Trash2, HelpCircle } from 'lucide-react';
+import { PollOptionItem } from './poll/PollOptionItem';
+import { PollSettings } from './poll/PollSettings';
 
 interface PostPollCreatorProps {
   question: string;
@@ -29,6 +30,8 @@ export function PostPollCreator({
   setExpiresAt,
   onRemove,
 }: PostPollCreatorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const handleAddOption = () => {
     if (options.length < 4) {
       setOptions([...options, '']);
@@ -48,79 +51,74 @@ export function PostPollCreator({
   };
 
   return (
-    <div className="bg-accent/20 space-y-4 rounded-2xl p-4 border border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
-      <Input
-        placeholder="Ask a question..."
-        value={question}
-        onChange={e => setQuestion(e.target.value)}
-        className="bg-background border-border/50 font-bold h-11 rounded-xl focus:ring-primary"
-      />
-      <div className="space-y-2">
-        {options.map((option, index) => (
-          <div key={index} className="flex gap-2 group">
-            <Input
-              placeholder={`Option ${index + 1}`}
+    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+      {/* Question Area - Styled like PostCreationTextInput */}
+      <div className="flex flex-col rounded-2xl border border-primary/20 bg-primary/5 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary/30">
+        <div className="flex items-center gap-2 px-4 py-2 border-b border-primary/10 bg-primary/5">
+          <HelpCircle className="h-4 w-4 text-primary opacity-60" />
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60">Poll Question</span>
+        </div>
+        <Textarea
+          ref={textareaRef}
+          placeholder="What would you like to ask?"
+          value={question}
+          onChange={e => setQuestion(e.target.value)}
+          className="min-h-[120px] resize-none border-none bg-transparent px-5 py-4 text-[18px] font-medium leading-relaxed focus-visible:ring-0 shadow-none placeholder:text-muted-foreground/30"
+        />
+      </div>
+
+      {/* Options Area */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Choices</span>
+          <span className="text-[10px] text-muted-foreground/40 font-medium">{options.length}/4 used</span>
+        </div>
+        
+        <div className="grid grid-cols-1 gap-3">
+          {options.map((option, index) => (
+            <PollOptionItem
+              key={index}
+              index={index}
               value={option}
-              onChange={e => handleOptionChange(index, e.target.value)}
-              className="bg-background border-border/50 h-10 rounded-xl focus:ring-primary"
+              onChange={val => handleOptionChange(index, val)}
+              onRemove={() => handleRemoveOption(index)}
+              canRemove={options.length > 2}
             />
-            {options.length > 2 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleRemoveOption(index)}
-                className="text-destructive hover:bg-destructive/10 h-10 w-10 p-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-4 py-1">
-        <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-muted-foreground shrink-0" />
-          <Select value={expiresAt} onValueChange={setExpiresAt}>
-            <SelectTrigger className="h-8 w-[110px] bg-background border-border/50 rounded-lg text-xs font-semibold">
-              <SelectValue placeholder="Duration" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1h">1 Hour</SelectItem>
-              <SelectItem value="1d">1 Day</SelectItem>
-              <SelectItem value="3d">3 Days</SelectItem>
-              <SelectItem value="7d">1 Week</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <CheckSquare className="w-4 h-4 text-muted-foreground shrink-0" />
-          <span className="text-xs font-semibold text-muted-foreground hidden sm:inline">Multiple options</span>
-          <Switch checked={allowMultiple} onCheckedChange={setAllowMultiple} />
+          ))}
+          
+          {options.length < 4 && (
+            <Button
+              variant="outline"
+              onClick={handleAddOption}
+              className="h-11 border-dashed border-primary/20 bg-primary/2 hover:bg-primary/5 text-primary/60 hover:text-primary rounded-xl flex items-center justify-center gap-2 transition-all group"
+            >
+              <Plus className="h-4 w-4 transition-transform group-hover:rotate-90" />
+              <span className="text-xs font-bold uppercase tracking-wider">Add Choice</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      <div className="flex gap-2 pt-1 border-t border-border/30">
-        {options.length < 4 && (
+      {/* Settings & Footer */}
+      <div className="pt-4 border-t border-border/40">
+        <PollSettings
+          allowMultiple={allowMultiple}
+          setAllowMultiple={setAllowMultiple}
+          expiresAt={expiresAt}
+          setExpiresAt={setExpiresAt}
+        />
+        
+        <div className="mt-6 flex justify-end">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            onClick={handleAddOption}
-            className="flex-1 border-dashed border-border/50 hover:bg-accent/50 text-xs font-bold uppercase tracking-widest h-9 rounded-xl"
+            onClick={onRemove}
+            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-9 px-4 rounded-xl transition-all flex items-center gap-2"
           >
-            <Plus className="mr-2 h-3 w-3" />
-            Add Option
+            <Trash2 className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-bold uppercase tracking-widest">Discard Poll</span>
           </Button>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-destructive text-xs font-bold px-4 h-9 rounded-xl"
-        >
-          Remove Poll
-        </Button>
+        </div>
       </div>
     </div>
   );

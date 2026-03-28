@@ -36,7 +36,14 @@ export interface PostApiType {
   }>;
   visibility: string;
   tags: string[];
-  mentions: string[];
+  mentions: Array<string | { 
+    _id: string; 
+    fullnames: string; 
+    username: string; 
+    email: string; 
+    avatar?: string;
+    verified?: boolean;
+  }>;
   likesCount: number;
   commentsCount: number;
   sharesCount: number;
@@ -129,6 +136,10 @@ export class PostService {
 
     if ((data as any).scheduledFor) {
       formData.append('scheduledFor', (data as any).scheduledFor.toISOString());
+    }
+
+    if ((data as any).mentions && (data as any).mentions.length > 0) {
+      formData.append('mentions', JSON.stringify((data as any).mentions));
     }
 
     if ((data as any).tags && (data as any).tags.length > 0) {

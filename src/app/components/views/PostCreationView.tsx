@@ -1,13 +1,7 @@
 'use client';
 
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/app/components/ui/avatar';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Textarea } from '@/app/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { Calendar as CalendarUI } from '@/app/components/ui/calendar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
@@ -23,8 +17,9 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useApp } from '@/context/AppContext';
+import { cn } from '@/app/components/ui/utils';
 import AIService from '@/services/ai';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
@@ -33,19 +28,24 @@ import { toast } from 'sonner';
 import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
 import { PostMediaPreview } from '@/app/components/post/create/PostMediaPreview';
 import { PostEmojiPicker } from '@/app/components/post/create/PostEmojiPicker';
+import { PostCreationHeader } from '@/app/components/post/create/PostCreationHeader';
+import { PostCreationTextInput } from '@/app/components/post/create/PostCreationTextInput';
+import { PostPreCreationPreview } from '@/app/components/post/create/PostPreCreationPreview';
 
 export function PostCreationView() {
   const router = useRouter();
   const { currentUser, loading } = useApp();
+  
+  // State
   const [content, setContent] = useState('');
   const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: string }>>([]);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
-
+  const [isFullPreview, setIsFullPreview] = useState(false);
+  
   // Poll state
   const [isPollMode, setIsPollMode] = useState(false);
-  const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptions, setPollOptions] = useState(['', '']);
   const [pollAllowMultiple, setPollAllowMultiple] = useState(false);
   const [pollExpiresAt, setPollExpiresAt] = useState('1d');
@@ -53,6 +53,65 @@ export function PostCreationView() {
   // Additional features
   const [locationName, setLocationName] = useState('');
   const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [mentions, setMentions] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+
+  const toggleMention = (user: { id: string; name: string; avatar?: string }) => {
+    setMentions(prev => {
+      const exists = prev.some(m => m.id === user.id);
+      if (exists) {
+        return prev.filter(m => m.id !== user.id);
+      }
+      return [...prev, user];
+    });
+  };
+
+  const removeMention = (userId: string) => {
+    setMentions(prev => prev.filter(m => m.id !== userId));
+  };
+
+  // Constants
+  const maxCharacters = 280;
+
+  // Helper functions
+  const getExpirationDate = (durationStr: string) => {
+    const date = new Date();
+    switch (durationStr) {
+      case '1h': date.setHours(date.getHours() + 1); break;
+      case '1d': date.setDate(date.getDate() + 1); break;
+      case '3d': date.setDate(date.getDate() + 3); break;
+      case '7d': date.setDate(date.getDate() + 7); break;
+      default: date.setDate(date.getDate() + 1);
+    }
+    return date;
+  };
+
+  // Load draft on mount
+  useEffect(() => {
+    const savedDraft = localStorage.getItem('linii_post_draft');
+    if (savedDraft) {
+      try {
+        const draft = JSON.parse(savedDraft);
+        if (draft.content) setContent(draft.content);
+        if (draft.visibility) setVisibility(draft.visibility);
+      } catch (e) {
+        console.error('Failed to parse draft', e);
+      }
+    }
+  }, []);
+
+  // Save draft on content/visibility change
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (content.trim()) {
+        localStorage.setItem('linii_post_draft', JSON.stringify({ content, visibility }));
+      } else {
+        localStorage.removeItem('linii_post_draft');
+      }
+    }, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [content, visibility]);
 
   const removeMedia = useCallback((index: number) => {
     setSelectedMedia(prev => prev.filter((_, i) => i !== index));
@@ -80,9 +139,8 @@ export function PostCreationView() {
       setContent(enhanced);
       toast.success('Post enhanced by AI!');
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : 'AI enhancement failed';
-      alert(message);
+      const message = error instanceof Error ? error.message : 'AI enhancement failed';
+      toast.error(message);
     } finally {
       setIsAiLoading(false);
     }
@@ -95,8 +153,6 @@ export function PostCreationView() {
       if (!content.trim()) {
         setContent(description);
       } else {
-        // Ask or just append? Let's just append or suggest.
-        // For simplicity, if content is empty, fill it. Else, append.
         setContent(prev => `${prev}\n\n[AI Description: ${description}]`);
       }
       toast.success('Image analyzed by AI!');
@@ -107,57 +163,37 @@ export function PostCreationView() {
     }
   };
 
-  const getExpirationDate = (durationStr: string) => {
-    const date = new Date();
-    switch (durationStr) {
-      case '1h': date.setHours(date.getHours() + 1); break;
-      case '1d': date.setDate(date.getDate() + 1); break;
-      case '3d': date.setDate(date.getDate() + 3); break;
-      case '7d': date.setDate(date.getDate() + 7); break;
-      default: date.setDate(date.getDate() + 1);
-    }
-    return date;
-  };
-
   const handlePost = async () => {
     if (!content.trim() && !selectedMediaFiles.length && !isPollMode) return;
-    if (
-      isPollMode &&
-      (!pollQuestion.trim() || pollOptions.some(opt => !opt.trim()))
-    ) {
+    if (isPollMode && (!content.trim() || pollOptions.some(opt => !opt.trim()))) {
       toast.error('Please fill in the poll question and all options');
       return;
     }
 
     setIsPosting(true);
-
     try {
-      const tags =
-        content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
-
+      const tags = content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
       const postType = isPollMode
         ? 'POLL'
         : selectedMediaFiles.length > 0
-          ? selectedMediaFiles[0].type.startsWith('video/')
-            ? 'VIDEO'
-            : 'IMAGE'
+          ? selectedMediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
           : 'TEXT';
 
       await PostService.createPost({
-        content: content.trim() || (isPollMode ? pollQuestion : ''),
+        content: content.trim(),
         postType,
+        visibility,
+        mentions: mentions.map(m => m.id),
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
-              question: pollQuestion.trim(),
+              question: content.trim(),
               options: pollOptions.filter(opt => opt.trim()),
               allowMultiple: pollAllowMultiple,
               expiresAt: getExpirationDate(pollExpiresAt)
             }
           : undefined,
-        location: locationName
-          ? { name: locationName, coordinates: [0, 0] }
-          : undefined,
+        location: locationName ? { name: locationName, coordinates: [0, 0] } : undefined,
         scheduledFor: scheduledDate ? scheduledDate : undefined,
         tags,
       });
@@ -167,12 +203,14 @@ export function PostCreationView() {
       setSelectedMedia([]);
       setSelectedMediaFiles([]);
       setIsPollMode(false);
-      setPollQuestion('');
       setPollOptions(['', '']);
       setPollAllowMultiple(false);
       setPollExpiresAt('1d');
       setLocationName('');
       setScheduledDate(undefined);
+      setVisibility('PUBLIC');
+      setMentions([]);
+      localStorage.removeItem('linii_post_draft');
       router.push('/home');
     } catch (error) {
       toast.error((error as Error).message || 'Failed to create post');
@@ -186,7 +224,6 @@ export function PostCreationView() {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    // Limit to 4 total items
     const remainingSlots = 4 - selectedMediaFiles.length;
     const filesToAdd = files.slice(0, remainingSlots);
 
@@ -214,8 +251,6 @@ export function PostCreationView() {
         handleImageAnalysis(file);
       }
     });
-
-    // Reset input
     e.target.value = '';
   };
 
@@ -224,265 +259,292 @@ export function PostCreationView() {
   };
 
   const characterCount = content.length;
-  const maxCharacters = 280;
   const isOverLimit = characterCount > maxCharacters;
-  const canPost =
-    (content.trim().length > 0 ||
-      selectedMediaFiles.length > 0 ||
-      (isPollMode &&
-        pollQuestion.trim().length > 0 &&
-        pollOptions.every(opt => opt.trim().length > 0))) &&
-    !isOverLimit &&
-    !isPosting;
+  const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && content.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isPosting;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-2xl bg-background min-h-screen sm:min-h-0 border-x border-border/10">
       <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
+            <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full h-10 w-10 p-0">
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h2 className="text-xl font-semibold">Create Post</h2>
+            <h2 className="text-xl font-semibold">{isFullPreview ? 'Review Post' : 'Create Post'}</h2>
           </div>
-          <Button
-            onClick={handlePost}
-            disabled={!canPost}
-            className="rounded-full px-6 font-bold"
-          >
-            {isPosting ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Posting...
-              </>
-            ) : (
-              'Post'
+          <div className="flex items-center gap-2">
+            {!isFullPreview && (content.trim() || selectedMediaFiles.length > 0 || isPollMode) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  if (confirm('Are you sure you want to clear this post?')) {
+                    setContent('');
+                    setSelectedMedia([]);
+                    setSelectedMediaFiles([]);
+                    setIsPollMode(false);
+                    setPollOptions(['', '']);
+                    setLocationName('');
+                    setScheduledDate(undefined);
+                  }
+                }}
+                className="text-muted-foreground hover:text-destructive hidden sm:flex h-9 rounded-full px-4"
+              >
+                Clear
+              </Button>
             )}
-          </Button>
+            
+            <Button
+              variant={isFullPreview ? "outline" : "ghost"}
+              size="sm"
+              onClick={() => setIsFullPreview(!isFullPreview)}
+              className="rounded-full h-9 px-4 font-bold border-primary/20 hover:bg-primary/5 transition-all"
+            >
+              {isFullPreview ? 'Edit' : 'Preview'}
+            </Button>
+
+            <Button
+              onClick={handlePost}
+              disabled={!canPost}
+              className="rounded-full px-6 font-bold h-9 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            >
+              {isPosting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Posting...
+                </>
+              ) : (
+                'Post'
+              )}
+            </Button>
+          </div>
         </div>
       </div>
 
-      <div className="p-4">
-        <div className="flex gap-3">
-          <Avatar className="h-12 w-12 shrink-0">
-            <AvatarImage
-              src={currentUser.avatar}
-              alt={currentUser.displayName}
-            />
-            <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
-          </Avatar>
-
-          <div className="flex-1 space-y-4">
-            <Textarea
-              placeholder="What's on your mind?"
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              className="min-h-[120px] resize-none border-none bg-transparent py-4 text-lg focus-visible:ring-0"
-              maxLength={maxCharacters + 50}
-            />
-
-            {isPollMode && (
-              <PostPollCreator
-                question={pollQuestion}
-                setQuestion={setPollQuestion}
-                options={pollOptions}
-                setOptions={setPollOptions}
-                allowMultiple={pollAllowMultiple}
-                setAllowMultiple={setPollAllowMultiple}
-                expiresAt={pollExpiresAt}
-                setExpiresAt={setPollExpiresAt}
-                onRemove={() => setIsPollMode(false)}
+      <div className="p-4 sm:p-6">
+        {isFullPreview ? (
+          <PostPreCreationPreview
+            user={{
+              displayName: currentUser.displayName,
+              username: currentUser.username || currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+              avatar: currentUser.avatar
+            }}
+            content={content}
+            media={selectedMedia}
+            poll={isPollMode ? {
+              question: content,
+              options: pollOptions.filter(o => o.trim()),
+              expiresAt: getExpirationDate(pollExpiresAt)
+            } : undefined}
+            visibility={visibility}
+            mentions={mentions}
+          />
+        ) : (
+          <div className="flex gap-4">
+            <div className="flex-1 space-y-6">
+              <PostCreationHeader
+                user={{
+                  displayName: currentUser.displayName,
+                  avatar: currentUser.avatar
+                }}
+                visibility={visibility}
+                onVisibilityChange={setVisibility}
+                mentions={mentions}
+                onSelectMention={toggleMention}
+                onRemoveMention={removeMention}
               />
-            )}
 
-            {locationName && (
-              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
-                <Badge
-                  variant="secondary"
-                  className="bg-primary/10 text-primary gap-1 rounded-lg py-1 pl-1 pr-2"
-                >
-                  <MapPin className="h-3 w-3" />
-                  <span className="text-xs font-bold">{locationName}</span>
-                  <X
-                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
-                    onClick={() => setLocationName('')}
-                  />
-                </Badge>
-              </div>
-            )}
+              {isPollMode ? (
+                <PostPollCreator
+                  question={content}
+                  setQuestion={setContent}
+                  options={pollOptions}
+                  setOptions={setPollOptions}
+                  allowMultiple={pollAllowMultiple}
+                  setAllowMultiple={setPollAllowMultiple}
+                  expiresAt={pollExpiresAt}
+                  setExpiresAt={setPollExpiresAt}
+                  onRemove={() => setIsPollMode(false)}
+                />
+              ) : (
+                <PostCreationTextInput
+                  content={content}
+                  setContent={setContent}
+                  isPreviewMode={isPreviewMode}
+                  setIsPreviewMode={setIsPreviewMode}
+                  maxCharacters={maxCharacters}
+                />
+              )}
 
-            {scheduledDate && (
-              <div className="animate-in slide-in-from-left flex items-center gap-2 px-1 duration-300">
-                <Badge
-                  variant="secondary"
-                  className="gap-1 rounded-lg bg-orange-500/10 py-1 pl-1 pr-2 text-orange-500"
-                >
-                  <Calendar className="h-3 w-3" />
-                  <span className="text-xs font-bold">
-                    Scheduled for {new Date(scheduledDate).toLocaleString()}
-                  </span>
-                  <X
-                    className="hover:text-destructive ml-1 h-3 w-3 cursor-pointer transition-colors"
-                    onClick={() => setScheduledDate(undefined)}
-                  />
-                </Badge>
-              </div>
-            )}
+              <div className="flex flex-wrap gap-2 px-1">
+                {locationName && (
+                  <Badge
+                    variant="secondary"
+                    className="bg-primary/10 text-primary gap-1.5 rounded-full py-1.5 pl-2 pr-3 border border-primary/20"
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="text-xs font-bold uppercase tracking-tight">{locationName}</span>
+                    <X
+                      className="hover:text-destructive ml-1 h-3.5 w-3.5 cursor-pointer transition-colors"
+                      onClick={() => setLocationName('')}
+                    />
+                  </Badge>
+                )}
 
-            <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
-
-            <div className="border-border flex items-center justify-between border-t pt-4 mt-2">
-              <TooltipProvider delayDuration={300}>
-                <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={handleMediaUpload}
-                    className="hidden"
-                    id="media-upload"
-                    multiple
-                  />
-                  
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <label htmlFor="media-upload">
-                        <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/10 rounded-full h-9 w-9 shrink-0 cursor-pointer" asChild>
-                          <span>
-                            <ImageIcon className="h-5 w-5" />
-                          </span>
-                        </Button>
-                      </label>
-                    </TooltipTrigger>
-                    <TooltipContent>Add Media</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`rounded-full h-9 w-9 shrink-0 ${isPollMode ? 'text-primary bg-primary/10' : 'text-primary hover:bg-primary/10'}`}
-                        onClick={() => setIsPollMode(!isPollMode)}
-                      >
-                        <TrendingUp className="h-5 w-5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Create Poll</TooltipContent>
-                  </Tooltip>
-
-                  <Popover>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 rounded-full h-9 w-9 shrink-0"
-                          >
-                            <MapPin className="h-5 w-5" />
-                          </Button>
-                        </PopoverTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>Add Location</TooltipContent>
-                    </Tooltip>
-                    <PopoverContent className="w-80 p-3" align="start">
-                      <div className="space-y-3">
-                        <h4 className="font-medium text-sm">Location Name</h4>
-                        <div className="flex items-center gap-2">
-                          <Input 
-                            value={locationName} 
-                            onChange={(e) => setLocationName(e.target.value)} 
-                            placeholder="Where are you?" 
-                            className="bg-accent/50"
-                          />
-                        </div>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-
-                  <Popover>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className={`rounded-full h-9 w-9 shrink-0 ${scheduledDate ? 'text-orange-500 bg-orange-500/10' : 'text-orange-500 hover:text-orange-600 hover:bg-orange-500/10'}`}
-                          >
-                            <Calendar className="h-5 w-5" />
-                          </Button>
-                        </PopoverTrigger>
-                      </TooltipTrigger>
-                      <TooltipContent>Schedule Post</TooltipContent>
-                    </Tooltip>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <CalendarUI
-                        mode="single"
-                        selected={scheduledDate}
-                        onSelect={setScheduledDate}
-                        initialFocus
-                      />
-                      {scheduledDate && (
-                        <div className="p-3 border-t border-border flex justify-end">
-                          <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)}>
-                            Clear
-                          </Button>
-                        </div>
-                      )}
-                    </PopoverContent>
-                  </Popover>
-
-                  <PostEmojiPicker onEmojiSelect={onEmojiSelect} />
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-primary hover:bg-primary/10 rounded-full h-9 w-9 shrink-0"
-                        onClick={handleAiEnhance}
-                        disabled={isAiLoading || !content.trim()}
-                      >
-                        {isAiLoading ? (
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <Sparkles className="h-5 w-5" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>AI Enhance Text</TooltipContent>
-                  </Tooltip>
-                </div>
-              </TooltipProvider>
-
-              <div className="flex items-center gap-3">
-                <div
-                  className={`text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}
-                >
-                  {characterCount}/{maxCharacters}
-                </div>
-
-                {isOverLimit && (
-                  <Badge variant="destructive" className="text-xs">
-                    Over limit
+                {scheduledDate && (
+                  <Badge
+                    variant="secondary"
+                    className="gap-1.5 rounded-full bg-orange-500/10 py-1.5 pl-2 pr-3 text-orange-500 border border-orange-500/20"
+                  >
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="text-xs font-bold uppercase tracking-tight">
+                      {new Date(scheduledDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                    </span>
+                    <X
+                      className="hover:text-destructive ml-1 h-3.5 w-3.5 cursor-pointer transition-colors"
+                      onClick={() => setScheduledDate(undefined)}
+                    />
                   </Badge>
                 )}
               </div>
+
+              <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
+
+              <div className="border-border flex items-center justify-between border-t pt-5 mt-4">
+                <TooltipProvider delayDuration={400}>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      onChange={handleMediaUpload}
+                      className="hidden"
+                      id="media-upload"
+                      multiple
+                    />
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <label htmlFor="media-upload">
+                            <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/10 rounded-full h-10 w-10 shrink-0 cursor-pointer transition-all hover:scale-110" asChild>
+                              <span><ImageIcon className="h-5 w-5" /></span>
+                            </Button>
+                          </label>
+                        </TooltipTrigger>
+                        <TooltipContent>Add Media</TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                              "rounded-full h-10 w-10 shrink-0",
+                              isPollMode ? 'text-primary bg-primary/10' : 'text-primary hover:bg-primary/10'
+                            )}
+                            onClick={() => setIsPollMode(!isPollMode)}
+                          >
+                            <TrendingUp className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Create Poll</TooltipContent>
+                      </Tooltip>
+
+                      <Popover>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="icon" className="text-rose-500 hover:bg-rose-500/10 rounded-full h-10 w-10 shrink-0">
+                                <MapPin className="h-5 w-5" />
+                              </Button>
+                            </PopoverTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>Add Location</TooltipContent>
+                        </Tooltip>
+                        <PopoverContent className="w-80 p-4 rounded-2xl shadow-2xl" align="start">
+                          <div className="space-y-3">
+                            <h4 className="font-bold text-xs uppercase tracking-wider text-rose-500">Location</h4>
+                            <Input 
+                              value={locationName} 
+                              onChange={(e) => setLocationName(e.target.value)} 
+                              placeholder="Where are you?" 
+                              className="bg-accent/50 rounded-xl" 
+                            />
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
+                      <Popover>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn("rounded-full h-10 w-10 shrink-0", scheduledDate ? 'text-orange-500 bg-orange-500/10' : 'text-orange-500 hover:bg-orange-500/10')}
+                              >
+                                <Calendar className="h-5 w-5" />
+                              </Button>
+                            </PopoverTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>Schedule</TooltipContent>
+                        </Tooltip>
+                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
+                          <CalendarUI mode="single" selected={scheduledDate} onSelect={setScheduledDate} initialFocus />
+                          {scheduledDate && (
+                            <div className="p-3 border-t bg-accent/5 flex justify-end">
+                              <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)} className="text-xs rounded-full">Clear</Button>
+                            </div>
+                          )}
+                        </PopoverContent>
+                      </Popover>
+
+                      <PostEmojiPicker onEmojiSelect={onEmojiSelect} />
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary hover:bg-primary/10 rounded-full h-10 w-10 shrink-0"
+                            onClick={handleAiEnhance}
+                            disabled={isAiLoading || !content.trim()}
+                          >
+                            {isAiLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>AI Enhance</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </TooltipProvider>
+
+                <div className="flex items-center gap-3">
+                  {content.trim() && (
+                    <span className="text-[10px] text-muted-foreground/50 uppercase font-bold tracking-widest animate-pulse hidden md:inline-block">Draft saved</span>
+                  )}
+                  {isOverLimit && (
+                    <Badge variant="destructive" className="text-[9px] h-5 px-2 rounded-full uppercase font-black">Over</Badge>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="border-border border-t p-4">
-        <div className="text-muted-foreground space-y-2 text-sm">
-          <p>
-            💡 <strong>Tips for great posts:</strong>
+      <div className="border-border border-t p-6 mt-4 bg-accent/2">
+        <div className="text-muted-foreground/70 space-y-3 text-xs leading-relaxed max-w-lg">
+          <p className="flex items-center gap-2 text-foreground/80 font-semibold mb-2">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Tips for your next masterpiece:
           </p>
-          <ul className="ml-4 list-inside list-disc space-y-1">
-            <li>Keep it engaging and authentic</li>
-            <li>Use relevant hashtags to reach more people</li>
-            <li>Add images or videos to increase engagement</li>
-            <li>Ask questions to encourage interaction</li>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none">
+            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Keep it engaging and authentic</li>
+            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Use relevant hashtags</li>
+            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Add high-quality media</li>
+            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Ask questions to spark debate</li>
           </ul>
         </div>
       </div>

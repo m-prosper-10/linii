@@ -85,5 +85,19 @@ export const socialService = {
       return response.data.users;
     }
     throw new Error(response.message || 'Failed to get suggested users');
+  },
+
+  /**
+   * Search for users by query
+   */
+  async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: Partial<User>[], total: number }> {
+    const response = await apiClient.get<{ users: Partial<User>[], total: number }>(`/social/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+    if (response.success && response.data) {
+      return {
+        users: response.data.users,
+        total: response.data.total
+      };
+    }
+    throw new Error(response.message || 'Search failed');
   }
 };
