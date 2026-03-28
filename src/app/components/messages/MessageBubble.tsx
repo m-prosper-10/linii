@@ -42,7 +42,7 @@ export function MessageBubble({
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarImage src={sender.avatar} />
-          <AvatarFallback>{sender.displayName[0]}</AvatarFallback>
+          <AvatarFallback>{sender.fullnames?.[0]}</AvatarFallback>
         </Avatar>
       ) : (
         <div className="w-8 shrink-0" />
