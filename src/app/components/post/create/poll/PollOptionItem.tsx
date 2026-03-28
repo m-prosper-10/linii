@@ -2,7 +2,7 @@
 
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
-import { X } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface PollOptionItemProps {
   index: number;
@@ -20,15 +20,15 @@ export function PollOptionItem({
   canRemove
 }: PollOptionItemProps) {
   return (
-    <div className="flex gap-2 group animate-in fade-in slide-in-from-left-2 duration-200">
-      <div className="relative flex-1">
+    <div className="flex gap-2 group animate-in fade-in slide-in-from-left-2 duration-300">
+      <div className="relative flex-1 group/input">
         <Input
           placeholder={`Option ${index + 1}`}
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="bg-background border-border/40 h-11 rounded-xl focus:ring-primary/20 focus:border-primary/40 transition-all pl-10"
+          className="bg-background border-border/40 h-12 rounded-2xl focus:ring-primary/10 focus:border-primary/50 transition-all pl-12 shadow-sm group-hover/input:border-primary/20"
         />
-        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground/40 font-bold text-xs">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-lg bg-accent/50 text-muted-foreground/40 font-bold text-[10px] tracking-tighter ring-1 ring-border/10 group-focus-within/input:bg-primary/10 group-focus-within/input:text-primary/60 transition-colors">
           {index + 1}
         </div>
       </div>
@@ -39,7 +39,7 @@ export function PollOptionItem({
           onClick={onRemove}
           className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-11 w-11 p-0 rounded-xl sm:opacity-0 group-hover:opacity-100 transition-all shrink-0"
         >
-          <X className="h-4 w-4" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       )}
     </div>

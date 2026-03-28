@@ -5,7 +5,6 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@/app/components/ui/avatar';
-import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
 import {
   DropdownMenu,
@@ -13,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/app/components/ui/dropdown-menu';
-import { Copy, Flag, Loader2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Copy, Flag, Loader2, MoreHorizontal, Trash2, CheckCircle2, Globe, Users, Lock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import type { PostApiType } from '@/services/post';
 
@@ -59,17 +58,17 @@ export function PostHeader({
               {post.author.fullnames}
             </span>
             {post.author.verified && (
-              <Badge variant="secondary" className="h-4 px-1 text-[10px] shrink-0">✓</Badge>
+              <CheckCircle2 className="h-3.5 w-3.5 fill-primary text-background shrink-0" />
             )}
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
             <span>@{post.author.username}</span>
-            {variant === 'feed' && (
-              <>
-                <span>·</span>
-                <span>{timeAgo}</span>
-              </>
-            )}
+            <span>·</span>
+            <span>{timeAgo}</span>
+            <span>·</span>
+            {post.visibility === 'PUBLIC' && <Globe className="h-3 w-3" />}
+            {post.visibility === 'FRIENDS' && <Users className="h-3 w-3" />}
+            {(post.visibility === 'PRIVATE' || post.visibility === 'CUSTOM') && <Lock className="h-3 w-3" />}
           </div>
         </div>
       </div>

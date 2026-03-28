@@ -4,7 +4,7 @@ import React from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { PostContent } from '../PostContent';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
-import { cn } from '@/app/components/ui/utils';
+import { PostApiType } from '@/services/post';
 
 interface PostPreCreationPreviewProps {
   user: {
@@ -54,7 +54,7 @@ export function PostPreCreationPreview({
       totalVotes: 0,
       expiresAt: poll.expiresAt.toISOString(),
       allowMultiple: false,
-      userVoted: false,
+      userVoted: [],
       isExpired: false
     } : undefined,
     visibility,
@@ -93,13 +93,11 @@ export function PostPreCreationPreview({
           </div>
 
           {/* Content Rendering */}
-          <div className="mt-2">
             <PostContent
-              post={mockPost as any}
+              post={mockPost as PostApiType}
               onPostClick={() => {}}
               onUpdate={() => {}}
             />
-          </div>
 
           {/* Actions Mockup */}
           <div className="mt-6 flex items-center justify-between border-t border-border/40 pt-4 px-1">
@@ -128,7 +126,7 @@ export function PostPreCreationPreview({
 
       <div className="bg-primary/5 rounded-2xl p-4 border border-primary/10">
         <p className="text-[11px] text-primary/70 leading-relaxed italic text-center">
-          "This is how your post will look to your followers. Review carefully before sharing."
+          &quot;This is how your post will look to your followers. Review carefully before sharing.&quot;
         </p>
       </div>
     </div>
