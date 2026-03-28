@@ -12,6 +12,7 @@ import { Loader2, Send } from 'lucide-react';
 import { PostService } from '@/services/post';
 import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
+import { EmojiPicker } from '@/app/components/post/EmojiPicker';
 
 interface PostCommentInputProps {
   postId: string;
@@ -34,6 +35,10 @@ export function PostCommentInput({
   const [value, setValue] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const handleEmojiSelect = (emoji: string) => {
+    setValue(value + emoji);
+  };
+
   const handleSubmit = async () => {
     const content = value.trim();
     if (!content) return;
@@ -55,32 +60,45 @@ export function PostCommentInput({
     if (submitMode === 'enter' && e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSubmit();
-    } else if (submitMode === 'ctrl-enter' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+    } else if (
+      submitMode === 'ctrl-enter' &&
+      e.key === 'Enter' &&
+      (e.metaKey || e.ctrlKey)
+    ) {
       handleSubmit();
     }
   };
 
   return (
-    <div className={`flex items-end gap-3 ${className}`}>
-      <Avatar className="mb-1 h-8 w-8 shrink-0">
+    <div
+      className={`flex items-center justify-between gap-2 ${className}`}
+    >
+      <Avatar className="h-10 w-10 shrink-0">
         <AvatarImage src={currentUser?.avatar} alt={currentUser?.fullnames} />
         <AvatarFallback>{currentUser?.fullnames?.[0]}</AvatarFallback>
       </Avatar>
-      <div className="flex flex-1 gap-2">
-        <Textarea
-          placeholder={placeholder}
-          value={value}
-          onChange={e => setValue(e.target.value)}
-          className="bg-accent/20 border-border focus-visible:ring-primary/20 min-h-[44px] max-h-[120px] resize-none text-sm"
-          onKeyDown={handleKeyDown}
-        />
+      <div className="flex flex-1 items-center justify-between gap-2">
+        <div className="flex w-full items-center gap-2">
+          <input
+            placeholder={placeholder}
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            className="bg-accent/20 focus-visible:ring-primary/20 max-h-[120px] min-h-[44px] w-full max-w-100 text-sm pl-2 border-border"
+            onKeyDown={handleKeyDown}
+          />
+          <EmojiPicker onEmojiSelect={handleEmojiSelect} />
+        </div>
         <Button
           size="sm"
           disabled={!value.trim() || loading}
           onClick={handleSubmit}
-          className="self-end h-9 rounded-lg"
+          className="h-10 self-end rounded-lg border"
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+          {loading ? (
+            <Loader2 className="h-6 w-6 animate-spin" />
+          ) : (
+            <Send className="h-6 w-6" />
+          )}
         </Button>
       </div>
     </div>
