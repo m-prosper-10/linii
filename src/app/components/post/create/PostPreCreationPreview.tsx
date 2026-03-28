@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { PostContent } from '../PostContent';
-import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
+import { PostHeader } from '../PostHeader';
+import { Heart, MessageCircle, Share2 } from 'lucide-react';
 import { PostApiType } from '@/services/post';
 
 interface PostPreCreationPreviewProps {
@@ -79,19 +79,12 @@ export function PostPreCreationPreview({
 
       <div className="rounded-3xl border border-primary/10 bg-card overflow-hidden shadow-2xl shadow-primary/5 transition-all animate-in fade-in zoom-in-95 duration-500">
         <div className="p-4 sm:p-5">
-          {/* Header Mockup */}
-          <div className="flex justify-between items-start mb-4">
-            <div className="flex gap-3">
-              <Avatar className="h-10 w-10 ring-1 ring-border/20">
-                <AvatarImage src={user.avatar} alt={user.displayName} />
-                <AvatarFallback>{user.displayName[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex flex-col">
-                <span className="font-bold text-[15px] leading-tight">{user.displayName}</span>
-                <span className="text-muted-foreground text-xs">@{user.username} • Just now</span>
-              </div>
-            </div>
-            <MoreHorizontal className="h-5 w-5 text-muted-foreground/40" />
+          {/* Real Post Header Component for perfect preview */}
+          <div className="mb-4">
+            <PostHeader 
+              post={mockPost as unknown as PostApiType} 
+              variant="feed"
+            />
           </div>
 
           {/* Content Rendering */}

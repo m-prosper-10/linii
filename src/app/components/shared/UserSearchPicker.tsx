@@ -1,14 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { Check, Loader2, Search } from 'lucide-react';
+import { Check, Search } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/app/components/ui/command';
 import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
 import { socialService } from '@/services/social';
-import { User } from '@/services/auth';
-import { cn } from '@/app/components/ui/utils';
-import { toast } from 'sonner';
+import { User } from '@/services/auth';import { toast } from 'sonner';
+import { Skeleton } from '@/app/components/ui/skeleton';
 
 interface UserSearchPickerProps {
   selectedUsers: Array<{ id: string; name: string; avatar?: string }>;
@@ -16,6 +15,22 @@ interface UserSearchPickerProps {
   onRemove: (userId: string) => void;
   children: React.ReactNode;
 }
+
+const UserSearchPickerSkeleton = () => {
+  return (
+    <div className="p-2 space-y-2">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center gap-3 p-3">
+          <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+          <div className="flex flex-col gap-2 flex-1">
+            <Skeleton className="h-3 w-24 rounded-full" />
+            <Skeleton className="h-2 w-16 rounded-full opacity-50" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export function UserSearchPicker({
   selectedUsers,
@@ -68,11 +83,7 @@ export function UserSearchPicker({
             className="border-none focus:ring-0"
           />
           <CommandList className="max-h-[300px] custom-scrollbar">
-            {loading && (
-              <div className="flex items-center justify-center py-6">
-                <Loader2 className="h-5 w-5 animate-spin text-primary opacity-50" />
-              </div>
-            )}
+            {loading && <UserSearchPickerSkeleton />}
             
             {!loading && results.length === 0 && query.trim() !== '' && (
               <CommandEmpty>No users found.</CommandEmpty>
