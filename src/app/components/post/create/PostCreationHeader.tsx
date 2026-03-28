@@ -26,7 +26,7 @@ export function PostCreationHeader({
 }: PostCreationHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-3 mb-4">
-      <div className="flex flex-row items-center gap-3 w-full border">
+      <div className="flex flex-row items-center justify-start gap-3 w-full">
         <div className="flex -space-x-2 overflow-hidden">
           <Avatar className="h-10 w-10 border-2 border-background ring-1 ring-border/20 shrink-0">
             <AvatarImage src={user.avatar} alt={user.displayName} />
@@ -51,7 +51,7 @@ export function PostCreationHeader({
           )}
         </div>
 
-        <div className="flex flex-col">
+        <div className="flex flex-row items-center justify-between w-full">
           <div className="flex items-center gap-1.5">
             <span className="font-bold text-[15px] leading-tight flex items-center gap-1">
               {user.displayName}
@@ -81,10 +81,10 @@ export function PostCreationHeader({
           </div>
           
           <Select value={visibility} onValueChange={onVisibilityChange}>
-            <SelectTrigger className="h-5 gap-1 rounded-full border-none bg-accent/30 hover:bg-accent/50 px-2 text-[10px] font-bold uppercase tracking-wider transition-all focus:ring-0 w-fit">
+            <SelectTrigger className="h-5 gap-1 rounded-md border-none bg-accent/30 hover:bg-accent/50 px-4 text-[10px] font-bold uppercase tracking-wider transition-all focus:ring-0 w-fit">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent align="start" className="rounded-xl border-border/50 shadow-2xl">
+            <SelectContent align="start" className="rounded-sm border-border/50 shadow-2xl">
               <SelectItem value="PUBLIC">
                 <div className="flex items-center gap-2 py-0.5">
                   <Globe className="h-3 w-3 text-sky-500"/> 
