@@ -91,7 +91,7 @@ export const socialService = {
    * Search for users by query
    */
   async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: Partial<User>[], total: number }> {
-    const response = await apiClient.get<any>(`/social/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+    const response = await apiClient.get<{ users: Partial<User>[], total: number }>(`/social/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
     if (response.success && response.data) {
       return {
         users: response.data.users,

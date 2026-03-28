@@ -337,7 +337,6 @@ export function PostCreationView() {
               expiresAt: getExpirationDate(pollExpiresAt)
             } : undefined}
             visibility={visibility}
-            currentUser={currentUser}
             mentions={mentions}
           />
         ) : (
