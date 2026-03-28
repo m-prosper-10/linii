@@ -3,6 +3,7 @@
 import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
 import { EmojiPicker } from '@/app/components/messages/EmojiPicker';
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
+import { NewConversationDialog } from '@/app/components/messages/NewConversationDialog';
 import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
 import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
 import {
@@ -26,6 +27,7 @@ import {
   Verified,
   Video,
   X,
+  SquarePen,
 } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -42,6 +44,7 @@ export function MessagesView() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showMobileChat, setShowMobileChat] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
+  const [newConvOpen, setNewConvOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -167,6 +170,16 @@ export function MessagesView() {
     setShowMobileChat(false);
   };
 
+  const handleConversationCreated = (conversation: Conversation) => {
+    // Add to list if not already present, then select it
+    setConversations(prev => {
+      const exists = prev.some(c => c._id === conversation._id);
+      return exists ? prev : [conversation, ...prev];
+    });
+    setSelectedConversationId(conversation._id);
+    setShowMobileChat(true);
+  };
+
   // Auto-resize textarea
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessageInput(e.target.value);
@@ -182,6 +195,12 @@ export function MessagesView() {
 
   return (
     <div className="flex h-full w-full flex-row">
+      {/* New Conversation Dialog */}
+      <NewConversationDialog
+        open={newConvOpen}
+        onOpenChange={setNewConvOpen}
+        onConversationCreated={handleConversationCreated}
+      />
       {/* Conversations List */}
       <div
         className={cn(
@@ -190,8 +209,18 @@ export function MessagesView() {
         )}
       >
         <div className="border-border bg-card/50 sticky top-0 z-10 space-y-4 border-b p-4 backdrop-blur-sm">
-          <h2 className="text-xl font-semibold">Messages</h2>
-          <div className="relative">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Messages</h2>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setNewConvOpen(true)}
+              className="h-8 w-8 p-0 rounded-xl text-muted-foreground hover:text-foreground"
+              title="New message"
+            >
+              <SquarePen className="h-4 w-4" />
+            </Button>
+          </div>          <div className="relative">
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search conversations..."
