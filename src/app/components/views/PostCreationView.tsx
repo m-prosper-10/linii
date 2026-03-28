@@ -27,7 +27,7 @@ import { toast } from 'sonner';
 // New Components
 import { PostPollCreator } from '@/app/components/post/create/PostPollCreator';
 import { PostMediaPreview } from '@/app/components/post/create/PostMediaPreview';
-import { PostEmojiPicker } from '@/app/components/post/create/PostEmojiPicker';
+import { PostEmojiPicker } from '@/app/components/post/create/EmojiPicker';
 import { PostCreationHeader } from '@/app/components/post/create/PostCreationHeader';
 import { PostCreationTextInput } from '@/app/components/post/create/PostCreationTextInput';
 import { PostPreCreationPreview } from '@/app/components/post/create/PostPreCreationPreview';
