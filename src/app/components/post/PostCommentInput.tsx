@@ -73,7 +73,7 @@ export function PostCommentInput({
 
   return (
     <div className={cn('flex items-start gap-2.5', className)}>
-      <Avatar className="h-8 w-8 shrink-0 mt-1">
+      <Avatar className="h-12 w-12 shrink-0 mt-1">
         <AvatarImage src={currentUser?.avatar} alt={currentUser?.fullnames} />
         <AvatarFallback className="text-xs">{currentUser?.fullnames?.[0]}</AvatarFallback>
       </Avatar>
@@ -93,7 +93,7 @@ export function PostCommentInput({
           onKeyDown={handleKeyDown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          className="flex-1 resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none min-h-[24px] max-h-[120px]"
+          className="flex-1 resize-none bg-transparent text-sm leading-relaxed placeholder:text-muted-foreground/40 focus:outline-none h-7 min-h-8 max-h-[120px] mb-0.5"
         />
 
         <div className="flex items-center gap-1 shrink-0 pb-0.5">
@@ -102,15 +102,15 @@ export function PostCommentInput({
             disabled={!canSubmit}
             onClick={handleSubmit}
             className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-xl transition-all duration-200',
+              'flex h-7 w-7 items-center justify-center rounded-md transition-all duration-200',
               canSubmit
-                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-100'
                 : 'text-muted-foreground/30 cursor-not-allowed'
             )}
           >
             {loading
-              ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              : <Send className="h-3.5 w-3.5" />
+              ? <Loader2 className="h-4 w-4 animate-spin" />
+              : <Send className="h-4 w-4" />
             }
           </button>
         </div>
