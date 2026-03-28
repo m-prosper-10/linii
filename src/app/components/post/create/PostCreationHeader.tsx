@@ -2,7 +2,7 @@
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/components/ui/select';
-import { Globe, Users, Lock, ChevronDown, UserPlus } from 'lucide-react';
+import { Globe, Users, Lock, UserPlus } from 'lucide-react';
 import { Button } from '@/app/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
 
