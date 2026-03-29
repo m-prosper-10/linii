@@ -252,18 +252,13 @@ export function DiscoverySidebar() {
                     <div className="text-[10px] text-muted-foreground truncate font-medium">
                       @{user.username}
                     </div>
-                    {user.suggestionLabel && (
-                      <div className="text-primary/80 mt-0.5 line-clamp-2 text-[10px] font-medium leading-snug">
-                        {user.suggestionLabel}
-                      </div>
-                    )}
                   </div>
                   <Button 
                     size="sm" 
                     variant={followingIds.has(user._id!) ? "secondary" : "default"}
                     className={cn(
-                      "h-8 rounded-full px-3 font-bold text-[10px] transition-all",
-                      followingIds.has(user._id!) ? "opacity-60" : "shadow-lg shadow-primary/10 hover:shadow-primary/20"
+                      "h-8 rounded-md px-3 font-bold text-[10px] transition-all",
+                      followingIds.has(user._id!) ? "opacity-60" : "hover:shadow-primary/20"
                     )}
                     onClick={() => handleFollow(user._id!)}
                     disabled={followingIds.has(user._id!)}
