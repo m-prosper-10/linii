@@ -5,7 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import { chatService, Conversation } from '@/services/chat';
 import { socialService } from '@/services/social';
 import { useApp } from '@/context/AppContext';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { cn } from '@/app/components/ui/utils';
@@ -29,13 +33,13 @@ import {
 // ── Background options ────────────────────────────────────────────────────────
 
 const BG_OPTIONS = [
-  { id: 'default',  label: 'Default',  class: 'bg-background' },
-  { id: 'slate',    label: 'Slate',    class: 'bg-slate-900' },
-  { id: 'zinc',     label: 'Zinc',     class: 'bg-zinc-800' },
-  { id: 'rose',     label: 'Rose',     class: 'bg-rose-950' },
-  { id: 'indigo',   label: 'Indigo',   class: 'bg-indigo-950' },
-  { id: 'emerald',  label: 'Emerald',  class: 'bg-emerald-950' },
-  { id: 'amber',    label: 'Amber',    class: 'bg-amber-950' },
+  { id: 'default', label: 'Default', class: 'bg-background' },
+  { id: 'slate', label: 'Slate', class: 'bg-slate-900' },
+  { id: 'zinc', label: 'Zinc', class: 'bg-zinc-800' },
+  { id: 'rose', label: 'Rose', class: 'bg-rose-950' },
+  { id: 'indigo', label: 'Indigo', class: 'bg-indigo-950' },
+  { id: 'emerald', label: 'Emerald', class: 'bg-emerald-950' },
+  { id: 'amber', label: 'Amber', class: 'bg-amber-950' },
 ];
 
 const BG_STORAGE_KEY = (id: string) => `chat_bg_${id}`;
@@ -85,7 +89,7 @@ export function ConversationSettingsView() {
   if (loading || !conversation) {
     return (
       <div className="flex h-full items-center justify-center">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground/40" />
+        <Loader2 className="text-muted-foreground/40 h-5 w-5 animate-spin" />
       </div>
     );
   }
@@ -93,7 +97,9 @@ export function ConversationSettingsView() {
   const isGroup = conversation.conversationType === 'GROUP';
   const isAdmin = conversation.admins.includes(currentUser?._id ?? '');
   const isCreator = conversation.createdBy === currentUser?._id;
-  const otherUser = conversation.participants.find(p => p._id !== currentUser?._id);
+  const otherUser = conversation.participants.find(
+    p => p._id !== currentUser?._id
+  );
 
   const handleSaveName = async () => {
     if (!groupName.trim()) return;
@@ -115,7 +121,10 @@ export function ConversationSettingsView() {
 
   const handleRemoveParticipant = async (participantId: string) => {
     try {
-      const updated = await chatService.removeParticipant(conversationId, participantId);
+      const updated = await chatService.removeParticipant(
+        conversationId,
+        participantId
+      );
       setConversation(updated);
       toast.success('Participant removed');
     } catch (err: unknown) {
@@ -165,7 +174,9 @@ export function ConversationSettingsView() {
     try {
       const updated = await chatService.getConversation(conversationId);
       setConversation(updated);
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   return (
@@ -174,7 +185,7 @@ export function ConversationSettingsView() {
       <div className="bg-background/80 border-border/40 sticky top-0 z-10 flex items-center gap-3 border-b px-4 py-3 backdrop-blur-md">
         <button
           onClick={() => router.back()}
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent/60 transition-colors"
+          className="hover:bg-accent/60 flex h-8 w-8 items-center justify-center rounded-full transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
@@ -182,17 +193,20 @@ export function ConversationSettingsView() {
       </div>
 
       <div className="space-y-6 p-4">
-
         {/* ── Identity section ── */}
         <Section title={isGroup ? 'Group Info' : 'Contact'}>
           <div className="flex items-center gap-4">
             <Avatar className="h-16 w-16">
-              <AvatarImage src={isGroup ? conversation.avatar : otherUser?.avatar} />
+              <AvatarImage
+                src={isGroup ? conversation.avatar : otherUser?.avatar}
+              />
               <AvatarFallback className="text-xl font-bold">
-                {isGroup ? (conversation.name?.[0] ?? 'G') : otherUser?.fullnames?.[0]}
+                {isGroup
+                  ? (conversation.name?.[0] ?? 'G')
+                  : otherUser?.fullnames?.[0]}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               {isGroup && editingName ? (
                 <div className="space-y-2">
                   <Input
@@ -209,11 +223,25 @@ export function ConversationSettingsView() {
                     className="h-8 text-sm"
                   />
                   <div className="flex gap-2">
-                    <Button size="sm" className="h-7 rounded-lg px-3 text-xs" onClick={handleSaveName} disabled={saving}>
-                      {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                    <Button
+                      size="sm"
+                      className="h-7 rounded-lg px-3 text-xs"
+                      onClick={handleSaveName}
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <Check className="h-3 w-3" />
+                      )}
                       Save
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-7 rounded-lg px-3 text-xs" onClick={() => setEditingName(false)}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 rounded-lg px-3 text-xs"
+                      onClick={() => setEditingName(false)}
+                    >
                       <X className="h-3 w-3" /> Cancel
                     </Button>
                   </div>
@@ -221,18 +249,24 @@ export function ConversationSettingsView() {
               ) : (
                 <>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold truncate">
-                      {isGroup ? (conversation.name ?? 'Unnamed group') : otherUser?.fullnames}
+                    <p className="truncate font-semibold">
+                      {isGroup
+                        ? (conversation.name ?? 'Unnamed group')
+                        : otherUser?.fullnames}
                     </p>
                     {isGroup && (isAdmin || isCreator) && (
-                      <button onClick={() => setEditingName(true)} className="text-muted-foreground/50 hover:text-foreground transition-colors">
+                      <button
+                        onClick={() => setEditingName(true)}
+                        className="text-muted-foreground/50 hover:text-foreground transition-colors"
+                      >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground/60 mt-0.5">
+                  <p className="text-muted-foreground/60 mt-0.5 text-xs">
                     {isGroup
-                      ? (conversation.description || `${conversation.participants.length} members`)
+                      ? conversation.description ||
+                        `${conversation.participants.length} members`
                       : `@${otherUser?.username}`}
                   </p>
                 </>
@@ -253,17 +287,17 @@ export function ConversationSettingsView() {
                   'relative h-9 w-full rounded-lg border-2 transition-all',
                   bg.class,
                   selectedBg === bg.id
-                    ? 'border-primary scale-105 shadow-md shadow-primary/20'
+                    ? 'border-primary shadow-primary/20 scale-105 shadow-md'
                     : 'border-border/30 hover:border-border'
                 )}
               >
                 {selectedBg === bg.id && (
-                  <Check className="absolute inset-0 m-auto h-3.5 w-3.5 text-primary drop-shadow" />
+                  <Check className="text-primary absolute inset-0 m-auto h-3.5 w-3.5 drop-shadow" />
                 )}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[11px] text-muted-foreground/50">
+          <p className="text-muted-foreground/50 mt-2 text-[11px]">
             Background is saved locally on this device.
           </p>
         </Section>
@@ -272,20 +306,30 @@ export function ConversationSettingsView() {
         <Section title="Notifications">
           <button
             onClick={() => setMuted(m => !m)}
-            className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 hover:bg-accent/50 transition-colors"
+            className="hover:bg-accent/50 flex w-full items-center justify-between rounded-xl px-3 py-2.5 transition-colors"
           >
             <div className="flex items-center gap-3">
-              {muted ? <BellOff className="h-4 w-4 text-muted-foreground/60" /> : <Bell className="h-4 w-4 text-muted-foreground/60" />}
-              <span className="text-sm font-medium">{muted ? 'Unmute notifications' : 'Mute notifications'}</span>
+              {muted ? (
+                <BellOff className="text-muted-foreground/60 h-4 w-4" />
+              ) : (
+                <Bell className="text-muted-foreground/60 h-4 w-4" />
+              )}
+              <span className="text-sm font-medium">
+                {muted ? 'Unmute notifications' : 'Mute notifications'}
+              </span>
             </div>
-            <div className={cn(
-              'h-5 w-9 rounded-full transition-colors',
-              muted ? 'bg-primary' : 'bg-muted'
-            )}>
-              <div className={cn(
-                'h-5 w-5 rounded-full bg-white shadow transition-transform',
-                muted ? 'translate-x-4' : 'translate-x-0'
-              )} />
+            <div
+              className={cn(
+                'h-5 w-9 rounded-full transition-colors',
+                muted ? 'bg-primary' : 'bg-muted'
+              )}
+            >
+              <div
+                className={cn(
+                  'h-5 w-5 rounded-full bg-white shadow transition-transform',
+                  muted ? 'translate-x-4' : 'translate-x-0'
+                )}
+              />
             </div>
           </button>
         </Section>
@@ -295,10 +339,10 @@ export function ConversationSettingsView() {
           <Section
             title={`Members · ${conversation.participants.length}`}
             action={
-              (isAdmin || isCreator) ? (
+              isAdmin || isCreator ? (
                 <button
                   onClick={() => setAddMembersOpen(true)}
-                  className="flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+                  className="text-primary hover:text-primary/80 flex items-center gap-1 text-xs font-semibold transition-colors"
                 >
                   <Plus className="h-3.5 w-3.5" /> Add
                 </button>
@@ -310,27 +354,49 @@ export function ConversationSettingsView() {
                 const pIsAdmin = conversation.admins.includes(participant._id!);
                 const pIsCreator = conversation.createdBy === participant._id;
                 const isSelf = participant._id === currentUser?._id;
-                const canRemove = (isAdmin || isCreator) && !isSelf && !pIsCreator;
+                const canRemove =
+                  (isAdmin || isCreator) && !isSelf && !pIsCreator;
 
                 return (
-                  <div key={participant._id} className="flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-accent/30 transition-colors">
+                  <div
+                    key={participant._id}
+                    className="hover:bg-accent/30 flex items-center gap-3 rounded-xl px-2 py-2 transition-colors"
+                  >
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarImage src={participant.avatar} />
-                      <AvatarFallback className="text-xs font-bold">{participant.fullnames?.[0]}</AvatarFallback>
+                      <AvatarFallback className="text-xs font-bold">
+                        {participant.fullnames?.[0]}
+                      </AvatarFallback>
                     </Avatar>
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-sm font-medium truncate">{participant.fullnames}</span>
-                        {pIsCreator && <Crown className="h-3 w-3 text-amber-500 shrink-0" />}
-                        {pIsAdmin && !pIsCreator && <span className="text-[10px] font-bold text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-md">Admin</span>}
-                        {isSelf && <span className="text-[10px] text-muted-foreground/50">(you)</span>}
+                        <span className="truncate text-sm font-medium">
+                          {participant.fullnames}
+                        </span>
+                        {pIsCreator && (
+                          <Crown className="h-3 w-3 shrink-0 text-amber-500" />
+                        )}
+                        {pIsAdmin && !pIsCreator && (
+                          <span className="text-primary/70 bg-primary/10 rounded-md px-1.5 py-0.5 text-[10px] font-bold">
+                            Admin
+                          </span>
+                        )}
+                        {isSelf && (
+                          <span className="text-muted-foreground/50 text-[10px]">
+                            (you)
+                          </span>
+                        )}
                       </div>
-                      <p className="text-[11px] text-muted-foreground/50">@{participant.username}</p>
+                      <p className="text-muted-foreground/50 text-[11px]">
+                        @{participant.username}
+                      </p>
                     </div>
                     {canRemove && (
                       <button
-                        onClick={() => handleRemoveParticipant(participant._id!)}
-                        className="rounded-lg p-1.5 text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        onClick={() =>
+                          handleRemoveParticipant(participant._id!)
+                        }
+                        className="text-muted-foreground/40 hover:bg-destructive/10 hover:text-destructive rounded-lg p-1.5 transition-colors"
                         title="Remove"
                       >
                         <UserMinus className="h-3.5 w-3.5" />
@@ -347,13 +413,25 @@ export function ConversationSettingsView() {
         <Section title="Danger Zone">
           <div className="space-y-1">
             {!isGroup && (
-              <DangerRow icon={UserX} label={`Block @${otherUser?.username}`} onClick={handleBlock} />
+              <DangerRow
+                icon={UserX}
+                label={`Block @${otherUser?.username}`}
+                onClick={handleBlock}
+              />
             )}
             {isGroup && (
-              <DangerRow icon={LogOut} label="Leave conversation" onClick={handleLeave} />
+              <DangerRow
+                icon={LogOut}
+                label="Leave conversation"
+                onClick={handleLeave}
+              />
             )}
             {(isCreator || !isGroup) && (
-              <DangerRow icon={Trash2} label="Delete conversation" onClick={handleDelete} />
+              <DangerRow
+                icon={Trash2}
+                label="Delete conversation"
+                onClick={handleDelete}
+              />
             )}
           </div>
         </Section>
@@ -375,25 +453,43 @@ export function ConversationSettingsView() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function Section({ title, children, action }: { title: string; children: React.ReactNode; action?: React.ReactNode }) {
+function Section({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
     <div>
       <div className="mb-2 flex items-center justify-between px-0.5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">{title}</span>
+        <span className="text-muted-foreground/50 text-[10px] font-bold uppercase tracking-widest">
+          {title}
+        </span>
         {action}
       </div>
-      <div className="rounded-2xl border border-border/30 bg-card/60 px-3 py-2">
+      <div className="border-border/30 bg-card/60 rounded-2xl border px-3 py-2">
         {children}
       </div>
     </div>
   );
 }
 
-function DangerRow({ icon: Icon, label, onClick }: { icon: React.ElementType; label: string; onClick: () => void }) {
+function DangerRow({
+  icon: Icon,
+  label,
+  onClick,
+}: {
+  icon: React.ElementType;
+  label: string;
+  onClick: () => void;
+}) {
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors text-left"
+      className="text-destructive hover:bg-destructive/10 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors"
     >
       <Icon className="h-4 w-4 shrink-0" />
       {label}
@@ -416,23 +512,35 @@ function AddMembersDialog({
   onAdded: () => void;
 }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<{ _id?: string; fullnames?: string; username?: string; avatar?: string }[]>([]);
+  const [results, setResults] = useState<
+    { _id?: string; fullnames?: string; username?: string; avatar?: string }[]
+  >([]);
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!open) { setQuery(''); setResults([]); return; }
+    if (!open) {
+      setQuery('');
+      setResults([]);
+      return;
+    }
   }, [open]);
 
   useEffect(() => {
-    if (!query.trim()) { setResults([]); return; }
+    if (!query.trim()) {
+      setResults([]);
+      return;
+    }
     const t = setTimeout(async () => {
       setSearching(true);
       try {
         const { users } = await socialService.searchUsers(query, 1, 10);
         setResults(users.filter(u => u._id && !existingIds.includes(u._id)));
-      } catch { setResults([]); }
-      finally { setSearching(false); }
+      } catch {
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
     }, 300);
     return () => clearTimeout(t);
   }, [query, existingIds]);
@@ -455,45 +563,69 @@ function AddMembersDialog({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={() => onOpenChange(false)} />
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/40 bg-background shadow-2xl overflow-hidden">
-        <div className="border-b border-border/30 px-4 py-3">
+      <div
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
+        onClick={() => onOpenChange(false)}
+      />
+      <div className="border-border/40 bg-background fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border shadow-2xl">
+        <div className="border-border/30 border-b px-4 py-3">
           <p className="text-sm font-semibold">Add members</p>
         </div>
-        <div className="flex items-center gap-2 border-b border-border/20 px-4 py-3">
+        <div className="border-border/20 flex items-center gap-2 border-b px-4 py-3">
           <input
             autoFocus
             value={query}
             onChange={e => setQuery(e.target.value)}
             placeholder="Search people…"
-            className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none"
+            className="placeholder:text-muted-foreground/40 flex-1 bg-transparent text-sm focus:outline-none"
           />
-          {searching && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground/40" />}
+          {searching && (
+            <Loader2 className="text-muted-foreground/40 h-3.5 w-3.5 animate-spin" />
+          )}
         </div>
         <div className="scrollbar-thin max-h-72 overflow-y-auto">
-          {results.length > 0 ? results.map(user => (
-            <div key={user._id} className="flex items-center gap-3 px-4 py-3 hover:bg-accent/40 transition-colors">
-              <Avatar className="h-9 w-9 shrink-0">
-                <AvatarImage src={user.avatar} />
-                <AvatarFallback className="text-xs">{user.fullnames?.[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{user.fullnames}</p>
-                <p className="text-xs text-muted-foreground/50">@{user.username}</p>
-              </div>
-              <Button
-                size="sm"
-                className="h-7 rounded-lg px-3 text-xs"
-                disabled={adding === user._id}
-                onClick={() => handleAdd(user._id!)}
+          {results.length > 0 ? (
+            results.map(user => (
+              <div
+                key={user._id}
+                className="hover:bg-accent/40 flex items-center gap-3 px-4 py-3 transition-colors"
               >
-                {adding === user._id ? <Loader2 className="h-3 w-3 animate-spin" /> : 'Add'}
-              </Button>
-            </div>
-          )) : query.trim() && !searching ? (
-            <p className="py-8 text-center text-sm text-muted-foreground/50">No users found</p>
+                <Avatar className="h-9 w-9 shrink-0">
+                  <AvatarImage src={user.avatar} />
+                  <AvatarFallback className="text-xs">
+                    {user.fullnames?.[0]}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium">
+                    {user.fullnames}
+                  </p>
+                  <p className="text-muted-foreground/50 text-xs">
+                    @{user.username}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  className="h-7 rounded-lg px-3 text-xs"
+                  disabled={adding === user._id}
+                  onClick={() => handleAdd(user._id!)}
+                >
+                  {adding === user._id ? (
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                  ) : (
+                    'Add'
+                  )}
+                </Button>
+              </div>
+            ))
+          ) : query.trim() && !searching ? (
+            <p className="text-muted-foreground/50 py-8 text-center text-sm">
+              No users found
+            </p>
           ) : (
-            <p className="py-8 text-center text-sm text-muted-foreground/40">Search for people to add</p>
+            <p className="text-muted-foreground/40 py-8 text-center text-sm">
+              Search for people to add
+            </p>
           )}
         </div>
       </div>
