@@ -41,7 +41,7 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
             type="button"
             variant="ghost"
             size="sm"
-            className={`h-7 w-7 p-0 rounded-lg transition-colors ${isOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground/50 hover:text-foreground'}`}
+            className={`h-7 w-7 p-0 rounded-md transition-colors ${isOpen ? 'text-primary bg-primary/10' : 'text-muted-foreground/50 hover:text-foreground'}`}
           >
             <Smile className="h-4 w-4" />
           </Button>
@@ -51,7 +51,7 @@ export function EmojiPicker({ onEmojiSelect }: EmojiPickerProps) {
           side="top"
           align="end"
           sideOffset={8}
-          className="w-72 p-0 border-border/40 shadow-xl rounded-2xl overflow-hidden bg-background/98 backdrop-blur-sm"
+          className="w-72 p-0 border-border/40 shadow-xl rounded-md overflow-hidden bg-background/98 backdrop-blur-sm"
         >
           <div className="px-3 py-2 border-b border-border/30">
             <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/50">
