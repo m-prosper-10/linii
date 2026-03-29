@@ -44,7 +44,7 @@ export function PollRendering({ post, onUpdate }: PollRenderingProps) {
       {/* Header */}
       {poll.question && (
         <div className="px-4 pt-4 pb-3 border-b border-border/20">
-          <p className="font-semibold text-[15px] leading-snug text-foreground">
+          <p className="font-medium leading-snug text-foreground">
             {poll.question}
           </p>
         </div>

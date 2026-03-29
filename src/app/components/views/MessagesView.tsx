@@ -1,7 +1,7 @@
 'use client';
 
 import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
-import { EmojiPicker } from '@/app/components/messages/EmojiPicker';
+import { EmojiPicker } from '../post/EmojiPicker';
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
 import { NewConversationDialog } from '@/app/components/messages/NewConversationDialog';
 import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
@@ -255,9 +255,9 @@ export function MessagesView() {
               // Simple unread count for now - backend could provide this properly
               const unreadCount =
                 conversation.lastMessage?.sender._id !== currentUser?._id &&
-                !conversation.lastMessage?.readBy.some(
-                  r => r.userId === currentUser?._id
-                )
+                  !conversation.lastMessage?.readBy.some(
+                    r => r.userId === currentUser?._id
+                  )
                   ? 1
                   : 0;
 
@@ -359,7 +359,7 @@ export function MessagesView() {
                 ))}
               </div>
             ) : (
-              <div className="mx-auto max-w-4xl space-y-4">
+              <div className="mx-auto max-w-4xl space-y-2">
                 {messages.map((message, index) => {
                   const isCurrentUser = message.sender._id === currentUser?._id;
                   const isGrouped = shouldGroupMessage(index);
@@ -386,8 +386,29 @@ export function MessagesView() {
 
           {/* Message Input */}
           <div className="border-border bg-card/50 border-t p-4 backdrop-blur-sm">
-            <form onSubmit={handleSendMessage} className="space-y-3">
-              <div className="flex items-end gap-2">
+            {/* AI Suggestions */}
+            <div className="flex flex-wrap gap-2 border py-2">
+              {[
+                'Sounds good! 🤙',
+                "Let's schedule a call 🖐",
+                'Great idea! 🇦🇶',
+                'Sounds good! 🤙',
+                "Let's schedule a call 🖐",
+                'Great idea! 🇦🇶',
+              ].map((suggestion, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => setMessageInput(suggestion)}
+                  className="bg-accent hover:bg-accent/80 border-border rounded-md border px-3 py-1.5 text-xs transition-colors"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+
+            <form onSubmit={handleSendMessage} className="flex flex-row items-center justify-between">
+              <div className="flex flex-row items-center w-full gap-2">
                 <Button
                   type="button"
                   variant="ghost"
@@ -409,7 +430,7 @@ export function MessagesView() {
                         handleSendMessage(e);
                       }
                     }}
-                    className="bg-accent/50 border-border focus:ring-primary/20 max-h-[120px] min-h-[44px] w-full resize-none rounded-2xl border px-4 py-2.5 transition-all focus:outline-none focus:ring-2"
+                    className="bg-accent/50 border-border focus:ring-primary/20 max-h-[120px] min-h-[44px] w-full resize-none rounded-md border px-4 py-2.5 transition-all focus:outline-none focus:ring-2"
                     rows={1}
                   />
                 </div>
@@ -419,28 +440,10 @@ export function MessagesView() {
                 <Button
                   type="submit"
                   disabled={!messageInput.trim()}
-                  className="h-9 w-9 shrink-0 rounded-full p-0"
+                  className="h-9 w-9 shrink-0 rounded-md p-2"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
-              </div>
-
-              {/* AI Suggestions */}
-              <div className="flex flex-wrap gap-2">
-                {[
-                  '👍 Sounds good!',
-                  "📅 Let's schedule a call",
-                  '💡 Great idea!',
-                ].map((suggestion, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setMessageInput(suggestion)}
-                    className="bg-accent hover:bg-accent/80 border-border rounded-full border px-3 py-1.5 text-xs transition-colors"
-                  >
-                    {suggestion}
-                  </button>
-                ))}
               </div>
             </form>
           </div>
