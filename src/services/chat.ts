@@ -92,6 +92,52 @@ class ChatService {
       throw new Error(response.message || 'Failed to mark conversation as read');
     }
   }
+
+  async getConversation(conversationId: string): Promise<Conversation> {
+    const response = await apiClient.get<{ conversation: Conversation }>(`/conversations/${conversationId}`);
+    if (response.success && response.data) {
+      return response.data.conversation;
+    }
+    throw new Error(response.message || 'Failed to fetch conversation');
+  }
+
+  async updateConversation(conversationId: string, data: { name?: string; description?: string }): Promise<Conversation> {
+    const response = await apiClient.put<{ conversation: Conversation }>(`/conversations/${conversationId}`, data);
+    if (response.success && response.data) {
+      return response.data.conversation;
+    }
+    throw new Error(response.message || 'Failed to update conversation');
+  }
+
+  async addParticipants(conversationId: string, participantIds: string[]): Promise<Conversation> {
+    const response = await apiClient.post<{ conversation: Conversation }>(`/conversations/${conversationId}/participants`, { participantIds });
+    if (response.success && response.data) {
+      return response.data.conversation;
+    }
+    throw new Error(response.message || 'Failed to add participants');
+  }
+
+  async removeParticipant(conversationId: string, participantId: string): Promise<Conversation> {
+    const response = await apiClient.delete<{ conversation: Conversation }>(`/conversations/${conversationId}/participants/${participantId}`);
+    if (response.success && response.data) {
+      return response.data.conversation;
+    }
+    throw new Error(response.message || 'Failed to remove participant');
+  }
+
+  async leaveConversation(conversationId: string): Promise<void> {
+    const response = await apiClient.post(`/conversations/${conversationId}/leave`, {});
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to leave conversation');
+    }
+  }
+
+  async deleteConversation(conversationId: string): Promise<void> {
+    const response = await apiClient.delete(`/conversations/${conversationId}`);
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to delete conversation');
+    }
+  }
 }
 
 export const chatService = new ChatService();

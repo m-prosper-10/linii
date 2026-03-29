@@ -12,7 +12,6 @@ import { ConversationListItem } from '@/app/components/messages/ConversationList
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
 import { ChatHeader } from '@/app/components/messages/ChatHeader';
 import { MessageInput } from '@/app/components/messages/MessageInput';
-import { ChatSettings } from '@/app/components/messages/ChatSettings';
 import { NewConversationDialog } from '@/app/components/messages/NewConversationDialog';
 import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
 import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
@@ -247,14 +246,6 @@ export function MessagesView() {
             value={messageInput}
             onChange={setMessageInput}
             onSend={handleSend}
-          />
-
-          {/* Settings panel — overlays the chat area */}
-          <ChatSettings
-            open={settingsOpen}
-            onClose={() => setSettingsOpen(false)}
-            conversation={selectedConversation}
-            otherUser={otherUser}
           />
         </div>
       ) : (
