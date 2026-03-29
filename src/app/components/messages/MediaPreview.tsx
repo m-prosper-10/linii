@@ -228,7 +228,7 @@ export function MediaPreview({
     <div className="space-y-3">
       {allImages && !compact ? (
         // Image grid layout
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-rows-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
           {files.map(file => (
             <div key={file.id}>
               {renderFilePreview(file)}
