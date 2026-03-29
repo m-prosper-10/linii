@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { ArrowLeft, Phone, Settings2, Video } from 'lucide-react';
 import { User } from '@/services/auth';
 import { useRouter } from 'next/navigation';
+import { AudioCall } from './AudioCall';
+import { VideoCall } from './VideoCall';
 
 interface ChatHeaderProps {
   conversationId: string;
@@ -15,6 +18,8 @@ interface ChatHeaderProps {
 
 export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: ChatHeaderProps) {
   const router = useRouter();
+  const [isAudioCallOpen, setIsAudioCallOpen] = useState(false);
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
   return (
     <div className="border-border/40 bg-card/60 sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 backdrop-blur-md">
       {/* Left: back + user info */}
@@ -64,10 +69,20 @@ export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: Chat
 
       {/* Right: action buttons */}
       <div className="flex items-center gap-0.5">
-        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:text-foreground">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:text-foreground"
+          onClick={() => setIsAudioCallOpen(true)}
+        >
           <Phone className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:text-foreground">
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:text-foreground"
+          onClick={() => setIsVideoCallOpen(true)}
+        >
           <Video className="h-4 w-4" />
         </Button>
         <Button
@@ -79,6 +94,24 @@ export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: Chat
           <Settings2 className="h-4 w-4" />
         </Button>
       </div>
+
+      {/* Audio Call Modal */}
+      <AudioCall
+        isOpen={isAudioCallOpen}
+        onClose={() => setIsAudioCallOpen(false)}
+        otherUser={otherUser}
+        isIncoming={false}
+        onEnd={() => setIsAudioCallOpen(false)}
+      />
+
+      {/* Video Call Modal */}
+      <VideoCall
+        isOpen={isVideoCallOpen}
+        onClose={() => setIsVideoCallOpen(false)}
+        otherUser={otherUser}
+        isIncoming={false}
+        onEnd={() => setIsVideoCallOpen(false)}
+      />
     </div>
   );
 }
