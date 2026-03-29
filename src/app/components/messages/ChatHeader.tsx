@@ -4,15 +4,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar'
 import { Button } from '@/app/components/ui/button';
 import { ArrowLeft, Phone, Settings2, Video } from 'lucide-react';
 import { User } from '@/services/auth';
+import { useRouter } from 'next/navigation';
 
 interface ChatHeaderProps {
+  conversationId: string;
   otherUser: User;
   isTyping: boolean;
   onBack: () => void;
-  onSettingsOpen: () => void;
 }
 
-export function ChatHeader({ otherUser, isTyping, onBack, onSettingsOpen }: ChatHeaderProps) {
+export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: ChatHeaderProps) {
+  const router = useRouter();
   return (
     <div className="border-border/40 bg-card/60 sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 backdrop-blur-md">
       {/* Left: back + user info */}
@@ -72,7 +74,7 @@ export function ChatHeader({ otherUser, isTyping, onBack, onSettingsOpen }: Chat
           variant="ghost"
           size="sm"
           className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:text-foreground"
-          onClick={onSettingsOpen}
+          onClick={() => router.push(`/messages/${conversationId}/settings`)}
         >
           <Settings2 className="h-4 w-4" />
         </Button>
