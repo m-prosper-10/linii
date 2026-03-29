@@ -92,13 +92,13 @@ export function FilePreviewModal({
             <Button
               size="sm"
               variant="ghost"
-              className={`absolute left-4 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 ${
+              className={`absolute left-4 z-10 h-12 w-12 p-4 rounded-full text-white hover:bg-white/20 ${
                 currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
               }`}
               onClick={handlePrevious}
               disabled={currentIndex === 0}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="size-8" />
             </Button>
             <Button
               size="sm"
@@ -109,14 +109,14 @@ export function FilePreviewModal({
               onClick={handleNext}
               disabled={currentIndex === files.length - 1}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="size-8" />
             </Button>
           </>
         )}
 
         {/* File counter */}
         {files.length > 1 && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white text-md bg-transparent backdrop-blur-sm px-4 py-2 rounded-full">
             {currentIndex + 1} / {files.length}
           </div>
         )}
