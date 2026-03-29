@@ -3,6 +3,17 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { chatService, Conversation, Message } from '@/services/chat';
+import { useSocket, TypingIndicator } from '@/services/socket';
+
+interface LocalFile {
+  id: string;
+  file: File;
+  preview: string;
+  originalName: string;
+  mimeType: string;
+  size: number;
+}
+
 import { cn } from '@/app/components/ui/utils';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
@@ -18,6 +29,7 @@ import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
 
 export function MessagesView() {
   const { currentUser } = useApp();
+  const { socket, isConnected } = useSocket();
 
   // ── Conversation list state ──────────────────────────────────────────────
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -31,9 +43,13 @@ export function MessagesView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
+
+  // ── Real-time state ─────────────────────────────────────────────────────
+  const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(new Map()); // conversationId -> Set of userIds
+  const otherUserTyping = selectedConversationId ? (typingUsers.get(selectedConversationId)?.size ?? 0) > 0 : false;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const selectedConversation = conversations.find(c => c._id === selectedConversationId);
   const otherUser = selectedConversation?.participants.find(p => p._id !== currentUser?._id);
@@ -72,33 +88,172 @@ export function MessagesView() {
     if (selectedConversationId) fetchMessages(selectedConversationId);
   }, [selectedConversationId, fetchMessages]);
 
+  // Socket connection and real-time handlers
+  useEffect(() => {
+    if (!isConnected || !currentUser) return;
+
+    // Connect to socket
+    socket.connect().catch(console.error);
+
+    // Set up event listeners
+    const handleNewMessage = (message: Message) => {
+      if (message.conversationId === selectedConversationId) {
+        setMessages(prev => [...prev, message]);
+        // Mark as read if it's not our message
+        if (message.sender._id !== currentUser._id) {
+          socket.markAsRead({ conversationId: message.conversationId, messageId: message._id });
+        }
+      }
+      
+      // Update conversation list
+      setConversations(prev =>
+        prev.map(c => c._id === message.conversationId 
+          ? { ...c, lastMessage: message, lastActivity: message.createdAt }
+          : c
+        )
+      );
+    };
+
+    const handleMessageRead = (data: { userId: string; conversationId: string; messageId?: string }) => {
+      if (data.conversationId === selectedConversationId) {
+        setMessages(prev => 
+          prev.map(msg => {
+            if (data.messageId) {
+              return msg._id === data.messageId 
+                ? { ...msg, readBy: [...msg.readBy, { userId: data.userId, readAt: new Date().toISOString() }] }
+                : msg;
+            } else {
+              // Mark all messages from other users as read by this user
+              return msg.sender._id !== currentUser._id 
+                ? { ...msg, readBy: [...msg.readBy, { userId: data.userId, readAt: new Date().toISOString() }] }
+                : msg;
+            }
+          })
+        );
+      }
+    };
+
+    const handleUserTyping = (data: TypingIndicator) => {
+      if (data.conversationId === selectedConversationId && data.userId !== currentUser._id) {
+        setTypingUsers(prev => {
+          const newMap = new Map(prev);
+          const conversationTypers = newMap.get(data.conversationId) || new Set();
+          
+          if (data.isTyping) {
+            conversationTypers.add(data.userId);
+          } else {
+            conversationTypers.delete(data.userId);
+          }
+          
+          if (conversationTypers.size > 0) {
+            newMap.set(data.conversationId, conversationTypers);
+          } else {
+            newMap.delete(data.conversationId);
+          }
+          
+          return newMap;
+        });
+      }
+    };
+
+    const handleMessageError = (data: { error: string }) => {
+      console.error('Message error:', data.error);
+      // Show error notification to user
+    };
+
+    // Register event listeners
+    socket.onMessage(handleNewMessage);
+    socket.onMessageRead(handleMessageRead);
+    socket.onUserTyping(handleUserTyping);
+    socket.onMessageError(handleMessageError);
+
+    return () => {
+      // Clean up event listeners
+      socket.offMessage(handleNewMessage);
+      socket.offMessageRead(handleMessageRead);
+      socket.offUserTyping(handleUserTyping);
+      socket.offMessageError(handleMessageError);
+    };
+  }, [isConnected, currentUser, selectedConversationId, socket]);
+
+  // Join/leave conversation rooms
+  useEffect(() => {
+    if (isConnected && selectedConversationId) {
+      socket.joinConversation(selectedConversationId);
+      return () => {
+        socket.leaveConversation(selectedConversationId);
+      };
+    }
+  }, [isConnected, selectedConversationId, socket]);
+
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Typing indicator (local simulation)
+  // Typing indicator with socket integration
   useEffect(() => {
-    if (!messageInput) { setIsTyping(false); return; }
-    setIsTyping(true);
-    const t = setTimeout(() => setIsTyping(false), 1000);
-    return () => clearTimeout(t);
-  }, [messageInput]);
+    if (!selectedConversationId) return;
+
+    if (messageInput.trim()) {
+      socket.startTyping(selectedConversationId);
+      
+      // Clear existing timeout
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Stop typing after 1 second of inactivity
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.stopTyping(selectedConversationId);
+      }, 1000);
+    } else {
+      socket.stopTyping(selectedConversationId);
+    }
+
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [messageInput, selectedConversationId, socket]);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
 
-  const handleSend = async () => {
+  const handleSend = async (localFiles: LocalFile[]) => {
     const content = messageInput.trim();
-    if (!content || !selectedConversationId) return;
+    if (!content && localFiles.length === 0 || !selectedConversationId) return;
+    
+    // Clear input immediately for better UX
     setMessageInput('');
+    
     try {
-      const msg = await chatService.sendMessage({ conversationId: selectedConversationId, content });
+      let msg: Message;
+      
+      if (localFiles.length > 0) {
+        // Upload files first, then send message
+        const filesToUpload = localFiles.map(f => f.file);
+        const uploadedFiles = await chatService.uploadFiles(filesToUpload);
+        
+        // Send message with uploaded files
+        msg = await chatService.sendMessageWithFiles(
+          selectedConversationId,
+          content,
+          uploadedFiles
+        );
+      } else {
+        // Send regular text message
+        msg = await chatService.sendMessage({ conversationId: selectedConversationId, content });
+      }
+      
       setMessages(prev => [...prev, msg]);
       setConversations(prev =>
         prev.map(c => c._id === selectedConversationId ? { ...c, lastMessage: msg } : c)
       );
     } catch (err) {
       console.error('Failed to send message:', err);
+      // Restore message on error
+      setMessageInput(content);
     }
   };
 
@@ -215,7 +370,7 @@ export function MessagesView() {
           <ChatHeader
             conversationId={selectedConversation._id}
             otherUser={otherUser}
-            isTyping={isTyping}
+            isTyping={otherUserTyping}
             onBack={() => setShowMobileChat(false)}
           />
 
