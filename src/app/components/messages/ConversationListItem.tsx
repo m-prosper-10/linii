@@ -33,7 +33,7 @@ export function ConversationListItem({
     <div
       onClick={onClick}
       className={cn(
-        'border-border cursor-pointer border-b p-4 transition-all duration-200',
+        'border-border cursor-pointer border-b p-2 transition-all duration-200',
         'hover:bg-accent/70 active:scale-[0.99]',
         isSelected && 'bg-accent/50 border-l-primary border-l-4'
       )}

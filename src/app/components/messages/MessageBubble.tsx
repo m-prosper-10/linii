@@ -35,7 +35,7 @@ export function MessageBubble({
       className={cn(
         'animate-in slide-in-from-bottom-2 group flex gap-3 duration-300',
         isCurrentUser && 'flex-row-reverse',
-        isGrouped && 'mt-1'
+        isGrouped && 'mt-0'
       )}
     >
       {/* Avatar - only show if not grouped */}
@@ -51,13 +51,13 @@ export function MessageBubble({
       {/* Message Content */}
       <div
         className={cn(
-          'flex max-w-[70%] flex-col gap-1',
+          'flex max-w-[70%] flex-col gap-0',
           isCurrentUser && 'items-end'
         )}
       >
         <div
           className={cn(
-            'rounded-2xl px-4 py-2.5 shadow-sm transition-all duration-200',
+            'rounded-md px-2 py-2 shadow-sm transition-all duration-200',
             'hover:shadow-md',
             isCurrentUser
               ? 'bg-primary text-primary-foreground rounded-tr-md'
@@ -72,7 +72,7 @@ export function MessageBubble({
         {/* Timestamp and Status */}
         <div
           className={cn(
-            'text-muted-foreground flex items-center gap-1 px-2 text-xs',
+            'text-muted-foreground flex items-center gap-1 px-2 text-[10px]',
             'opacity-0 transition-opacity duration-200 group-hover:opacity-100'
           )}
         >

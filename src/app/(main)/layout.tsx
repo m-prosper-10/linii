@@ -31,7 +31,7 @@ export default function MainLayout({
 
   const showThreeColumnLayout =
     pathname &&
-    ['home', 'explore', 'profile', 'post/create'].some(route =>
+    ['home', 'explore', 'profile', 'post/create', 'notifications'].some(route =>
       pathname.includes(route)
     );
   const showMessagesLayout = pathname?.includes('messages');
@@ -39,7 +39,7 @@ export default function MainLayout({
     pathname?.includes('post/create') || pathname?.includes('edit-profile');
 
   return (
-    <div className="bg-background flex min-h-screen">
+    <div className={cn('bg-background flex min-h-screen', showMessagesLayout && 'h-screen overflow-hidden')}>
       <div
         className={cn(
           'hidden shrink-0 transition-all duration-300 ease-in-out md:block',
@@ -57,7 +57,7 @@ export default function MainLayout({
         <MobileHeader />
 
         {/* Main Content */}
-        <div className="flex-1 md:pb-1">{children}</div>
+        <div className={cn('flex-1 md:pb-1', showMessagesLayout && 'overflow-hidden')}>{children}</div>
 
         {/* Mobile Bottom Navigation */}
         <MobileBottomNav />
