@@ -235,10 +235,13 @@ export function MessagesView() {
         const filesToUpload = localFiles.map(f => f.file);
         const uploadedFiles = await chatService.uploadFiles(filesToUpload);
         
+        // Ensure content is not empty - use default message if no text provided
+        const messageContent = content || 'Shared files';
+        
         // Send message with uploaded files
         msg = await chatService.sendMessageWithFiles(
           selectedConversationId,
-          content,
+          messageContent,
           uploadedFiles
         );
       } else {
