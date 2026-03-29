@@ -14,7 +14,7 @@ import { format } from 'date-fns';
 
 interface ConversationListItemProps {
   otherUser: User;
-  lastMessage: Message;
+  lastMessage?: Message;
   unreadCount: number;
   isSelected: boolean;
   isOnline?: boolean;
@@ -67,7 +67,7 @@ export function ConversationListItem({
               )}
             </div>
             <span className="text-muted-foreground ml-2 shrink-0 text-xs">
-              {format(new Date(lastMessage.createdAt), 'HH:mm')}
+              {lastMessage ? format(new Date(lastMessage.createdAt), 'HH:mm') : ''}
             </span>
           </div>
 
@@ -80,9 +80,11 @@ export function ConversationListItem({
                   : 'text-muted-foreground'
               )}
             >
-              {unreadCount > 0
-                ? `${unreadCount} new messages`
-                : lastMessage.content}
+              {!lastMessage
+                ? 'No messages yet'
+                : unreadCount > 0
+                  ? `${unreadCount} new messages`
+                  : lastMessage.content}
             </p>
             {unreadCount > 0 && (
               <Badge className="bg-primary text-primary-foreground animate-in zoom-in-50 h-5 min-w-5 shrink-0 rounded-full px-1.5">
