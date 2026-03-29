@@ -33,7 +33,7 @@ export function MessageBubble({
   return (
     <div
       className={cn(
-        'animate-in border slide-in-from-bottom-2 group flex gap-3 duration-300',
+        'animate-in slide-in-from-bottom-2 group flex gap-3 duration-300',
         isCurrentUser && 'flex-row-reverse',
         isGrouped && 'mt-0'
       )}

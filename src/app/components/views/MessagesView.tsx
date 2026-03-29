@@ -28,6 +28,8 @@ import {
   Video,
   X,
   SquarePen,
+  PlusCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 
@@ -215,12 +217,13 @@ export function MessagesView() {
               variant="ghost"
               size="sm"
               onClick={() => setNewConvOpen(true)}
-              className="h-8 w-8 p-0 rounded-xl text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground h-8 w-8 rounded-xl p-0"
               title="New message"
             >
-              <SquarePen className="h-4 w-4" />
+              <PlusCircle className="size-6" />
             </Button>
-          </div>          <div className="relative">
+          </div>{' '}
+          <div className="relative">
             <Search className="text-muted-foreground absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" />
             <Input
               placeholder="Search conversations..."
@@ -255,9 +258,9 @@ export function MessagesView() {
               // Simple unread count for now - backend could provide this properly
               const unreadCount =
                 conversation.lastMessage?.sender._id !== currentUser?._id &&
-                  !conversation.lastMessage?.readBy.some(
-                    r => r.userId === currentUser?._id
-                  )
+                !conversation.lastMessage?.readBy.some(
+                  r => r.userId === currentUser?._id
+                )
                   ? 1
                   : 0;
 
@@ -308,8 +311,8 @@ export function MessagesView() {
                 <div className="flex items-center gap-2 font-medium">
                   {otherUser?.fullnames}
                   {/* Verified logic could be more robust */}
-                  {otherUser?.username === 'verified_user' && (
-                    <Verified className="h-4 w-4 fill-blue-600" />
+                  {otherUser?.verified && (
+                    <CheckCircle2 className="h-6 w-6 fill-blue-600" />
                   )}
                 </div>
                 <div className="text-muted-foreground text-sm">
@@ -338,20 +341,20 @@ export function MessagesView() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                <Phone className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="p-1">
+                <Phone className="h-6 w-6" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                <Video className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="p-1">
+                <Video className="h-6 w-6" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                <MoreVertical className="h-5 w-5" />
+              <Button variant="ghost" size="sm" className="p-1">
+                <MoreVertical className="h-6 w-6" />
               </Button>
             </div>
           </div>
 
           {/* Messages */}
-          <ScrollArea className="flex-1 p-4">
+          <ScrollArea className="flex-1">
             {messagesLoading && messages.length === 0 ? (
               <div className="mx-auto max-w-4xl space-y-4 pt-4">
                 {[...Array(8)].map((_, i) => (
@@ -359,7 +362,7 @@ export function MessagesView() {
                 ))}
               </div>
             ) : (
-              <div className="mx-auto max-w-4xl space-y-2">
+              <div className="mx-auto w-full space-y-1 px-4 py-1">
                 {messages.map((message, index) => {
                   const isCurrentUser = message.sender._id === currentUser?._id;
                   const isGrouped = shouldGroupMessage(index);
@@ -387,7 +390,7 @@ export function MessagesView() {
           {/* Message Input */}
           <div className="border-border bg-card/50 border-t p-4 backdrop-blur-sm">
             {/* AI Suggestions */}
-            <div className="flex flex-wrap gap-2 border py-2">
+            <div className="flex flex-wrap gap-2 py-2">
               {[
                 'Sounds good! 🤙',
                 "Let's schedule a call 🖐",
@@ -407,8 +410,11 @@ export function MessagesView() {
               ))}
             </div>
 
-            <form onSubmit={handleSendMessage} className="flex flex-row items-center justify-between">
-              <div className="flex flex-row items-center w-full gap-2">
+            <form
+              onSubmit={handleSendMessage}
+              className="flex flex-row items-center justify-between"
+            >
+              <div className="flex w-full flex-row items-center gap-2">
                 <Button
                   type="button"
                   variant="ghost"

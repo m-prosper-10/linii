@@ -17,6 +17,8 @@ import {
   UserPlus,
   Verified,
   Bookmark,
+  CheckCircle2,
+  CheckCircle,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -291,7 +293,7 @@ export function ProfileView() {
         <div className="mb-2">
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-bold tracking-tight">{user.fullnames}</h1>
-            {user.verified && <Verified className="h-5 w-5 fill-primary text-primary-foreground" />}
+            {user.verified && <CheckCircle2 className="h-6 w-6 fill-blue-600 text-primary" />}
           </div>
           <p className="text-sm text-muted-foreground/70 font-medium">@{user.username}</p>
           {!isOwnProfile && isFollowedBy && !isFollowing && (
