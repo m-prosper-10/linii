@@ -8,6 +8,7 @@ import {
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
 import { Check, CheckCheck } from 'lucide-react';
+import { FileDisplay } from './FileDisplay';
 
 import { format } from 'date-fns';
 
@@ -19,6 +20,8 @@ interface MessageBubbleProps {
   isRead: boolean;
   showAvatar?: boolean;
   isGrouped?: boolean;
+  files?: string[];
+  messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
 }
 
 export function MessageBubble({
@@ -29,6 +32,8 @@ export function MessageBubble({
   isRead,
   showAvatar = true,
   isGrouped = false,
+  files,
+  messageType = 'TEXT',
 }: MessageBubbleProps) {
   return (
     <div
@@ -64,9 +69,19 @@ export function MessageBubble({
               : 'bg-accent rounded-tl-md'
           )}
         >
-          <p className="wrap-break-word text-[15px] leading-relaxed">
-            {content}
-          </p>
+          {/* Message text content */}
+          {content && (
+            <p className="wrap-break-word text-[15px] leading-relaxed">
+              {content}
+            </p>
+          )}
+          
+          {/* File attachments */}
+          <FileDisplay 
+            files={files || []} 
+            messageType={messageType} 
+            isCurrentUser={isCurrentUser}
+          />
         </div>
 
         {/* Timestamp and Status */}

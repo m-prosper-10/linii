@@ -390,6 +390,8 @@ export function MessagesView() {
                     isRead={msg.readBy.some(r => r.userId !== msg.sender._id)}
                     showAvatar={!shouldGroupMessage(i)}
                     isGrouped={shouldGroupMessage(i)}
+                    files={msg.files}
+                    messageType={msg.messageType}
                   />
                 ))
               )}
