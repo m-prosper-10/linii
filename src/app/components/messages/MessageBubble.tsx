@@ -70,7 +70,7 @@ export function MessageBubble({
           )}
         >
           {/* Message text content */}
-          {content && (
+          {content && content !== 'Shared files' && (
             <p className="wrap-break-word text-[15px] leading-relaxed">
               {content}
             </p>
