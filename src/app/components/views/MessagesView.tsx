@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useApp } from '@/context/AppContext';
 import { chatService, Conversation, Message } from '@/services/chat';
 import { useSocket, TypingIndicator } from '@/services/socket';
+import { User } from '@/services/auth';
 
 interface LocalFile {
   id: string;
@@ -12,6 +13,14 @@ interface LocalFile {
   originalName: string;
   mimeType: string;
   size: number;
+}
+
+interface MessageData {
+  content: string;
+  sender: User;
+  createdAt: string;
+  files?: string[];
+  messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
 }
 
 import { cn } from '@/app/components/ui/utils';
@@ -235,10 +244,13 @@ export function MessagesView() {
         const filesToUpload = localFiles.map(f => f.file);
         const uploadedFiles = await chatService.uploadFiles(filesToUpload);
         
+        // Ensure content is not empty - use default message if no text provided
+        const messageContent = content || 'Shared files';
+        
         // Send message with uploaded files
         msg = await chatService.sendMessageWithFiles(
           selectedConversationId,
-          content,
+          messageContent,
           uploadedFiles
         );
       } else {
@@ -255,6 +267,28 @@ export function MessagesView() {
       // Restore message on error
       setMessageInput(content);
     }
+  };
+
+  const handleReply = (messageToReply: MessageData) => {
+    // Set the input to show reply context
+    const replyText = `> ${messageToReply.sender.fullnames}: ${messageToReply.content.substring(0, 100)}${messageToReply.content.length > 100 ? '...' : ''}\n\n`;
+    setMessageInput(replyText);
+    // Focus the input
+    document.querySelector('textarea')?.focus();
+  };
+
+  const handleForward = (messageToForward: MessageData) => {
+    // For now, just copy the message content to input
+    // In a real app, you'd open a dialog to select conversation to forward to
+    const forwardText = `${messageToForward.content}`;
+    setMessageInput(forwardText);
+    document.querySelector('textarea')?.focus();
+  };
+
+  const handleReact = async (messageId: string, emoji: string, type: string) => {
+    // This would typically call an API to add/remove reaction
+    console.log('React to message:', messageId, emoji, type);
+    // For now, just log it - in real implementation you'd call the API
   };
 
   const handleSelectConversation = (id: string) => {
@@ -390,6 +424,12 @@ export function MessagesView() {
                     isRead={msg.readBy.some(r => r.userId !== msg.sender._id)}
                     showAvatar={!shouldGroupMessage(i)}
                     isGrouped={shouldGroupMessage(i)}
+                    files={msg.files}
+                    messageType={msg.messageType}
+                    onReply={handleReply}
+                    onForward={handleForward}
+                    onReact={handleReact}
+                    reactions={[]} // TODO: Add reactions from message data
                   />
                 ))
               )}
