@@ -2,34 +2,52 @@
 
 import { PostCard } from '@/app/components/post/PostCard';
 import { PostDetailModal } from '@/app/components/post/PostDetailModal';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/app/components/ui/avatar';
-import { Badge } from '@/app/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/app/components/ui/tabs';
 import {
   ArrowLeft,
   Calendar,
   Edit,
   Link as LinkIcon,
   MapPin,
+  MessageCircle,
+  MoreHorizontal,
+  Play,
+  UserCheck,
+  UserPlus,
+  Verified,
+  Bookmark,
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authService, User as ApiUser } from '@/services/auth';
 import { PostService, PostApiType } from '@/services/post';
 import { socialService } from '@/services/social';
+import { chatService } from '@/services/chat';
 import ProfileSkeleton from '@/app/components/skeletons/ProfileSkeleton';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
+import { cn } from '@/app/components/ui/utils';
+import { format } from 'date-fns';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/app/components/ui/dropdown-menu';
+
+// ── Tab config ────────────────────────────────────────────────────────────────
+
+type TabId = 'posts' | 'media' | 'likes' | 'saved';
+
+const TABS: { id: TabId; label: string; ownOnly?: boolean }[] = [
+  { id: 'posts',  label: 'Posts' },
+  { id: 'media',  label: 'Media' },
+  { id: 'likes',  label: 'Likes' },
+  { id: 'saved',  label: 'Saved', ownOnly: true },
+];
+
+// ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProfileView() {
   const router = useRouter();
@@ -38,12 +56,16 @@ export function ProfileView() {
 
   const [user, setUser] = useState<ApiUser | null>(null);
   const [posts, setPosts] = useState<PostApiType[]>([]);
+  const [savedPosts, setSavedPosts] = useState<PostApiType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [activeTab, setActiveTab] = useState('posts');
+  const [isFollowedBy, setIsFollowedBy] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [messageLoading, setMessageLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabId>('posts');
   const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
 
-  const userId = params?.userId as string;
+  const userId = params?.userId as string | undefined;
   const isOwnProfile = !userId || userId === appUser?._id;
 
   useEffect(() => {
@@ -64,14 +86,22 @@ export function ProfileView() {
 
       if (profileData) {
         setUser(profileData);
-        setIsFollowing(profileData.followStatus?.isFollowing || false);
+        setIsFollowing(profileData.followStatus?.isFollowing ?? false);
+        setIsFollowedBy(profileData.followStatus?.isFollowedBy ?? false);
       }
 
       if (postsData) {
         setPosts(postsData.posts);
       }
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
+
+      // Fetch saved posts for own profile
+      if (isOwnProfile) {
+        try {
+          const saved = await PostService.getUserPosts(targetId);
+          if (saved) setSavedPosts(saved.posts.filter(p => p.userSaved));
+        } catch { /* saved posts optional */ }
+      }
+    } catch {
       toast.error('Failed to load profile');
     } finally {
       setIsLoading(false);
@@ -79,284 +109,283 @@ export function ProfileView() {
   };
 
   const handleFollowToggle = async () => {
-    if (!user) return;
-    const previousState = isFollowing;
+    if (!user || followLoading) return;
+    const prev = isFollowing;
+    setFollowLoading(true);
+    setIsFollowing(!prev);
     try {
-      setIsFollowing(!isFollowing);
-      if (previousState) {
+      if (prev) {
         await socialService.unfollowUser(user._id);
         toast.success(`Unfollowed @${user.username}`);
       } else {
         await socialService.followUser(user._id);
         toast.success(`Following @${user.username}`);
       }
-    } catch (error: any) {
-      setIsFollowing(previousState);
-      toast.error(error.message || 'Failed to update follow status');
+      // Refresh stats
+      const updated = await authService.getUserProfile(user._id);
+      if (updated) setUser(updated);
+    } catch (err: unknown) {
+      setIsFollowing(prev);
+      toast.error((err as Error).message || 'Failed to update follow status');
+    } finally {
+      setFollowLoading(false);
     }
   };
 
-  const handlePostDeleted = (deletedPostId: string) => {
-    setPosts(posts.filter(p => p._id !== deletedPostId));
+  const handleMessage = async () => {
+    if (!user || messageLoading) return;
+    setMessageLoading(true);
+    try {
+      const conv = await chatService.createConversation({
+        participants: [user._id],
+        conversationType: 'DIRECT',
+      });
+      router.push(`/messages?conv=${conv._id}`);
+    } catch {
+      toast.error('Could not open conversation');
+    } finally {
+      setMessageLoading(false);
+    }
   };
 
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
+  const handlePostDeleted = (id: string) => {
+    setPosts(prev => prev.filter(p => p._id !== id));
+    setSavedPosts(prev => prev.filter(p => p._id !== id));
+  };
+
+  if (isLoading) return <ProfileSkeleton />;
 
   if (!user) {
     return (
-      <div className="p-8 text-center">
-        <h2 className="text-xl font-semibold">User not found</h2>
-        <Button variant="link" onClick={() => router.push('/home')}>
-          Go Home
-        </Button>
+      <div className="flex flex-col items-center justify-center gap-4 p-16 text-center">
+        <p className="text-lg font-semibold">User not found</p>
+        <Button variant="outline" onClick={() => router.push('/home')}>Go home</Button>
       </div>
     );
   }
 
-  const mediaPosts = posts.filter(post => post.media && post.media.length > 0);
-  const likedPosts = posts.filter(
-    post => post.userReaction?.reactionType === 'LIKE'
-  );
+  const mediaPosts = posts.filter(p => p.media?.length > 0);
+  const likedPosts = posts.filter(p => p.userReaction?.reactionType === 'LIKE');
+  const visibleTabs = TABS.filter(t => !t.ownOnly || isOwnProfile);
+
+  const tabContent: Record<TabId, PostApiType[]> = {
+    posts: posts,
+    media: mediaPosts,
+    likes: likedPosts,
+    saved: savedPosts,
+  };
 
   return (
     <div className="mx-auto max-w-2xl">
-      <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
-        <div className="flex items-center gap-4 p-4">
-          <Button variant="ghost" size="sm" onClick={() => router.back()}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div className="flex flex-col">
-            <h2 className="text-xl font-semibold">{user.fullnames}</h2>
-            <p className="text-muted-foreground text-xs font-medium opacity-70">
-              {user.postsCount || 0} posts
+      {/* Sticky top bar */}
+      <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-md">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <button
+            onClick={() => router.back()}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent/60 transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-bold leading-tight">{user.fullnames}</h2>
+            <p className="text-[11px] text-muted-foreground/60 font-medium">
+              {(user.postsCount || 0).toLocaleString()} posts
             </p>
           </div>
         </div>
       </div>
 
-      <div>
-        {/* Cover Image */}
-        <div className="bg-accent/20 relative h-48 overflow-hidden">
-          {user.coverImage ? (
-            <img
-              src={user.coverImage}
-              alt="Cover"
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <div className="from-primary/10 to-accent/10 h-full w-full bg-gradient-to-r" />
+      {/* Cover */}
+      <div className="relative h-44 overflow-hidden bg-accent/20">
+        {user.coverImage ? (
+          <img src={user.coverImage} alt="Cover" className="h-full w-full object-cover" />
+        ) : (
+          <div className="h-full w-full bg-linear-to-br from-primary/20 via-primary/5 to-accent/20" />
+        )}
+      </div>
+
+      {/* Profile info */}
+      <div className="px-4 pb-2">
+        {/* Avatar row */}
+        <div className="-mt-14 mb-3 flex items-end justify-between">
+          <div className="relative">
+            <Avatar className="border-background h-28 w-28 border-4 shadow-lg">
+              <AvatarImage src={user.avatar} alt={user.fullnames} />
+              <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
+                {user.fullnames?.[0] ?? user.username?.[0] ?? '?'}
+              </AvatarFallback>
+            </Avatar>
+            {/* Online indicator — placeholder, could be wired to socket */}
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 pb-1">
+            {isOwnProfile ? (
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-full px-5 font-semibold"
+                onClick={() => router.push('/edit-profile')}
+              >
+                <Edit className="mr-1.5 h-3.5 w-3.5" />
+                Edit profile
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 w-9 rounded-full p-0"
+                  onClick={handleMessage}
+                  disabled={messageLoading}
+                  title="Message"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={isFollowing ? 'outline' : 'default'}
+                  className={cn(
+                    'rounded-full px-5 font-bold transition-all',
+                    isFollowing && 'hover:border-destructive hover:text-destructive'
+                  )}
+                  onClick={handleFollowToggle}
+                  disabled={followLoading}
+                >
+                  {followLoading ? (
+                    <span className="flex items-center gap-1.5">
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    </span>
+                  ) : isFollowing ? (
+                    <span className="flex items-center gap-1.5">
+                      <UserCheck className="h-3.5 w-3.5" />
+                      Following
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5">
+                      <UserPlus className="h-3.5 w-3.5" />
+                      {isFollowedBy ? 'Follow back' : 'Follow'}
+                    </span>
+                  )}
+                </Button>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 w-9 rounded-full p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={() => socialService.blockUser(user._id).then(() => toast.success('User blocked'))}>
+                      Block @{user.username}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Name + username */}
+        <div className="mb-2">
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-xl font-bold tracking-tight">{user.fullnames}</h1>
+            {user.verified && <Verified className="h-5 w-5 fill-primary text-primary-foreground" />}
+          </div>
+          <p className="text-sm text-muted-foreground/70 font-medium">@{user.username}</p>
+          {!isOwnProfile && isFollowedBy && !isFollowing && (
+            <span className="mt-1 inline-block rounded-md bg-accent/60 px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+              Follows you
+            </span>
           )}
         </div>
 
-        {/* Profile Info */}
-        <div className="px-4 pb-4">
-          <div className="-mt-16 mb-4 flex items-start justify-between">
-            <Avatar className="border-background h-32 w-32 border-4 shadow-xl">
-              <AvatarImage src={user.avatar} alt={user.fullnames} />
-              <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
-                {user.fullnames
-                  ? user.fullnames[0]
-                  : user.username
-                    ? user.username[0]
-                    : '?'}
-              </AvatarFallback>
-            </Avatar>
+        {/* Bio */}
+        {user.bio && (
+          <p className="mb-3 text-sm text-foreground/85 leading-relaxed whitespace-pre-wrap">
+            {user.bio}
+          </p>
+        )}
 
-            <div className="mt-16">
-              {isOwnProfile ? (
-                <Button
-                  variant="outline"
-                  className="gap-2 rounded-full px-6 font-semibold"
-                  onClick={() => router.push('/edit-profile')}
-                >
-                  <Edit className="h-4 w-4" />
-                  Edit profile
-                </Button>
-              ) : (
-                <div className="flex gap-2">
-                  <Button
-                    variant={isFollowing ? 'outline' : 'default'}
-                    className="rounded-full px-6 font-bold"
-                    onClick={handleFollowToggle}
-                  >
-                    {isFollowing ? 'Following' : 'Follow'}
-                  </Button>
-                  <Button variant="outline" className="rounded-full">
-                    Message
-                  </Button>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">
-                  {user.fullnames}
-                </h1>
-                {user.verified && (
-                  <Badge
-                    variant="secondary"
-                    className="bg-primary/10 text-primary h-5 border-none px-2"
-                  >
-                    ✓
-                  </Badge>
-                )}
-              </div>
-              <p className="text-muted-foreground font-medium opacity-80">
-                @{user.username}
-              </p>
-            </div>
-
-            {user.bio && (
-              <p className="text-foreground/90 whitespace-pre-wrap font-normal leading-relaxed">
-                {user.bio}
-              </p>
-            )}
-
-            <div className="text-muted-foreground flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium opacity-80">
-              {user.location && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 opacity-70" />
-                  {user.location}
-                </div>
-              )}
-              {user.website && (
-                <div className="flex items-center gap-1.5">
-                  <LinkIcon className="h-4 w-4 opacity-70" />
-                  <a
-                    href={`https://${user.website}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline"
-                  >
-                    {user.website}
-                  </a>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 opacity-70" />
-                Joined{' '}
-                {new Date(user.joinedDate).toLocaleDateString(undefined, {
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </div>
-            </div>
-
-            <div className="flex gap-6 pb-2">
-              <button className="flex items-center gap-1.5 hover:underline">
-                <span className="text-foreground font-bold">
-                  {user.following?.toLocaleString() || 0}
-                </span>{' '}
-                <span className="text-muted-foreground text-sm font-medium">
-                  Following
-                </span>
-              </button>
-              <button className="flex items-center gap-1.5 hover:underline">
-                <span className="text-foreground font-bold">
-                  {user.followers?.toLocaleString() || 0}
-                </span>{' '}
-                <span className="text-muted-foreground text-sm font-medium">
-                  Followers
-                </span>
-              </button>
-            </div>
-          </div>
+        {/* Meta row */}
+        <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-muted-foreground/60">
+          {user.location && (
+            <span className="flex items-center gap-1">
+              <MapPin className="h-3.5 w-3.5" />
+              {user.location}
+            </span>
+          )}
+          {user.website && (
+            <a
+              href={user.website.startsWith('http') ? user.website : `https://${user.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-primary hover:underline"
+            >
+              <LinkIcon className="h-3.5 w-3.5" />
+              {user.website.replace(/^https?:\/\//, '')}
+            </a>
+          )}
+          {user.joinedDate && (
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5" />
+              Joined {format(new Date(user.joinedDate), 'MMMM yyyy')}
+            </span>
+          )}
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="border-border h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
-            <TabsTrigger
-              value="posts"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
-            >
-              Posts
-            </TabsTrigger>
-            <TabsTrigger
-              value="media"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
-            >
-              Media
-            </TabsTrigger>
-            <TabsTrigger
-              value="likes"
-              className="data-[state=active]:border-primary rounded-none border-b-2 border-transparent px-8 py-4 text-sm font-bold data-[state=active]:bg-transparent"
-            >
-              Likes
-            </TabsTrigger>
-          </TabsList>
+        {/* Stats */}
+        <div className="flex gap-5 pb-3">
+          <button className="group flex items-baseline gap-1 hover:underline">
+            <span className="font-bold text-foreground">{(user.following ?? 0).toLocaleString()}</span>
+            <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground">Following</span>
+          </button>
+          <button className="group flex items-baseline gap-1 hover:underline">
+            <span className="font-bold text-foreground">{(user.followers ?? 0).toLocaleString()}</span>
+            <span className="text-sm text-muted-foreground/60 group-hover:text-muted-foreground">Followers</span>
+          </button>
+        </div>
+      </div>
 
-          <TabsContent value="posts" className="mt-0">
-            {posts.length > 0 ? (
-              posts.map(post => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  onPostClick={() => setSelectedPostId(post._id)}
-                  onDeleted={handlePostDeleted}
-                />
-              ))
-            ) : (
-              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
-                No posts yet
-              </div>
+      {/* Tabs */}
+      <div className="border-border/40 flex border-b">
+        {visibleTabs.map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={cn(
+              'relative flex flex-1 items-center justify-center gap-1.5 py-3.5 text-sm font-semibold transition-colors',
+              activeTab === tab.id
+                ? 'text-foreground'
+                : 'text-muted-foreground/60 hover:text-muted-foreground'
             )}
-          </TabsContent>
+          >
+            {tab.id === 'saved' && <Bookmark className="h-3.5 w-3.5" />}
+            {tab.label}
+            {activeTab === tab.id && (
+              <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
+            )}
+          </button>
+        ))}
+      </div>
 
-          <TabsContent value="media" className="mt-0 p-1">
-            {mediaPosts.length > 0 ? (
-              <div className="grid grid-cols-3 gap-1">
-                {mediaPosts.map(post => (
-                  <div
-                    key={post._id}
-                    className="bg-accent/20 border-border/50 aspect-square cursor-pointer overflow-hidden border transition-opacity hover:opacity-90"
-                    onClick={() => setSelectedPostId(post._id)}
-                  >
-                    {post.media[0].type === 'VIDEO' ? (
-                      <div className="flex h-full w-full items-center justify-center bg-black">
-                        <span className="text-xs font-bold uppercase tracking-widest text-white">
-                          Video
-                        </span>
-                      </div>
-                    ) : (
-                      <img
-                        src={post.media[0].url}
-                        alt="Media"
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
-                No media posts yet
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="likes" className="mt-0">
-            {likedPosts.length > 0 ? (
-              likedPosts.map(post => (
-                <PostCard
-                  key={post._id}
-                  post={post}
-                  onPostClick={() => setSelectedPostId(post._id)}
-                  onDeleted={handlePostDeleted}
-                />
-              ))
-            ) : (
-              <div className="text-muted-foreground p-12 text-center font-medium opacity-60">
-                No liked posts yet
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+      {/* Tab content */}
+      <div>
+        {activeTab === 'media' ? (
+          <MediaGrid posts={mediaPosts} onPostClick={setSelectedPostId} />
+        ) : tabContent[activeTab].length > 0 ? (
+          tabContent[activeTab].map(post => (
+            <PostCard
+              key={post._id}
+              post={post}
+              onPostClick={() => setSelectedPostId(post._id)}
+              onDeleted={handlePostDeleted}
+            />
+          ))
+        ) : (
+          <EmptyTab tab={activeTab} isOwn={isOwnProfile} />
+        )}
       </div>
 
       {selectedPostId && (
@@ -366,6 +395,64 @@ export function ProfileView() {
           onDeleted={handlePostDeleted}
         />
       )}
+    </div>
+  );
+}
+
+// ── Media grid ────────────────────────────────────────────────────────────────
+
+function MediaGrid({ posts, onPostClick }: { posts: PostApiType[]; onPostClick: (id: string) => void }) {
+  if (posts.length === 0) return <EmptyTab tab="media" isOwn={false} />;
+
+  return (
+    <div className="grid grid-cols-3 gap-0.5 p-0.5">
+      {posts.map(post => {
+        const item = post.media[0];
+        const isVideo = item.type === 'VIDEO';
+        return (
+          <div
+            key={post._id}
+            onClick={() => onPostClick(post._id)}
+            className="group relative aspect-square cursor-pointer overflow-hidden bg-accent/20"
+          >
+            {isVideo ? (
+              <div className="flex h-full w-full items-center justify-center bg-black/80">
+                <Play className="h-8 w-8 fill-white text-white opacity-80" />
+              </div>
+            ) : (
+              <img
+                src={item.url}
+                alt=""
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            )}
+            {/* Multi-media indicator */}
+            {post.media.length > 1 && (
+              <span className="absolute right-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                +{post.media.length - 1}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ── Empty states ──────────────────────────────────────────────────────────────
+
+const EMPTY_COPY: Record<TabId, { own: string; other: string }> = {
+  posts:  { own: "You haven't posted yet",       other: "No posts yet" },
+  media:  { own: "No media posts yet",            other: "No media posts yet" },
+  likes:  { own: "You haven't liked anything yet", other: "No liked posts" },
+  saved:  { own: "No saved posts yet",            other: "" },
+};
+
+function EmptyTab({ tab, isOwn }: { tab: TabId; isOwn: boolean }) {
+  const copy = isOwn ? EMPTY_COPY[tab].own : EMPTY_COPY[tab].other;
+  return (
+    <div className="py-16 text-center text-sm text-muted-foreground/50 font-medium italic">
+      {copy}
     </div>
   );
 }
