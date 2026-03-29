@@ -31,7 +31,7 @@ export default function MainLayout({
 
   const showThreeColumnLayout =
     pathname &&
-    ['home', 'explore', 'profile', 'post/create'].some(route =>
+    ['home', 'explore', 'profile', 'post/create', 'notifications'].some(route =>
       pathname.includes(route)
     );
   const showMessagesLayout = pathname?.includes('messages');

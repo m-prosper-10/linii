@@ -5,371 +5,348 @@ import {
   MessageCircle,
   UserPlus,
   AtSign,
-  Info,
   Share2,
-  Vote,
+  BarChart2,
   Calendar,
-  MoreHorizontal,
-  Check,
-  CheckCheck,
-  Trash2,
   Bell,
-  LucideIcon,
+  CheckCheck,
   Loader2,
+  Trash2,
+  LucideIcon,
 } from 'lucide-react';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@/app/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
-import { Tabs, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
 import { cn } from '@/app/components/ui/utils';
 import { useEffect, useState, useCallback } from 'react';
 import { notificationService, Notification } from '@/services/notification';
-import { formatDistanceToNow } from 'date-fns';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu';
 import { socialService } from '@/services/social';
+import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'next/navigation';
 import NotificationSkeleton from '../skeletons/NotificationSkeleton';
+import { toast } from 'sonner';
 
-const notificationIcons: Record<string, LucideIcon> = {
-  LIKE: Heart,
-  COMMENT: MessageCircle,
-  FOLLOW: UserPlus,
-  MENTION: AtSign,
-  SHARE: Share2,
-  POLL_VOTE: Vote,
-  EVENT_INVITE: Calendar,
-  POST: Info,
-  default: Info,
+// ── Icon + colour config ──────────────────────────────────────────────────────
+
+const TYPE_META: Record<string, { icon: LucideIcon; bg: string; fg: string }> = {
+  LIKE:         { icon: Heart,         bg: 'bg-rose-500/10',    fg: 'text-rose-500' },
+  COMMENT:      { icon: MessageCircle, bg: 'bg-blue-500/10',    fg: 'text-blue-500' },
+  FOLLOW:       { icon: UserPlus,      bg: 'bg-emerald-500/10', fg: 'text-emerald-500' },
+  MENTION:      { icon: AtSign,        bg: 'bg-violet-500/10',  fg: 'text-violet-500' },
+  SHARE:        { icon: Share2,        bg: 'bg-orange-500/10',  fg: 'text-orange-500' },
+  POLL_VOTE:    { icon: BarChart2,     bg: 'bg-cyan-500/10',    fg: 'text-cyan-500' },
+  EVENT_INVITE: { icon: Calendar,      bg: 'bg-indigo-500/10',  fg: 'text-indigo-500' },
+  POST:         { icon: Bell,          bg: 'bg-amber-500/10',   fg: 'text-amber-500' },
 };
 
-const notificationColors: Record<string, string> = {
-  LIKE: 'text-red-500 bg-red-500/10',
-  COMMENT: 'text-blue-500 bg-blue-500/10',
-  FOLLOW: 'text-green-500 bg-green-500/10',
-  MENTION: 'text-purple-500 bg-purple-500/10',
-  SHARE: 'text-orange-500 bg-orange-500/10',
-  POLL_VOTE: 'text-cyan-500 bg-cyan-500/10',
-  EVENT_INVITE: 'text-indigo-500 bg-indigo-500/10',
-  POST: 'text-yellow-500 bg-yellow-500/10',
-  default: 'text-gray-500 bg-gray-500/10',
-};
+const DEFAULT_META = { icon: Bell, bg: 'bg-muted', fg: 'text-muted-foreground' };
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+const TABS = [
+  { id: 'all',      label: 'All' },
+  { id: 'unread',   label: 'Unread' },
+  { id: 'mentions', label: 'Mentions' },
+] as const;
+
+type TabId = typeof TABS[number]['id'];
+
+// ── Main view ─────────────────────────────────────────────────────────────────
 
 export function NotificationsView() {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState<TabId>('all');
+  // Track follow-back state per sender id
+  const [followedBack, setFollowedBack] = useState<Set<string>>(new Set());
+  const [followingInProgress, setFollowingInProgress] = useState<Set<string>>(new Set());
 
-  const fetchNotifications = useCallback(
-    async (pageNum = 1, append = false) => {
-      try {
-        setLoading(true);
-        const data = await notificationService.getNotifications(pageNum);
+  const fetchNotifications = useCallback(async (pageNum = 1, append = false) => {
+    try {
+      if (append) { setLoadingMore(true); } else { setLoading(true); }
+      const data = await notificationService.getNotifications(pageNum);
+      setNotifications(prev => append ? [...prev, ...data.notifications] : data.notifications);
+      setUnreadCount(data.unreadCount);
+      setHasMore(data.pagination.hasMore);
+      setPage(data.pagination.page);
+    } catch {
+      toast.error('Failed to load notifications');
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  }, []);
 
-        if (append) {
-          setNotifications(prev => [...prev, ...data.notifications]);
-        } else {
-          setNotifications(data.notifications);
-        }
+  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
-        setUnreadCount(data.unreadCount);
-        setHasMore(data.pagination.hasMore);
-        setPage(data.pagination.page);
-      } catch (error) {
-        console.error('Error fetching notifications:', error);
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
-  useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
-
-  const handleMarkAsRead = async (id: string, isRead: boolean) => {
+  const markAsRead = async (id: string, isRead: boolean) => {
     if (isRead) return;
     try {
       await notificationService.markAsRead(id);
-      setNotifications(prev =>
-        prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
-      );
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch (error) {
-      console.error('Error marking as read:', error);
-    }
+    } catch { /* silent */ }
   };
 
-  const handleMarkAllAsRead = async () => {
+  const markAllAsRead = async () => {
     try {
       await notificationService.markAllAsRead();
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
       setUnreadCount(0);
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+    } catch {
+      toast.error('Failed to mark all as read');
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const deleteNotification = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    const target = notifications.find(n => n._id === id);
+    setNotifications(prev => prev.filter(n => n._id !== id));
+    if (target && !target.isRead) setUnreadCount(prev => Math.max(0, prev - 1));
     try {
       await notificationService.deleteNotification(id);
-      const deletedNotif = notifications.find(n => n._id === id);
-      setNotifications(prev => prev.filter(n => n._id !== id));
-      if (deletedNotif && !deletedNotif.isRead) {
-        setUnreadCount(prev => Math.max(0, prev - 1));
-      }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+    } catch {
+      toast.error('Failed to delete notification');
+      fetchNotifications(); // revert
     }
   };
 
-  const handleFollow = async (userId: string) => {
+  const handleFollowBack = async (e: React.MouseEvent, senderId: string) => {
+    e.stopPropagation();
+    if (followedBack.has(senderId) || followingInProgress.has(senderId)) return;
+    setFollowingInProgress(prev => new Set(prev).add(senderId));
     try {
-      await socialService.followUser(userId);
-      // Optional: Update UI to show following status
-    } catch (error) {
-      console.error('Error following user:', error);
+      await socialService.followUser(senderId);
+      setFollowedBack(prev => new Set(prev).add(senderId));
+      toast.success('Following back');
+    } catch {
+      toast.error('Failed to follow');
+    } finally {
+      setFollowingInProgress(prev => { const s = new Set(prev); s.delete(senderId); return s; });
     }
   };
 
-  const getFilteredNotifications = () => {
-    if (activeTab === 'unread') return notifications.filter(n => !n.isRead);
-    if (activeTab === 'mentions')
-      return notifications.filter(n => n.type === 'MENTION');
-    return notifications;
+  const handleNotificationClick = (n: Notification) => {
+    markAsRead(n._id, n.isRead);
+    if (n.type === 'FOLLOW') {
+      router.push(`/profile/${n.sender._id}`);
+    } else if (['LIKE', 'COMMENT', 'SHARE', 'MENTION', 'POLL_VOTE'].includes(n.type) && n.targetType === 'POST') {
+      router.push(`/post/${n.targetId}`);
+    } else if (n.type === 'EVENT_INVITE') {
+      router.push(`/post/${n.targetId}`);
+    }
   };
 
-  const NotificationItem = ({
-    notification,
-  }: {
-    notification: Notification;
-  }) => {
-    const Icon =
-      notificationIcons[notification.type] || notificationIcons.default;
-    const iconStyles =
-      notificationColors[notification.type] || notificationColors.default;
-
-    return (
-      <div
-        className={cn(
-          'hover:bg-accent/50 border-border group relative cursor-pointer border-b p-4 transition-colors',
-          !notification.isRead && 'bg-primary/5'
-        )}
-        onClick={() => handleMarkAsRead(notification._id, notification.isRead)}
-      >
-        <div className="flex gap-3">
-          {notification.sender && notification.sender.avatar ? (
-            <Avatar className="border-border h-12 w-12 border">
-              <AvatarImage src={notification.sender.avatar} />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {notification.sender.fullnames?.[0] || 'U'}
-              </AvatarFallback>
-            </Avatar>
-          ) : (
-            <div
-              className={cn(
-                'flex h-12 w-12 shrink-0 items-center justify-center rounded-full',
-                iconStyles
-              )}
-            >
-              <Icon className="h-6 w-6" />
-            </div>
-          )}
-
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex-1">
-                <p className="text-foreground leading-tight">
-                  {notification.sender && (
-                    <span className="cursor-pointer font-bold hover:underline">
-                      {notification.sender.fullnames}
-                    </span>
-                  )}{' '}
-                  <span className="text-muted-foreground">
-                    {notification.message}
-                  </span>
-                </p>
-                <p className="text-muted-foreground mt-1.5 text-xs font-medium">
-                  {formatDistanceToNow(new Date(notification.createdAt), {
-                    addSuffix: true,
-                  })}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    asChild
-                    onClick={e => e.stopPropagation()}
-                  >
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full"
-                    >
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    {!notification.isRead && (
-                      <DropdownMenuItem
-                        onClick={() =>
-                          handleMarkAsRead(notification._id, false)
-                        }
-                      >
-                        <Check className="mr-2 h-4 w-4" /> Mark as read
-                      </DropdownMenuItem>
-                    )}
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={e => {
-                        e.stopPropagation();
-                        handleDelete(notification._id);
-                      }}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-
-              {!notification.isRead && (
-                <div className="bg-primary shadow-primary/30 mt-2 h-2.5 w-2.5 shrink-0 rounded-full shadow-sm" />
-              )}
-            </div>
-
-            {notification.type === 'FOLLOW' && (
-              <Button
-                size="sm"
-                variant="outline"
-                className="hover:bg-primary hover:text-primary-foreground hover:border-primary mt-3 rounded-full px-4 font-semibold transition-all"
-                onClick={e => {
-                  e.stopPropagation();
-                  handleFollow(notification.sender._id);
-                }}
-              >
-                Follow back
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
+  const filtered = notifications.filter(n => {
+    if (activeTab === 'unread') return !n.isRead;
+    if (activeTab === 'mentions') return n.type === 'MENTION';
+    return true;
+  });
 
   return (
-    <div className="border-border/50 bg-card mx-auto min-h-screen max-w-full border-x">
-      <div className="bg-card/80 border-border/50 sticky top-0 z-10 border-b backdrop-blur-md">
-        <div className="flex items-center justify-between p-4">
-          <h2 className="text-2xl font-bold tracking-tight">Notifications</h2>
+    <div className="mx-auto min-h-screen max-w-2xl">
+      {/* Sticky header */}
+      <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-md">
+        <div className="flex items-center justify-between px-4 py-3">
+          <h2 className="text-xl font-bold tracking-tight">Notifications</h2>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-primary hover:bg-primary/10 gap-2 text-xs font-bold uppercase tracking-wider"
-              onClick={handleMarkAllAsRead}
+            <button
+              onClick={markAllAsRead}
+              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
             >
-              <CheckCheck className="h-4 w-4" />
-              Mark all as read
-            </Button>
+              <CheckCheck className="h-3.5 w-3.5" />
+              Mark all read
+            </button>
           )}
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="border-border/50 h-auto w-full justify-start rounded-none border-t bg-transparent p-0">
-            <TabsTrigger
-              value="all"
-              className="data-[state=active]:border-primary h-12 min-w-[60px] rounded-none border-b-2 border-transparent px-0 text-sm font-bold data-[state=active]:bg-transparent"
+        {/* Tabs */}
+        <div className="flex border-t border-border/30">
+          {TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={cn(
+                'relative flex-1 py-3 text-sm font-semibold transition-colors',
+                activeTab === tab.id
+                  ? 'text-foreground'
+                  : 'text-muted-foreground hover:text-foreground/70'
+              )}
             >
-              All
-            </TabsTrigger>
-            <TabsTrigger
-              value="unread"
-              className="data-[state=active]:border-primary relative h-12 min-w-[60px] rounded-none border-b-2 border-transparent px-0 text-sm font-bold data-[state=active]:bg-transparent"
-            >
-              Unread
-              {unreadCount > 0 && (
-                <span className="bg-primary text-primary-foreground ml-2 rounded-full px-1.5 py-0.5 text-[10px] font-black">
-                  {unreadCount}
+              {tab.label}
+              {tab.id === 'unread' && unreadCount > 0 && (
+                <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black text-primary-foreground">
+                  {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
-            </TabsTrigger>
-            <TabsTrigger
-              value="mentions"
-              className="data-[state=active]:border-primary h-12 min-w-[60px] rounded-none border-b-2 border-transparent px-0 text-sm font-bold data-[state=active]:bg-transparent"
-            >
-              Mentions
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+              {activeTab === tab.id && (
+                <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="flex flex-col">
-        {loading && notifications.length === 0 ? (
-          <div className="flex flex-col">
-            {[...Array(6)].map((_, i) => (
-              <NotificationSkeleton key={i} />
-            ))}
-          </div>
-        ) : getFilteredNotifications().length > 0 ? (
+      {/* Content */}
+      <div>
+        {loading ? (
+          [...Array(6)].map((_, i) => <NotificationSkeleton key={i} />)
+        ) : filtered.length > 0 ? (
           <>
-            {getFilteredNotifications().map(notification => (
+            {filtered.map(n => (
               <NotificationItem
-                key={notification._id}
-                notification={notification}
+                key={n._id}
+                notification={n}
+                followedBack={followedBack}
+                followingInProgress={followingInProgress}
+                onClick={() => handleNotificationClick(n)}
+                onDelete={deleteNotification}
+                onFollowBack={handleFollowBack}
               />
             ))}
 
             {hasMore && (
-              <div className="flex justify-center p-4">
+              <div className="p-4">
                 <Button
                   variant="ghost"
+                  className="w-full text-sm font-semibold text-primary hover:bg-primary/5"
+                  disabled={loadingMore}
                   onClick={() => fetchNotifications(page + 1, true)}
-                  disabled={loading}
-                  className="text-primary hover:bg-primary/5 w-full font-bold"
                 >
-                  {loading ? (
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Loading more...
-                    </div>
-                  ) : (
-                    'Load more'
-                  )}
+                  {loadingMore
+                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading…</>
+                    : 'Load more'}
                 </Button>
               </div>
             )}
           </>
         ) : (
-          <div className="flex flex-col items-center justify-center space-y-4 p-20 text-center">
-            <div className="bg-accent/30 flex h-20 w-20 items-center justify-center rounded-full">
-              <Bell className="text-muted-foreground/50 h-10 w-10" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold">
-                {activeTab === 'unread'
-                  ? "You're all caught up!"
-                  : 'No notifications yet'}
-              </h3>
-              <p className="text-muted-foreground mx-auto mt-2 max-w-[250px]">
-                {activeTab === 'unread'
-                  ? "When you get new notifications, they'll show up here."
-                  : 'Start interacting with others to see notifications here!'}
-              </p>
-            </div>
-          </div>
+          <EmptyState tab={activeTab} />
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Notification item ─────────────────────────────────────────────────────────
+
+interface ItemProps {
+  notification: Notification;
+  followedBack: Set<string>;
+  followingInProgress: Set<string>;
+  onClick: () => void;
+  onDelete: (e: React.MouseEvent, id: string) => void;
+  onFollowBack: (e: React.MouseEvent, senderId: string) => void;
+}
+
+function NotificationItem({ notification: n, followedBack, followingInProgress, onClick, onDelete, onFollowBack }: ItemProps) {
+  const meta = TYPE_META[n.type] ?? DEFAULT_META;
+  const Icon = meta.icon;
+  const isFollow = n.type === 'FOLLOW';
+  const senderId = n.sender._id;
+  const isFollowing = followedBack.has(senderId);
+  const isPending = followingInProgress.has(senderId);
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        'group relative flex cursor-pointer items-start gap-3 border-b border-border/30 px-4 py-3.5 transition-colors',
+        'hover:bg-accent/40',
+        !n.isRead && 'bg-primary/3'
+      )}
+    >
+      {/* Unread dot */}
+      {!n.isRead && (
+        <span className="absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary" />
+      )}
+
+      {/* Avatar + icon badge */}
+      <div className="relative shrink-0">
+        <Avatar className="h-11 w-11">
+          <AvatarImage src={n.sender.avatar} alt={n.sender.fullnames} />
+          <AvatarFallback className="text-sm font-bold">
+            {n.sender.fullnames?.[0] ?? 'U'}
+          </AvatarFallback>
+        </Avatar>
+        {/* Type icon badge */}
+        <span className={cn(
+          'absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background',
+          meta.bg
+        )}>
+          <Icon className={cn('h-2.5 w-2.5', meta.fg)} />
+        </span>
+      </div>
+
+      {/* Body */}
+      <div className="min-w-0 flex-1">
+        <p className="text-sm leading-snug">
+          <span className="font-semibold text-foreground">{n.sender.fullnames}</span>
+          {' '}
+          <span className="text-muted-foreground">{n.message}</span>
+        </p>
+        <p className="mt-1 text-[11px] font-medium text-muted-foreground/50">
+          {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
+        </p>
+
+        {/* Follow-back CTA */}
+        {isFollow && (
+          <button
+            onClick={e => onFollowBack(e, senderId)}
+            disabled={isFollowing || isPending}
+            className={cn(
+              'mt-2.5 inline-flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-bold transition-all',
+              isFollowing
+                ? 'bg-muted text-muted-foreground cursor-default'
+                : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
+            )}
+          >
+            {isPending
+              ? <><Loader2 className="h-3 w-3 animate-spin" />Following…</>
+              : isFollowing
+                ? <><UserPlus className="h-3 w-3" />Following</>
+                : <><UserPlus className="h-3 w-3" />Follow back</>
+            }
+          </button>
+        )}
+      </div>
+
+      {/* Delete button — appears on hover */}
+      <button
+        onClick={e => onDelete(e, n._id)}
+        className={cn(
+          'shrink-0 rounded-lg p-1.5 text-muted-foreground/40 transition-all',
+          'opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive'
+        )}
+        title="Delete"
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyState({ tab }: { tab: TabId }) {
+  const copy = {
+    all:      { title: 'No notifications yet',  sub: 'Start interacting with others to see activity here.' },
+    unread:   { title: "You're all caught up!",  sub: 'New notifications will appear here.' },
+    mentions: { title: 'No mentions yet',        sub: "When someone mentions you, it'll show up here." },
+  }[tab];
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/40">
+        <Bell className="h-8 w-8 text-muted-foreground/30" />
+      </div>
+      <div>
+        <p className="font-semibold text-foreground/80">{copy.title}</p>
+        <p className="mt-1 max-w-[220px] text-sm text-muted-foreground/50">{copy.sub}</p>
       </div>
     </div>
   );
