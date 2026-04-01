@@ -11,7 +11,7 @@ import {
 import Image from 'next/image';
 import { Button } from '@/app/components/ui/button';
 import { EmojiPicker } from '@/app/components/post/EmojiPicker';
-import { ChevronDown, ChevronUp, Paperclip, Send, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, CornerDownRight, Paperclip, Send, X } from 'lucide-react';
 import { cn } from '@/app/components/ui/utils';
 import type { LocalFile } from './types';
 
@@ -26,14 +26,22 @@ export interface MessageInputHandle {
   focus: () => void;
 }
 
+export interface MessageReplyDraft {
+  messageId: string;
+  senderLabel: string;
+  preview: string;
+}
+
 interface MessageInputProps {
   value: string;
   onChange: (value: string) => void;
   onSend: (files: LocalFile[]) => void | Promise<void>;
+  replyTo?: MessageReplyDraft | null;
+  onCancelReply?: () => void;
 }
 
 export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
-  function MessageInput({ value, onChange, onSend }, ref) {
+  function MessageInput({ value, onChange, onSend, replyTo, onCancelReply }, ref) {
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [localFiles, setLocalFiles] = useState<LocalFile[]>([]);
@@ -121,6 +129,26 @@ export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
 
     return (
       <div className="border-border/40 bg-card/60 border-t px-4 py-3 backdrop-blur-md">
+        {replyTo && (
+          <div className="border-border/50 bg-accent/40 mb-3 flex items-start gap-2 rounded-xl border px-3 py-2">
+            <CornerDownRight className="text-primary mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-primary text-xs font-semibold">Replying to {replyTo.senderLabel}</p>
+              <p className="text-muted-foreground line-clamp-2 text-xs">{replyTo.preview}</p>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground hover:text-foreground h-7 w-7 shrink-0 rounded-full p-0"
+              onClick={() => onCancelReply?.()}
+              aria-label="Cancel reply"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        )}
+
         <div className="mb-2">
           <button
             type="button"

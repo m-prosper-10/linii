@@ -10,8 +10,10 @@ import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
 import { Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
+import type { QuotedMessagePreview } from '@/services/chat';
 import { FileDisplay } from './FileDisplay';
 import { MessageBubbleToolbar } from './MessageBubbleToolbar';
+import { MessageReplyQuote } from './MessageReplyQuote';
 import type { MessageActionContext } from './types';
 
 interface MessageBubbleProps {
@@ -25,6 +27,8 @@ interface MessageBubbleProps {
   isGrouped?: boolean;
   files?: string[];
   messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
+  replyTo?: QuotedMessagePreview;
+  onJumpToQuotedMessage?: (messageId: string) => void;
   onReply?: (message: MessageActionContext) => void;
   onForward?: (message: MessageActionContext) => void;
   onReact?: (messageId: string, emoji: string, type: string) => void;
@@ -44,6 +48,8 @@ export function MessageBubble({
   isGrouped = false,
   files,
   messageType = 'TEXT',
+  replyTo,
+  onJumpToQuotedMessage,
   onReply,
   onForward,
   onReact,
@@ -55,6 +61,7 @@ export function MessageBubble({
   const messageRef = useRef<HTMLDivElement>(null);
 
   const actionContext: MessageActionContext = {
+    messageId,
     content,
     sender,
     createdAt,
@@ -81,6 +88,7 @@ export function MessageBubble({
   return (
     <div
       ref={messageRef}
+      data-message-id={messageId}
       className={cn(
         'animate-in slide-in-from-bottom-2 flex gap-2.5 duration-300 sm:gap-3',
         isCurrentUser && 'flex-row-reverse',
@@ -119,6 +127,13 @@ export function MessageBubble({
                 : 'rounded-tl-md bg-accent'
             )}
           >
+            {replyTo && (
+              <MessageReplyQuote
+                quote={replyTo}
+                isCurrentUser={isCurrentUser}
+                onJumpToOriginal={onJumpToQuotedMessage}
+              />
+            )}
             {content && content !== 'Shared files' && (
               <p className="wrap-break-word text-[15px] leading-relaxed">{content}</p>
             )}
