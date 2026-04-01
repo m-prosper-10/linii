@@ -1,10 +1,22 @@
 import { apiClient } from '../lib/api';
 import { User } from './auth';
 
+/** Parent message embedded on replies (quoted bubble) */
+export interface QuotedMessagePreview {
+  _id: string;
+  sender: User;
+  content: string;
+  messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
+  files?: string[];
+  isDeleted: boolean;
+  createdAt?: string;
+}
+
 export interface Message {
   _id: string;
   conversationId: string;
   sender: User;
+  replyTo?: QuotedMessagePreview;
   content: string;
   messageType: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
   files?: string[];
@@ -51,6 +63,7 @@ export interface CreateMessageRequest {
   content: string;
   messageType?: 'TEXT' | 'IMAGE' | 'FILE' | 'AUDIO' | 'VIDEO';
   files?: string[];
+  replyToMessageId?: string;
 }
 
 export interface CreateConversationRequest {
@@ -199,15 +212,17 @@ class ChatService {
   }
 
   async sendMessageWithFiles(
-    conversationId: string, 
-    content: string, 
-    files: UploadedFile[]
+    conversationId: string,
+    content: string,
+    files: UploadedFile[],
+    replyToMessageId?: string
   ): Promise<Message> {
     const response = await apiClient.post<{ message: Message }>('/messages', {
       conversationId,
       content,
       messageType: files.length > 0 ? this.getMessageTypeFromFiles(files) : 'TEXT',
-      files: files.map(f => f.url)
+      files: files.map(f => f.url),
+      ...(replyToMessageId ? { replyToMessageId } : {}),
     });
 
     if (response.success && response.data) {

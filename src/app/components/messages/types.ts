@@ -11,6 +11,7 @@ export interface LocalFile {
 
 /** Payload passed to reply / forward handlers from a bubble */
 export interface MessageActionContext {
+  messageId: string;
   content: string;
   sender: User;
   createdAt: string;

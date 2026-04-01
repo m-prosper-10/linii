@@ -16,7 +16,9 @@ import { ChatHeader } from '@/app/components/messages/ChatHeader';
 import {
   MessageInput,
   type MessageInputHandle,
+  type MessageReplyDraft,
 } from '@/app/components/messages/MessageInput';
+import { replyPreviewLabel } from '@/app/components/messages/replyPreviewText';
 import { NewConversationDialog } from '@/app/components/messages/NewConversationDialog';
 import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
 import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
@@ -36,6 +38,7 @@ export function MessagesView() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
+  const [replyDraft, setReplyDraft] = useState<MessageReplyDraft | null>(null);
 
   const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(new Map());
   const otherUserTyping = selectedConversationId
@@ -85,6 +88,10 @@ export function MessagesView() {
   useEffect(() => {
     if (selectedConversationId) void fetchMessages(selectedConversationId);
   }, [selectedConversationId, fetchMessages]);
+
+  useEffect(() => {
+    setReplyDraft(null);
+  }, [selectedConversationId]);
 
   useEffect(() => {
     if (!isConnected || !currentUser) return;
@@ -222,10 +229,28 @@ export function MessagesView() {
     };
   }, [messageInput, selectedConversationId, socket]);
 
+  const jumpToQuotedMessage = useCallback((messageId: string) => {
+    const el = document.querySelector(`[data-message-id="${messageId}"]`);
+    if (!(el instanceof HTMLElement)) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background', 'rounded-lg');
+    window.setTimeout(() => {
+      el.classList.remove(
+        'ring-2',
+        'ring-primary',
+        'ring-offset-2',
+        'ring-offset-background',
+        'rounded-lg'
+      );
+    }, 1400);
+  }, []);
+
   const handleSend = useCallback(
     async (localFiles: LocalFile[]) => {
       const content = messageInput.trim();
       if ((!content && localFiles.length === 0) || !selectedConversationId) return;
+
+      const replyToMessageId = replyDraft?.messageId;
 
       try {
         let msg: Message;
@@ -237,15 +262,18 @@ export function MessagesView() {
           msg = await chatService.sendMessageWithFiles(
             selectedConversationId,
             messageContent,
-            uploadedFiles
+            uploadedFiles,
+            replyToMessageId
           );
         } else {
           msg = await chatService.sendMessage({
             conversationId: selectedConversationId,
             content,
+            ...(replyToMessageId ? { replyToMessageId } : {}),
           });
         }
 
+        setReplyDraft(null);
         setMessages(prev => {
           if (prev.some(m => m._id === msg._id)) return prev;
           return [...prev, msg];
@@ -261,12 +289,18 @@ export function MessagesView() {
         throw err;
       }
     },
-    [messageInput, selectedConversationId]
+    [messageInput, selectedConversationId, replyDraft]
   );
 
   const handleReply = useCallback((messageToReply: MessageActionContext) => {
-    const replyText = `> ${messageToReply.sender.fullnames}: ${messageToReply.content.substring(0, 100)}${messageToReply.content.length > 100 ? '…' : ''}\n\n`;
-    setMessageInput(replyText);
+    setReplyDraft({
+      messageId: messageToReply.messageId,
+      senderLabel:
+        messageToReply.sender.fullnames ||
+        messageToReply.sender.username ||
+        'User',
+      preview: replyPreviewLabel(messageToReply),
+    });
     queueMicrotask(() => messageInputRef.current?.focus());
   }, []);
 
@@ -278,6 +312,19 @@ export function MessagesView() {
   const handleReact = useCallback(async (_messageId: string, emoji: string, type: string) => {
     toast.message('Reactions', {
       description: `${emoji} (${type}) — reactions API not connected yet.`,
+    });
+  }, []);
+
+  const handleDeleteMessage = useCallback((messageId: string) => {
+    setMessages(prev => prev.filter(m => m._id !== messageId));
+    toast.success('Message removed on this device', {
+      description: 'Reloading the chat may show it again until delete is synced to the server.',
+    });
+  }, []);
+
+  const handleReportMessage = useCallback((_messageId: string) => {
+    toast.message('Report message', {
+      description: 'Thanks for letting us know — full reporting is coming soon.',
     });
   }, []);
 
@@ -414,9 +461,13 @@ export function MessagesView() {
                     isGrouped={shouldGroupMessage(i)}
                     files={msg.files}
                     messageType={msg.messageType}
+                    replyTo={msg.replyTo}
+                    onJumpToQuotedMessage={jumpToQuotedMessage}
                     onReply={handleReply}
                     onForward={handleForward}
                     onReact={handleReact}
+                    onDelete={handleDeleteMessage}
+                    onReport={handleReportMessage}
                     reactions={[]}
                   />
                 ))
@@ -430,6 +481,8 @@ export function MessagesView() {
             value={messageInput}
             onChange={setMessageInput}
             onSend={handleSend}
+            replyTo={replyDraft}
+            onCancelReply={() => setReplyDraft(null)}
           />
         </div>
       ) : (
