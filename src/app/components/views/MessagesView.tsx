@@ -22,7 +22,10 @@ import { replyPreviewLabel } from '@/app/components/messages/replyPreviewText';
 import { NewConversationDialog } from '@/app/components/messages/NewConversationDialog';
 import ConversationSkeleton from '@/app/components/skeletons/ConversationSkeleton';
 import MessageSkeleton from '@/app/components/skeletons/MessageSkeleton';
-import type { LocalFile, MessageActionContext } from '@/app/components/messages/types';
+import type {
+  LocalFile,
+  MessageActionContext,
+} from '@/app/components/messages/types';
 
 export function MessagesView() {
   const { currentUser } = useApp();
@@ -34,13 +37,17 @@ export function MessagesView() {
   const [newConvOpen, setNewConvOpen] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
 
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
   const [replyDraft, setReplyDraft] = useState<MessageReplyDraft | null>(null);
 
-  const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(new Map());
+  const [typingUsers, setTypingUsers] = useState<Map<string, Set<string>>>(
+    new Map()
+  );
   const otherUserTyping = selectedConversationId
     ? (typingUsers.get(selectedConversationId)?.size ?? 0) > 0
     : false;
@@ -49,8 +56,12 @@ export function MessagesView() {
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageInputRef = useRef<MessageInputHandle>(null);
 
-  const selectedConversation = conversations.find(c => c._id === selectedConversationId);
-  const otherUser = selectedConversation?.participants.find(p => p._id !== currentUser?._id);
+  const selectedConversation = conversations.find(
+    c => c._id === selectedConversationId
+  );
+  const otherUser = selectedConversation?.participants.find(
+    p => p._id !== currentUser?._id
+  );
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -105,7 +116,10 @@ export function MessagesView() {
           return [...prev, message];
         });
         if (message.sender._id !== currentUser._id) {
-          socket.markAsRead({ conversationId: message.conversationId, messageId: message._id });
+          socket.markAsRead({
+            conversationId: message.conversationId,
+            messageId: message._id,
+          });
         }
       }
 
@@ -152,10 +166,14 @@ export function MessagesView() {
     };
 
     const handleUserTyping = (data: TypingIndicator) => {
-      if (data.conversationId === selectedConversationId && data.userId !== currentUser._id) {
+      if (
+        data.conversationId === selectedConversationId &&
+        data.userId !== currentUser._id
+      ) {
         setTypingUsers(prev => {
           const newMap = new Map(prev);
-          const conversationTypers = newMap.get(data.conversationId) || new Set();
+          const conversationTypers =
+            newMap.get(data.conversationId) || new Set();
 
           if (data.isTyping) {
             conversationTypers.add(data.userId);
@@ -233,7 +251,13 @@ export function MessagesView() {
     const el = document.querySelector(`[data-message-id="${messageId}"]`);
     if (!(el instanceof HTMLElement)) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'ring-offset-background', 'rounded-lg');
+    el.classList.add(
+      'ring-2',
+      'ring-primary',
+      'ring-offset-2',
+      'ring-offset-background',
+      'rounded-lg'
+    );
     window.setTimeout(() => {
       el.classList.remove(
         'ring-2',
@@ -248,7 +272,8 @@ export function MessagesView() {
   const handleSend = useCallback(
     async (localFiles: LocalFile[]) => {
       const content = messageInput.trim();
-      if ((!content && localFiles.length === 0) || !selectedConversationId) return;
+      if ((!content && localFiles.length === 0) || !selectedConversationId)
+        return;
 
       const replyToMessageId = replyDraft?.messageId;
 
@@ -304,27 +329,35 @@ export function MessagesView() {
     queueMicrotask(() => messageInputRef.current?.focus());
   }, []);
 
-  const handleForward = useCallback((messageToForward: MessageActionContext) => {
-    setMessageInput(messageToForward.content);
-    queueMicrotask(() => messageInputRef.current?.focus());
-  }, []);
+  const handleForward = useCallback(
+    (messageToForward: MessageActionContext) => {
+      setMessageInput(messageToForward.content);
+      queueMicrotask(() => messageInputRef.current?.focus());
+    },
+    []
+  );
 
-  const handleReact = useCallback(async (_messageId: string, emoji: string, type: string) => {
-    toast.message('Reactions', {
-      description: `${emoji} (${type}) — reactions API not connected yet.`,
-    });
-  }, []);
+  const handleReact = useCallback(
+    async (_messageId: string, emoji: string, type: string) => {
+      toast.message('Reactions', {
+        description: `${emoji} (${type}) — reactions API not connected yet.`,
+      });
+    },
+    []
+  );
 
   const handleDeleteMessage = useCallback((messageId: string) => {
     setMessages(prev => prev.filter(m => m._id !== messageId));
     toast.success('Message removed on this device', {
-      description: 'Reloading the chat may show it again until delete is synced to the server.',
+      description:
+        'Reloading the chat may show it again until delete is synced to the server.',
     });
   }, []);
 
   const handleReportMessage = useCallback((_messageId: string) => {
     toast.message('Report message', {
-      description: 'Thanks for letting us know — full reporting is coming soon.',
+      description:
+        'Thanks for letting us know — full reporting is coming soon.',
     });
   }, []);
 
@@ -334,7 +367,9 @@ export function MessagesView() {
   };
 
   const handleConversationCreated = (conv: Conversation) => {
-    setConversations(prev => (prev.some(c => c._id === conv._id) ? prev : [conv, ...prev]));
+    setConversations(prev =>
+      prev.some(c => c._id === conv._id) ? prev : [conv, ...prev]
+    );
     setSelectedConversationId(conv._id);
     setShowMobileChat(true);
   };
@@ -403,10 +438,14 @@ export function MessagesView() {
             [...Array(6)].map((_, i) => <ConversationSkeleton key={i} />)
           ) : filteredConversations.length > 0 ? (
             filteredConversations.map(conv => {
-              const other = conv.participants.find(p => p._id !== currentUser?._id);
+              const other = conv.participants.find(
+                p => p._id !== currentUser?._id
+              );
               const unread =
                 conv.lastMessage?.sender._id !== currentUser?._id &&
-                !conv.lastMessage?.readBy.some(r => r.userId === currentUser?._id)
+                !conv.lastMessage?.readBy.some(
+                  r => r.userId === currentUser?._id
+                )
                   ? 1
                   : 0;
               return (
@@ -445,33 +484,31 @@ export function MessagesView() {
 
           <div className="from-background via-background to-muted/20 scrollbar-thin min-h-0 flex-1 overflow-y-auto bg-gradient-to-b">
             <div className="space-y-1 px-4 py-3">
-              {messagesLoading && messages.length === 0 ? (
-                [...Array(6)].map((_, i) => <MessageSkeleton key={i} />)
-              ) : (
-                messages.map((msg, i) => (
-                  <MessageBubble
-                    key={msg._id}
-                    messageId={msg._id}
-                    content={msg.content}
-                    createdAt={msg.createdAt}
-                    sender={msg.sender}
-                    isCurrentUser={msg.sender._id === currentUser?._id}
-                    isRead={msg.readBy.some(r => r.userId !== msg.sender._id)}
-                    showAvatar={!shouldGroupMessage(i)}
-                    isGrouped={shouldGroupMessage(i)}
-                    files={msg.files}
-                    messageType={msg.messageType}
-                    replyTo={msg.replyTo}
-                    onJumpToQuotedMessage={jumpToQuotedMessage}
-                    onReply={handleReply}
-                    onForward={handleForward}
-                    onReact={handleReact}
-                    onDelete={handleDeleteMessage}
-                    onReport={handleReportMessage}
-                    reactions={[]}
-                  />
-                ))
-              )}
+              {messagesLoading && messages.length === 0
+                ? [...Array(6)].map((_, i) => <MessageSkeleton key={i} />)
+                : messages.map((msg, i) => (
+                    <MessageBubble
+                      key={msg._id}
+                      messageId={msg._id}
+                      content={msg.content}
+                      createdAt={msg.createdAt}
+                      sender={msg.sender}
+                      isCurrentUser={msg.sender._id === currentUser?._id}
+                      isRead={msg.readBy.some(r => r.userId !== msg.sender._id)}
+                      showAvatar={!shouldGroupMessage(i)}
+                      isGrouped={shouldGroupMessage(i)}
+                      files={msg.files}
+                      messageType={msg.messageType}
+                      replyTo={msg.replyTo}
+                      onJumpToQuotedMessage={jumpToQuotedMessage}
+                      onReply={handleReply}
+                      onForward={handleForward}
+                      onReact={handleReact}
+                      onDelete={handleDeleteMessage}
+                      onReport={handleReportMessage}
+                      reactions={[]}
+                    />
+                  ))}
               <div ref={messagesEndRef} />
             </div>
           </div>
@@ -497,7 +534,9 @@ export function MessagesView() {
           </div>
           <div className="text-center">
             <p className="text-foreground/70 font-semibold">Your messages</p>
-            <p className="mt-0.5 text-sm">Select a conversation to start chatting</p>
+            <p className="mt-0.5 text-sm">
+              Select a conversation to start chatting
+            </p>
           </div>
           <Button
             variant="outline"

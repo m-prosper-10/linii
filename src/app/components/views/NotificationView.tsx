@@ -14,7 +14,11 @@ import {
   Trash2,
   LucideIcon,
 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/app/components/ui/avatar';
 import { Button } from '@/app/components/ui/button';
 import { cn } from '@/app/components/ui/utils';
 import { useEffect, useState, useCallback } from 'react';
@@ -27,28 +31,37 @@ import { toast } from 'sonner';
 
 // ── Icon + colour config ──────────────────────────────────────────────────────
 
-const TYPE_META: Record<string, { icon: LucideIcon; bg: string; fg: string }> = {
-  LIKE:         { icon: Heart,         bg: 'bg-rose-500/10',    fg: 'text-rose-500' },
-  COMMENT:      { icon: MessageCircle, bg: 'bg-blue-500/10',    fg: 'text-blue-500' },
-  FOLLOW:       { icon: UserPlus,      bg: 'bg-emerald-500/10', fg: 'text-emerald-500' },
-  MENTION:      { icon: AtSign,        bg: 'bg-violet-500/10',  fg: 'text-violet-500' },
-  SHARE:        { icon: Share2,        bg: 'bg-orange-500/10',  fg: 'text-orange-500' },
-  POLL_VOTE:    { icon: BarChart2,     bg: 'bg-cyan-500/10',    fg: 'text-cyan-500' },
-  EVENT_INVITE: { icon: Calendar,      bg: 'bg-indigo-500/10',  fg: 'text-indigo-500' },
-  POST:         { icon: Bell,          bg: 'bg-amber-500/10',   fg: 'text-amber-500' },
-};
+const TYPE_META: Record<string, { icon: LucideIcon; bg: string; fg: string }> =
+  {
+    LIKE: { icon: Heart, bg: 'bg-rose-500/10', fg: 'text-rose-500' },
+    COMMENT: { icon: MessageCircle, bg: 'bg-blue-500/10', fg: 'text-blue-500' },
+    FOLLOW: { icon: UserPlus, bg: 'bg-emerald-500/10', fg: 'text-emerald-500' },
+    MENTION: { icon: AtSign, bg: 'bg-violet-500/10', fg: 'text-violet-500' },
+    SHARE: { icon: Share2, bg: 'bg-orange-500/10', fg: 'text-orange-500' },
+    POLL_VOTE: { icon: BarChart2, bg: 'bg-cyan-500/10', fg: 'text-cyan-500' },
+    EVENT_INVITE: {
+      icon: Calendar,
+      bg: 'bg-indigo-500/10',
+      fg: 'text-indigo-500',
+    },
+    POST: { icon: Bell, bg: 'bg-amber-500/10', fg: 'text-amber-500' },
+  };
 
-const DEFAULT_META = { icon: Bell, bg: 'bg-muted', fg: 'text-muted-foreground' };
+const DEFAULT_META = {
+  icon: Bell,
+  bg: 'bg-muted',
+  fg: 'text-muted-foreground',
+};
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
-  { id: 'all',      label: 'All' },
-  { id: 'unread',   label: 'Unread' },
+  { id: 'all', label: 'All' },
+  { id: 'unread', label: 'Unread' },
   { id: 'mentions', label: 'Mentions' },
 ] as const;
 
-type TabId = typeof TABS[number]['id'];
+type TabId = (typeof TABS)[number]['id'];
 
 // ── Main view ─────────────────────────────────────────────────────────────────
 
@@ -63,33 +76,50 @@ export function NotificationsView() {
   const [activeTab, setActiveTab] = useState<TabId>('all');
   // Track follow-back state per sender id
   const [followedBack, setFollowedBack] = useState<Set<string>>(new Set());
-  const [followingInProgress, setFollowingInProgress] = useState<Set<string>>(new Set());
+  const [followingInProgress, setFollowingInProgress] = useState<Set<string>>(
+    new Set()
+  );
 
-  const fetchNotifications = useCallback(async (pageNum = 1, append = false) => {
-    try {
-      if (append) { setLoadingMore(true); } else { setLoading(true); }
-      const data = await notificationService.getNotifications(pageNum);
-      setNotifications(prev => append ? [...prev, ...data.notifications] : data.notifications);
-      setUnreadCount(data.unreadCount);
-      setHasMore(data.pagination.hasMore);
-      setPage(data.pagination.page);
-    } catch {
-      toast.error('Failed to load notifications');
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, []);
+  const fetchNotifications = useCallback(
+    async (pageNum = 1, append = false) => {
+      try {
+        if (append) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
+        const data = await notificationService.getNotifications(pageNum);
+        setNotifications(prev =>
+          append ? [...prev, ...data.notifications] : data.notifications
+        );
+        setUnreadCount(data.unreadCount);
+        setHasMore(data.pagination.hasMore);
+        setPage(data.pagination.page);
+      } catch {
+        toast.error('Failed to load notifications');
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    []
+  );
 
-  useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
 
   const markAsRead = async (id: string, isRead: boolean) => {
     if (isRead) return;
     try {
       await notificationService.markAsRead(id);
-      setNotifications(prev => prev.map(n => n._id === id ? { ...n, isRead: true } : n));
+      setNotifications(prev =>
+        prev.map(n => (n._id === id ? { ...n, isRead: true } : n))
+      );
       setUnreadCount(prev => Math.max(0, prev - 1));
-    } catch { /* silent */ }
+    } catch {
+      /* silent */
+    }
   };
 
   const markAllAsRead = async () => {
@@ -126,7 +156,11 @@ export function NotificationsView() {
     } catch {
       toast.error('Failed to follow');
     } finally {
-      setFollowingInProgress(prev => { const s = new Set(prev); s.delete(senderId); return s; });
+      setFollowingInProgress(prev => {
+        const s = new Set(prev);
+        s.delete(senderId);
+        return s;
+      });
     }
   };
 
@@ -134,7 +168,10 @@ export function NotificationsView() {
     markAsRead(n._id, n.isRead);
     if (n.type === 'FOLLOW') {
       router.push(`/profile/${n.sender._id}`);
-    } else if (['LIKE', 'COMMENT', 'SHARE', 'MENTION', 'POLL_VOTE'].includes(n.type) && n.targetType === 'POST') {
+    } else if (
+      ['LIKE', 'COMMENT', 'SHARE', 'MENTION', 'POLL_VOTE'].includes(n.type) &&
+      n.targetType === 'POST'
+    ) {
       router.push(`/post/${n.targetId}`);
     } else if (n.type === 'EVENT_INVITE') {
       router.push(`/post/${n.targetId}`);
@@ -156,7 +193,7 @@ export function NotificationsView() {
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+              className="text-primary hover:text-primary/80 flex items-center gap-1.5 text-xs font-semibold transition-colors"
             >
               <CheckCheck className="h-3.5 w-3.5" />
               Mark all read
@@ -165,7 +202,7 @@ export function NotificationsView() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-t border-border/30">
+        <div className="border-border/30 flex border-t">
           {TABS.map(tab => (
             <button
               key={tab.id}
@@ -179,12 +216,12 @@ export function NotificationsView() {
             >
               {tab.label}
               {tab.id === 'unread' && unreadCount > 0 && (
-                <span className="ml-1.5 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black text-primary-foreground">
+                <span className="bg-primary text-primary-foreground ml-1.5 rounded-full px-1.5 py-0.5 text-[10px] font-black">
                   {unreadCount > 99 ? '99+' : unreadCount}
                 </span>
               )}
               {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-primary" />
+                <span className="bg-primary absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full" />
               )}
             </button>
           ))}
@@ -213,13 +250,18 @@ export function NotificationsView() {
               <div className="p-4">
                 <Button
                   variant="ghost"
-                  className="w-full text-sm font-semibold text-primary hover:bg-primary/5"
+                  className="text-primary hover:bg-primary/5 w-full text-sm font-semibold"
                   disabled={loadingMore}
                   onClick={() => fetchNotifications(page + 1, true)}
                 >
-                  {loadingMore
-                    ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Loading…</>
-                    : 'Load more'}
+                  {loadingMore ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Loading…
+                    </>
+                  ) : (
+                    'Load more'
+                  )}
                 </Button>
               </div>
             )}
@@ -243,7 +285,14 @@ interface ItemProps {
   onFollowBack: (e: React.MouseEvent, senderId: string) => void;
 }
 
-function NotificationItem({ notification: n, followedBack, followingInProgress, onClick, onDelete, onFollowBack }: ItemProps) {
+function NotificationItem({
+  notification: n,
+  followedBack,
+  followingInProgress,
+  onClick,
+  onDelete,
+  onFollowBack,
+}: ItemProps) {
   const meta = TYPE_META[n.type] ?? DEFAULT_META;
   const Icon = meta.icon;
   const isFollow = n.type === 'FOLLOW';
@@ -255,14 +304,14 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
     <div
       onClick={onClick}
       className={cn(
-        'group relative flex cursor-pointer items-start gap-3 border-b border-border/30 px-4 py-3.5 transition-colors',
+        'border-border/30 group relative flex cursor-pointer items-start gap-3 border-b px-4 py-3.5 transition-colors',
         'hover:bg-accent/40',
         !n.isRead && 'bg-primary/3'
       )}
     >
       {/* Unread dot */}
       {!n.isRead && (
-        <span className="absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-primary" />
+        <span className="bg-primary absolute left-1.5 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full" />
       )}
 
       {/* Avatar + icon badge */}
@@ -274,10 +323,12 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
           </AvatarFallback>
         </Avatar>
         {/* Type icon badge */}
-        <span className={cn(
-          'absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2 border-background',
-          meta.bg
-        )}>
+        <span
+          className={cn(
+            'border-background absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full border-2',
+            meta.bg
+          )}
+        >
           <Icon className={cn('h-2.5 w-2.5', meta.fg)} />
         </span>
       </div>
@@ -285,11 +336,12 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
       {/* Body */}
       <div className="min-w-0 flex-1">
         <p className="text-sm leading-snug">
-          <span className="font-semibold text-foreground">{n.sender.fullnames}</span>
-          {' '}
+          <span className="text-foreground font-semibold">
+            {n.sender.fullnames}
+          </span>{' '}
           <span className="text-muted-foreground">{n.message}</span>
         </p>
-        <p className="mt-1 text-[11px] font-medium text-muted-foreground/50">
+        <p className="text-muted-foreground/50 mt-1 text-[11px] font-medium">
           {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}
         </p>
 
@@ -305,12 +357,22 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
                 : 'bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95'
             )}
           >
-            {isPending
-              ? <><Loader2 className="h-3 w-3 animate-spin" />Following…</>
-              : isFollowing
-                ? <><UserPlus className="h-3 w-3" />Following</>
-                : <><UserPlus className="h-3 w-3" />Follow back</>
-            }
+            {isPending ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Following…
+              </>
+            ) : isFollowing ? (
+              <>
+                <UserPlus className="h-3 w-3" />
+                Following
+              </>
+            ) : (
+              <>
+                <UserPlus className="h-3 w-3" />
+                Follow back
+              </>
+            )}
           </button>
         )}
       </div>
@@ -319,8 +381,8 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
       <button
         onClick={e => onDelete(e, n._id)}
         className={cn(
-          'shrink-0 rounded-lg p-1.5 text-muted-foreground/40 transition-all',
-          'opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive'
+          'text-muted-foreground/40 shrink-0 rounded-lg p-1.5 transition-all',
+          'hover:bg-destructive/10 hover:text-destructive opacity-0 group-hover:opacity-100'
         )}
         title="Delete"
       >
@@ -334,19 +396,30 @@ function NotificationItem({ notification: n, followedBack, followingInProgress, 
 
 function EmptyState({ tab }: { tab: TabId }) {
   const copy = {
-    all:      { title: 'No notifications yet',  sub: 'Start interacting with others to see activity here.' },
-    unread:   { title: "You're all caught up!",  sub: 'New notifications will appear here.' },
-    mentions: { title: 'No mentions yet',        sub: "When someone mentions you, it'll show up here." },
+    all: {
+      title: 'No notifications yet',
+      sub: 'Start interacting with others to see activity here.',
+    },
+    unread: {
+      title: "You're all caught up!",
+      sub: 'New notifications will appear here.',
+    },
+    mentions: {
+      title: 'No mentions yet',
+      sub: "When someone mentions you, it'll show up here.",
+    },
   }[tab];
 
   return (
     <div className="flex flex-col items-center justify-center gap-4 py-24 text-center">
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent/40">
-        <Bell className="h-8 w-8 text-muted-foreground/30" />
+      <div className="bg-accent/40 flex h-16 w-16 items-center justify-center rounded-2xl">
+        <Bell className="text-muted-foreground/30 h-8 w-8" />
       </div>
       <div>
-        <p className="font-semibold text-foreground/80">{copy.title}</p>
-        <p className="mt-1 max-w-[220px] text-sm text-muted-foreground/50">{copy.sub}</p>
+        <p className="text-foreground/80 font-semibold">{copy.title}</p>
+        <p className="text-muted-foreground/50 mt-1 max-w-[220px] text-sm">
+          {copy.sub}
+        </p>
       </div>
     </div>
   );
