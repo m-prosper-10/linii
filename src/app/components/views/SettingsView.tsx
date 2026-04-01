@@ -1,11 +1,20 @@
-"use client";
+'use client';
 
 import { Button } from '@/app/components/ui/button';
 import { Label } from '@/app/components/ui/label';
 import { Separator } from '@/app/components/ui/separator';
 import { Switch } from '@/app/components/ui/switch';
 import { useApp } from '@/context/AppContext';
-import { Bell, Eye, Lock, LogOut, Moon, Shield, Smartphone, Sun } from 'lucide-react';
+import {
+  Bell,
+  Eye,
+  Lock,
+  LogOut,
+  Moon,
+  Shield,
+  Smartphone,
+  Sun,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export function SettingsView() {
@@ -19,24 +28,24 @@ export function SettingsView() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
+    <div className="mx-auto max-w-2xl">
+      <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="p-4">
-          <h2 className="font-semibold text-xl">Settings</h2>
+          <h2 className="text-xl font-semibold">Settings</h2>
         </div>
       </div>
 
-      <div className="p-4 space-y-6">
+      <div className="space-y-6 p-4">
         {/* Appearance */}
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium mb-1">Appearance</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="mb-1 font-medium">Appearance</h3>
+            <p className="text-muted-foreground text-sm">
               Customize how the app looks and feels
             </p>
           </div>
 
-          <div className="space-y-4 bg-accent/30 rounded-lg p-4">
+          <div className="bg-accent/30 space-y-4 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {theme === 'dark' ? (
@@ -46,13 +55,13 @@ export function SettingsView() {
                 )}
                 <div>
                   <Label htmlFor="theme">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     Switch between light and dark themes
                   </p>
                 </div>
               </div>
-              <Switch 
-                id="theme" 
+              <Switch
+                id="theme"
                 checked={theme === 'dark'}
                 onCheckedChange={toggleTheme}
               />
@@ -65,16 +74,16 @@ export function SettingsView() {
         {/* Notifications */}
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium mb-1 flex items-center gap-2">
+            <h3 className="mb-1 flex items-center gap-2 font-medium">
               <Bell className="h-5 w-5" />
               Notifications
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Manage how you receive notifications
             </p>
           </div>
 
-          <div className="space-y-4 bg-accent/30 rounded-lg p-4">
+          <div className="bg-accent/30 space-y-4 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="push">Push Notifications</Label>
               <Switch id="push" defaultChecked />
@@ -107,20 +116,20 @@ export function SettingsView() {
         {/* Privacy */}
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium mb-1 flex items-center gap-2">
+            <h3 className="mb-1 flex items-center gap-2 font-medium">
               <Lock className="h-5 w-5" />
               Privacy & Safety
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Control who can see your content and interact with you
             </p>
           </div>
 
-          <div className="space-y-4 bg-accent/30 rounded-lg p-4">
+          <div className="bg-accent/30 space-y-4 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="private">Private Account</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Only followers can see your posts
                 </p>
               </div>
@@ -129,8 +138,8 @@ export function SettingsView() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="activity">Activity Status</Label>
-                <p className="text-sm text-muted-foreground">
-                  Show when you're active
+                <p className="text-muted-foreground text-sm">
+                  Show when you&apos;re active
                 </p>
               </div>
               <Switch id="activity" defaultChecked />
@@ -138,7 +147,7 @@ export function SettingsView() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="dm">Direct Messages</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Allow messages from everyone
                 </p>
               </div>
@@ -147,7 +156,7 @@ export function SettingsView() {
             <div className="flex items-center justify-between">
               <div>
                 <Label htmlFor="tagging">Photo Tagging</Label>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Allow others to tag you
                 </p>
               </div>
@@ -161,16 +170,16 @@ export function SettingsView() {
         {/* Content Preferences */}
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium mb-1 flex items-center gap-2">
+            <h3 className="mb-1 flex items-center gap-2 font-medium">
               <Eye className="h-5 w-5" />
               Content Preferences
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Customize your content feed
             </p>
           </div>
 
-          <div className="space-y-4 bg-accent/30 rounded-lg p-4">
+          <div className="bg-accent/30 space-y-4 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <Label htmlFor="ai-content">Show AI-Generated Content</Label>
               <Switch id="ai-content" defaultChecked />
@@ -191,16 +200,16 @@ export function SettingsView() {
         {/* Security */}
         <div className="space-y-4">
           <div>
-            <h3 className="font-medium mb-1 flex items-center gap-2">
+            <h3 className="mb-1 flex items-center gap-2 font-medium">
               <Shield className="h-5 w-5" />
               Security
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Manage your account security
             </p>
           </div>
 
-          <div className="space-y-3 bg-accent/30 rounded-lg p-4">
+          <div className="bg-accent/30 space-y-3 rounded-lg p-4">
             <Button variant="outline" className="w-full justify-start">
               Change Password
             </Button>
@@ -219,21 +228,24 @@ export function SettingsView() {
         {/* Account Actions */}
         <div className="space-y-4">
           <div className="space-y-3">
-            <Button 
-              variant="destructive" 
+            <Button
+              variant="destructive"
               className="w-full gap-2"
               onClick={handleLogout}
             >
               <LogOut className="h-4 w-4" />
               Log Out
             </Button>
-            <Button variant="outline" className="w-full text-destructive hover:text-destructive">
+            <Button
+              variant="outline"
+              className="text-destructive hover:text-destructive w-full"
+            >
               Delete Account
             </Button>
           </div>
         </div>
 
-        <div className="text-center text-sm text-muted-foreground pt-4">
+        <div className="text-muted-foreground pt-4 text-center text-sm">
           <p>Version 1.0.0</p>
         </div>
       </div>

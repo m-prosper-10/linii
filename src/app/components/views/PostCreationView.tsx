@@ -2,9 +2,18 @@
 
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/app/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/app/components/ui/popover';
 import { Calendar as CalendarUI } from '@/app/components/ui/calendar';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/app/components/ui/tooltip';
 import { Input } from '@/app/components/ui/input';
 import {
   ArrowLeft,
@@ -38,7 +47,9 @@ export function PostCreationView() {
 
   // State
   const [content, setContent] = useState('');
-  const [selectedMedia, setSelectedMedia] = useState<Array<{ url: string; type: string }>>([]);
+  const [selectedMedia, setSelectedMedia] = useState<
+    Array<{ url: string; type: string }>
+  >([]);
   const [isPosting, setIsPosting] = useState(false);
   const [selectedMediaFiles, setSelectedMediaFiles] = useState<File[]>([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
@@ -52,15 +63,27 @@ export function PostCreationView() {
 
   // Additional features
   const [locationName, setLocationName] = useState('');
-  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(undefined);
-  const [visibility, setVisibility] = useState<'PUBLIC' | 'FRIENDS' | 'PRIVATE'>('PUBLIC');
+  const [scheduledDate, setScheduledDate] = useState<Date | undefined>(
+    undefined
+  );
+  const [visibility, setVisibility] = useState<
+    'PUBLIC' | 'FRIENDS' | 'PRIVATE'
+  >('PUBLIC');
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const [mentions, setMentions] = useState<Array<{ id: string; name: string; avatar?: string }>>([]);
+  const [mentions, setMentions] = useState<
+    Array<{ id: string; name: string; avatar?: string }>
+  >([]);
   /** Remount markdown textarea after submit/clear so value and DOM stay in sync. */
   const [editorResetNonce, setEditorResetNonce] = useState(0);
-  const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
-  const toggleMention = (user: { id: string; name: string; avatar?: string }) => {
+  const toggleMention = (user: {
+    id: string;
+    name: string;
+    avatar?: string;
+  }) => {
     setMentions(prev => {
       const exists = prev.some(m => m.id === user.id);
       if (exists) {
@@ -81,11 +104,20 @@ export function PostCreationView() {
   const getExpirationDate = (durationStr: string) => {
     const date = new Date();
     switch (durationStr) {
-      case '1h': date.setHours(date.getHours() + 1); break;
-      case '1d': date.setDate(date.getDate() + 1); break;
-      case '3d': date.setDate(date.getDate() + 3); break;
-      case '7d': date.setDate(date.getDate() + 7); break;
-      default: date.setDate(date.getDate() + 1);
+      case '1h':
+        date.setHours(date.getHours() + 1);
+        break;
+      case '1d':
+        date.setDate(date.getDate() + 1);
+        break;
+      case '3d':
+        date.setDate(date.getDate() + 3);
+        break;
+      case '7d':
+        date.setDate(date.getDate() + 7);
+        break;
+      default:
+        date.setDate(date.getDate() + 1);
     }
     return date;
   };
@@ -112,7 +144,10 @@ export function PostCreationView() {
     draftSaveTimeoutRef.current = setTimeout(() => {
       draftSaveTimeoutRef.current = null;
       if (content.trim()) {
-        localStorage.setItem('linii_post_draft', JSON.stringify({ content, visibility }));
+        localStorage.setItem(
+          'linii_post_draft',
+          JSON.stringify({ content, visibility })
+        );
       } else {
         localStorage.removeItem('linii_post_draft');
       }
@@ -158,7 +193,8 @@ export function PostCreationView() {
       setContent(enhanced);
       toast.success('Post enhanced by AI!');
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'AI enhancement failed';
+      const message =
+        error instanceof Error ? error.message : 'AI enhancement failed';
       toast.error(message);
     } finally {
       setIsAiLoading(false);
@@ -184,7 +220,10 @@ export function PostCreationView() {
 
   const handlePost = async () => {
     if (!content.trim() && !selectedMediaFiles.length && !isPollMode) return;
-    if (isPollMode && (!content.trim() || pollOptions.some(opt => !opt.trim()))) {
+    if (
+      isPollMode &&
+      (!content.trim() || pollOptions.some(opt => !opt.trim()))
+    ) {
       toast.error('Please fill in the poll question and all options');
       return;
     }
@@ -194,11 +233,14 @@ export function PostCreationView() {
 
     setIsPosting(true);
     try {
-      const tags = content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
+      const tags =
+        content.match(/#[\w\u0080-\uFFFF]+/g)?.map(t => t.slice(1)) || [];
       const postType = isPollMode
         ? 'POLL'
         : selectedMediaFiles.length > 0
-          ? selectedMediaFiles[0].type.startsWith('video/') ? 'VIDEO' : 'IMAGE'
+          ? selectedMediaFiles[0].type.startsWith('video/')
+            ? 'VIDEO'
+            : 'IMAGE'
           : 'TEXT';
 
       await PostService.createPost({
@@ -209,13 +251,15 @@ export function PostCreationView() {
         mediaFiles: selectedMediaFiles,
         poll: isPollMode
           ? {
-            question: content.trim(),
-            options: pollOptions.filter(opt => opt.trim()),
-            allowMultiple: pollAllowMultiple,
-            expiresAt: getExpirationDate(pollExpiresAt)
-          }
+              question: content.trim(),
+              options: pollOptions.filter(opt => opt.trim()),
+              allowMultiple: pollAllowMultiple,
+              expiresAt: getExpirationDate(pollExpiresAt),
+            }
           : undefined,
-        location: locationName ? { name: locationName, coordinates: [0, 0] } : undefined,
+        location: locationName
+          ? { name: locationName, coordinates: [0, 0] }
+          : undefined,
         scheduledFor: scheduledDate ? scheduledDate : undefined,
         tags,
       });
@@ -285,50 +329,66 @@ export function PostCreationView() {
 
   const characterCount = content.length;
   const isOverLimit = characterCount > maxCharacters;
-  const canPost = (content.trim().length > 0 || selectedMediaFiles.length > 0 || (isPollMode && content.trim().length > 0 && pollOptions.every(opt => opt.trim().length > 0))) && !isPosting;
+  const canPost =
+    (content.trim().length > 0 ||
+      selectedMediaFiles.length > 0 ||
+      (isPollMode &&
+        content.trim().length > 0 &&
+        pollOptions.every(opt => opt.trim().length > 0))) &&
+    !isPosting;
 
   return (
-    <div className="mx-auto max-w-2xl bg-background min-h-screen sm:min-h-0 border-x border-border/10">
+    <div className="bg-background border-border/10 mx-auto min-h-screen max-w-2xl border-x sm:min-h-0">
       <div className="bg-background/80 border-border sticky top-0 z-10 border-b backdrop-blur-sm">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => router.back()} className="rounded-full h-10 w-10 p-0">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => router.back()}
+              className="h-10 w-10 rounded-full p-0"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h2 className="text-xl font-semibold">{isFullPreview ? 'Review Post' : 'Create Post'}</h2>
+            <h2 className="text-xl font-semibold">
+              {isFullPreview ? 'Review Post' : 'Create Post'}
+            </h2>
           </div>
           <div className="flex items-center gap-2">
-            {!isFullPreview && (content.trim() || selectedMediaFiles.length > 0 || isPollMode) && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (confirm('Are you sure you want to clear this post?')) {
-                    clearPendingDraftSave();
-                    localStorage.removeItem('linii_post_draft');
-                    setContent('');
-                    setSelectedMedia([]);
-                    setSelectedMediaFiles([]);
-                    setIsPollMode(false);
-                    setPollOptions(['', '']);
-                    setLocationName('');
-                    setScheduledDate(undefined);
-                    setIsPreviewMode(false);
-                    setIsFullPreview(false);
-                    setEditorResetNonce(n => n + 1);
-                  }
-                }}
-                className="text-muted-foreground hover:text-destructive hidden sm:flex h-9 rounded-full px-4"
-              >
-                Clear
-              </Button>
-            )}
+            {!isFullPreview &&
+              (content.trim() ||
+                selectedMediaFiles.length > 0 ||
+                isPollMode) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm('Are you sure you want to clear this post?')) {
+                      clearPendingDraftSave();
+                      localStorage.removeItem('linii_post_draft');
+                      setContent('');
+                      setSelectedMedia([]);
+                      setSelectedMediaFiles([]);
+                      setIsPollMode(false);
+                      setPollOptions(['', '']);
+                      setLocationName('');
+                      setScheduledDate(undefined);
+                      setIsPreviewMode(false);
+                      setIsFullPreview(false);
+                      setEditorResetNonce(n => n + 1);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive hidden h-9 rounded-full px-4 sm:flex"
+                >
+                  Clear
+                </Button>
+              )}
 
             <Button
-              variant={isFullPreview ? "outline" : "ghost"}
+              variant={isFullPreview ? 'outline' : 'ghost'}
               size="sm"
               onClick={() => setIsFullPreview(!isFullPreview)}
-              className="rounded-full h-9 px-4 font-bold border-primary/20 hover:bg-primary/5 transition-all"
+              className="border-primary/20 hover:bg-primary/5 h-9 rounded-full px-4 font-bold transition-all"
             >
               {isFullPreview ? 'Edit' : 'Preview'}
             </Button>
@@ -336,7 +396,7 @@ export function PostCreationView() {
             <Button
               onClick={handlePost}
               disabled={!canPost}
-              className="rounded-full px-6 font-bold h-9 shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="shadow-primary/20 h-9 rounded-full px-6 font-bold shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               {isPosting ? (
                 <>
@@ -356,16 +416,22 @@ export function PostCreationView() {
           <PostPreCreationPreview
             user={{
               displayName: currentUser.displayName,
-              username: currentUser.username || currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
-              avatar: currentUser.avatar
+              username:
+                currentUser.username ||
+                currentUser.displayName.toLowerCase().replace(/\s+/g, '_'),
+              avatar: currentUser.avatar,
             }}
             content={content}
             media={selectedMedia}
-            poll={isPollMode ? {
-              question: content,
-              options: pollOptions.filter(o => o.trim()),
-              expiresAt: getExpirationDate(pollExpiresAt)
-            } : undefined}
+            poll={
+              isPollMode
+                ? {
+                    question: content,
+                    options: pollOptions.filter(o => o.trim()),
+                    expiresAt: getExpirationDate(pollExpiresAt),
+                  }
+                : undefined
+            }
             visibility={visibility}
             mentions={mentions}
           />
@@ -375,7 +441,7 @@ export function PostCreationView() {
               <PostCreationHeader
                 user={{
                   displayName: currentUser.displayName,
-                  avatar: currentUser.avatar
+                  avatar: currentUser.avatar,
                 }}
                 visibility={visibility}
                 onVisibilityChange={setVisibility}
@@ -411,10 +477,12 @@ export function PostCreationView() {
                 {locationName && (
                   <Badge
                     variant="secondary"
-                    className="bg-primary/10 text-primary gap-1.5 rounded-full py-1.5 pl-2 pr-3 border border-primary/20"
+                    className="bg-primary/10 text-primary border-primary/20 gap-1.5 rounded-full border py-1.5 pl-2 pr-3"
                   >
                     <MapPin className="h-3.5 w-3.5" />
-                    <span className="text-xs font-bold uppercase tracking-tight">{locationName}</span>
+                    <span className="text-xs font-bold uppercase tracking-tight">
+                      {locationName}
+                    </span>
                     <X
                       className="hover:text-destructive ml-1 h-3.5 w-3.5 cursor-pointer transition-colors"
                       onClick={() => setLocationName('')}
@@ -425,11 +493,14 @@ export function PostCreationView() {
                 {scheduledDate && (
                   <Badge
                     variant="secondary"
-                    className="gap-1.5 rounded-full bg-orange-500/10 py-1.5 pl-2 pr-3 text-orange-500 border border-orange-500/20"
+                    className="gap-1.5 rounded-full border border-orange-500/20 bg-orange-500/10 py-1.5 pl-2 pr-3 text-orange-500"
                   >
                     <Calendar className="h-3.5 w-3.5" />
                     <span className="text-xs font-bold uppercase tracking-tight">
-                      {new Date(scheduledDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                      {new Date(scheduledDate).toLocaleString([], {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
                     </span>
                     <X
                       className="hover:text-destructive ml-1 h-3.5 w-3.5 cursor-pointer transition-colors"
@@ -441,7 +512,7 @@ export function PostCreationView() {
 
               <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
 
-              <div className="border-border flex items-center justify-between border-t pt-5 mt-4">
+              <div className="border-border mt-4 flex items-center justify-between border-t pt-5">
                 <TooltipProvider delayDuration={400}>
                   <div className="flex flex-wrap items-center gap-1.5">
                     <input
@@ -457,8 +528,15 @@ export function PostCreationView() {
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <label htmlFor="media-upload">
-                            <Button variant="ghost" size="icon" className="text-primary hover:bg-primary/10 rounded-full h-10 w-10 shrink-0 cursor-pointer transition-all hover:scale-110" asChild>
-                              <span><ImageIcon className="h-5 w-5" /></span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="text-primary hover:bg-primary/10 h-10 w-10 shrink-0 cursor-pointer rounded-full transition-all hover:scale-110"
+                              asChild
+                            >
+                              <span>
+                                <ImageIcon className="h-5 w-5" />
+                              </span>
                             </Button>
                           </label>
                         </TooltipTrigger>
@@ -471,8 +549,10 @@ export function PostCreationView() {
                             variant="ghost"
                             size="icon"
                             className={cn(
-                              "rounded-full h-10 w-10 shrink-0",
-                              isPollMode ? 'text-primary bg-primary/10' : 'text-primary hover:bg-primary/10'
+                              'h-10 w-10 shrink-0 rounded-full',
+                              isPollMode
+                                ? 'text-primary bg-primary/10'
+                                : 'text-primary hover:bg-primary/10'
                             )}
                             onClick={() => setIsPollMode(!isPollMode)}
                           >
@@ -486,19 +566,28 @@ export function PostCreationView() {
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <PopoverTrigger asChild>
-                              <Button variant="ghost" size="icon" className="text-rose-500 hover:bg-rose-500/10 rounded-full h-10 w-10 shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-10 w-10 shrink-0 rounded-full text-rose-500 hover:bg-rose-500/10"
+                              >
                                 <MapPin className="h-5 w-5" />
                               </Button>
                             </PopoverTrigger>
                           </TooltipTrigger>
                           <TooltipContent>Add Location</TooltipContent>
                         </Tooltip>
-                        <PopoverContent className="w-80 p-4 rounded-2xl shadow-2xl" align="start">
+                        <PopoverContent
+                          className="w-80 rounded-2xl p-4 shadow-2xl"
+                          align="start"
+                        >
                           <div className="space-y-3">
-                            <h4 className="font-bold text-xs uppercase tracking-wider text-rose-500">Location</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-wider text-rose-500">
+                              Location
+                            </h4>
                             <Input
                               value={locationName}
-                              onChange={(e) => setLocationName(e.target.value)}
+                              onChange={e => setLocationName(e.target.value)}
                               placeholder="Where are you?"
                               className="bg-accent/50 rounded-xl"
                             />
@@ -513,7 +602,12 @@ export function PostCreationView() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className={cn("rounded-full h-10 w-10 shrink-0", scheduledDate ? 'text-orange-500 bg-orange-500/10' : 'text-orange-500 hover:bg-orange-500/10')}
+                                className={cn(
+                                  'h-10 w-10 shrink-0 rounded-full',
+                                  scheduledDate
+                                    ? 'bg-orange-500/10 text-orange-500'
+                                    : 'text-orange-500 hover:bg-orange-500/10'
+                                )}
                               >
                                 <Calendar className="h-5 w-5" />
                               </Button>
@@ -521,11 +615,26 @@ export function PostCreationView() {
                           </TooltipTrigger>
                           <TooltipContent>Schedule</TooltipContent>
                         </Tooltip>
-                        <PopoverContent className="w-auto p-0 rounded-2xl" align="start">
-                          <CalendarUI mode="single" selected={scheduledDate} onSelect={setScheduledDate} initialFocus />
+                        <PopoverContent
+                          className="w-auto rounded-2xl p-0"
+                          align="start"
+                        >
+                          <CalendarUI
+                            mode="single"
+                            selected={scheduledDate}
+                            onSelect={setScheduledDate}
+                            initialFocus
+                          />
                           {scheduledDate && (
-                            <div className="p-3 border-t bg-accent/5 flex justify-end">
-                              <Button variant="ghost" size="sm" onClick={() => setScheduledDate(undefined)} className="text-xs rounded-full">Clear</Button>
+                            <div className="bg-accent/5 flex justify-end border-t p-3">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setScheduledDate(undefined)}
+                                className="rounded-full text-xs"
+                              >
+                                Clear
+                              </Button>
                             </div>
                           )}
                         </PopoverContent>
@@ -538,11 +647,15 @@ export function PostCreationView() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="text-primary hover:bg-primary/10 rounded-full h-10 w-10 shrink-0"
+                            className="text-primary hover:bg-primary/10 h-10 w-10 shrink-0 rounded-full"
                             onClick={handleAiEnhance}
                             disabled={isAiLoading || !content.trim()}
                           >
-                            {isAiLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Sparkles className="h-5 w-5" />}
+                            {isAiLoading ? (
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-5 w-5" />
+                            )}
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>AI Enhance</TooltipContent>
@@ -553,10 +666,17 @@ export function PostCreationView() {
 
                 <div className="flex items-center gap-3">
                   {content.trim() && (
-                    <span className="text-[10px] text-muted-foreground/50 uppercase font-bold tracking-widest animate-pulse hidden md:inline-block">Draft saved</span>
+                    <span className="text-muted-foreground/50 hidden animate-pulse text-[10px] font-bold uppercase tracking-widest md:inline-block">
+                      Draft saved
+                    </span>
                   )}
                   {isOverLimit && (
-                    <Badge variant="destructive" className="text-[9px] h-5 px-2 rounded-full uppercase font-black">Over</Badge>
+                    <Badge
+                      variant="destructive"
+                      className="h-5 rounded-full px-2 text-[9px] font-black uppercase"
+                    >
+                      Over
+                    </Badge>
                   )}
                 </div>
               </div>
@@ -565,17 +685,29 @@ export function PostCreationView() {
         )}
       </div>
 
-      <div className="border-border border-t p-6 mt-4 bg-accent/2">
-        <div className="text-muted-foreground/70 space-y-3 text-xs leading-relaxed max-w-lg">
-          <p className="flex items-center gap-2 text-foreground/80 font-semibold mb-2">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
+      <div className="border-border bg-accent/2 mt-4 border-t p-6">
+        <div className="text-muted-foreground/70 max-w-lg space-y-3 text-xs leading-relaxed">
+          <p className="text-foreground/80 mb-2 flex items-center gap-2 font-semibold">
+            <Sparkles className="text-primary h-3.5 w-3.5" />
             Tips for your next masterpiece:
           </p>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 list-none">
-            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Keep it engaging and authentic</li>
-            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Use relevant hashtags</li>
-            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Add high-quality media</li>
-            <li className="flex gap-2"><span className="text-primary opacity-50">•</span>Ask questions to spark debate</li>
+          <ul className="grid list-none grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+            <li className="flex gap-2">
+              <span className="text-primary opacity-50">•</span>Keep it engaging
+              and authentic
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary opacity-50">•</span>Use relevant
+              hashtags
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary opacity-50">•</span>Add high-quality
+              media
+            </li>
+            <li className="flex gap-2">
+              <span className="text-primary opacity-50">•</span>Ask questions to
+              spark debate
+            </li>
           </ul>
         </div>
       </div>
