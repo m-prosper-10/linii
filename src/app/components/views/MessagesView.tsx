@@ -281,6 +281,20 @@ export function MessagesView() {
     });
   }, []);
 
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    void messageId;
+    toast.message('Delete message', {
+      description: 'Removing messages from the server is not available yet.',
+    });
+  }, []);
+
+  const handleReportMessage = useCallback(async (messageId: string) => {
+    void messageId;
+    toast.message('Report message', {
+      description: 'Thanks for letting us know — full reporting is coming soon.',
+    });
+  }, []);
+
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);
     setShowMobileChat(true);
@@ -417,6 +431,8 @@ export function MessagesView() {
                     onReply={handleReply}
                     onForward={handleForward}
                     onReact={handleReact}
+                    onDelete={handleDeleteMessage}
+                    onReport={handleReportMessage}
                     reactions={[]}
                   />
                 ))

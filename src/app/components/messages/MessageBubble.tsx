@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import {
   Avatar,
   AvatarFallback,
@@ -8,23 +8,10 @@ import {
 } from '@/app/components/ui/avatar';
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
-import {
-  Check,
-  CheckCheck,
-  Reply,
-  Forward,
-  Smile,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Check, CheckCheck } from 'lucide-react';
 import { format } from 'date-fns';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu';
 import { FileDisplay } from './FileDisplay';
-import { ReactionPicker } from './ReactionPicker';
+import { MessageBubbleToolbar } from './MessageBubbleToolbar';
 import type { MessageActionContext } from './types';
 
 interface MessageBubbleProps {
@@ -41,6 +28,8 @@ interface MessageBubbleProps {
   onReply?: (message: MessageActionContext) => void;
   onForward?: (message: MessageActionContext) => void;
   onReact?: (messageId: string, emoji: string, type: string) => void;
+  onDelete?: (messageId: string) => void | Promise<void>;
+  onReport?: (messageId: string) => void | Promise<void>;
   reactions?: Array<{ userId: string; emoji: string; type: string }>;
 }
 
@@ -58,17 +47,11 @@ export function MessageBubble({
   onReply,
   onForward,
   onReact,
+  onDelete,
+  onReport,
   reactions = [],
 }: MessageBubbleProps) {
-  const [showControls, setShowControls] = useState(false);
-  const [showReactionPicker, setShowReactionPicker] = useState(false);
-  const [reactionPickerPlacement, setReactionPickerPlacement] = useState<
-    'above-trigger' | 'center'
-  >('above-trigger');
-  const [reactionPickerPosition, setReactionPickerPosition] = useState({
-    top: 0,
-    left: 0,
-  });
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
 
   const actionContext: MessageActionContext = {
@@ -78,45 +61,6 @@ export function MessageBubble({
     files,
     messageType,
   };
-
-  const handleReaction = (emoji: string, type: string) => {
-    onReact?.(messageId, emoji, type);
-  };
-
-  const handleReactionButtonClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setReactionPickerPlacement('above-trigger');
-    const rect = e.currentTarget.getBoundingClientRect();
-    setReactionPickerPosition({
-      top: rect.top,
-      left: rect.left + rect.width / 2,
-    });
-    setShowReactionPicker(!showReactionPicker);
-  };
-
-  const handleReply = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onReply?.(actionContext);
-  };
-
-  const handleForward = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onForward?.(actionContext);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        showReactionPicker &&
-        !messageRef.current?.contains(event.target as Node)
-      ) {
-        setShowReactionPicker(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showReactionPicker]);
 
   const groupedReactions = reactions.reduce(
     (acc, reaction) => {
@@ -131,22 +75,18 @@ export function MessageBubble({
     {} as Record<string, { emoji: string; count: number; users: string[] }>
   );
 
-  const controlButtonClass =
-    'h-7 w-7 rounded-full border border-border bg-background shadow-sm flex items-center justify-center text-muted-foreground transition-all hover:scale-105 hover:shadow-md';
+  const copyText =
+    content && content !== 'Shared files' ? content : '';
 
   return (
     <div
       ref={messageRef}
       className={cn(
-        'animate-in slide-in-from-bottom-2 group flex gap-2.5 duration-300 sm:gap-3',
+        'animate-in slide-in-from-bottom-2 flex gap-2.5 duration-300 sm:gap-3',
         isCurrentUser && 'flex-row-reverse',
         isGrouped ? 'mt-0.5' : 'mt-1'
       )}
-      onMouseEnter={() => setShowControls(true)}
-      onMouseLeave={() => {
-        setShowControls(false);
-        setShowReactionPicker(false);
-      }}
+      onMouseLeave={() => setReactionPickerOpen(false)}
     >
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0">
@@ -159,29 +99,50 @@ export function MessageBubble({
 
       <div
         className={cn(
-          'relative flex min-w-0 max-w-[min(85vw,28rem)] flex-col gap-0 sm:max-w-[min(72%,32rem)]',
+          'group flex min-w-0 max-w-[min(85vw,28rem)] flex-col gap-0 sm:max-w-[min(72%,32rem)]',
           isCurrentUser && 'items-end'
         )}
       >
+        {/* Row: bubble + toolbar on one line, vertically centered (Messenger / IG style) */}
         <div
           className={cn(
-            'rounded-2xl px-3 py-2 shadow-sm transition-shadow duration-200',
-            'hover:shadow-md',
-            isCurrentUser
-              ? 'bg-primary text-primary-foreground rounded-tr-md'
-              : 'bg-accent rounded-tl-md'
+            'flex w-fit max-w-full items-center gap-1.5 sm:gap-2',
+            isCurrentUser && 'flex-row-reverse'
           )}
         >
-          {content && content !== 'Shared files' && (
-            <p className="wrap-break-word text-[15px] leading-relaxed">
-              {content}
-            </p>
-          )}
+          <div
+            className={cn(
+              'min-w-0 rounded-2xl px-3 py-2 shadow-sm transition-shadow duration-200',
+              'hover:shadow-md',
+              isCurrentUser
+                ? 'rounded-tr-md bg-primary text-primary-foreground'
+                : 'rounded-tl-md bg-accent'
+            )}
+          >
+            {content && content !== 'Shared files' && (
+              <p className="wrap-break-word text-[15px] leading-relaxed">{content}</p>
+            )}
 
-          <FileDisplay
-            files={files || []}
-            messageType={messageType}
+            <FileDisplay
+              files={files || []}
+              messageType={messageType}
+              isCurrentUser={isCurrentUser}
+            />
+          </div>
+
+          <MessageBubbleToolbar
+            messageId={messageId}
             isCurrentUser={isCurrentUser}
+            copyText={copyText}
+            actionContext={actionContext}
+            messageRootRef={messageRef}
+            reactionPickerOpen={reactionPickerOpen}
+            onReactionPickerOpenChange={setReactionPickerOpen}
+            onReply={onReply}
+            onForward={onForward}
+            onReact={onReact}
+            onDelete={onDelete}
+            onReport={onReport}
           />
         </div>
 
@@ -206,95 +167,6 @@ export function MessageBubble({
           </div>
         )}
 
-        {/* Desktop: hover toolbar */}
-        <div
-          className={cn(
-            'absolute -top-1 z-10 hidden gap-1 md:flex',
-            showControls ? 'opacity-100' : 'pointer-events-none opacity-0',
-            isCurrentUser ? '-left-22' : '-right-22'
-          )}
-        >
-          <button
-            type="button"
-            onClick={handleReactionButtonClick}
-            className={controlButtonClass}
-            title="React"
-          >
-            <Smile className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={handleReply}
-            className={controlButtonClass}
-            title="Reply"
-          >
-            <Reply className="h-3.5 w-3.5" />
-          </button>
-          <button
-            type="button"
-            onClick={handleForward}
-            className={controlButtonClass}
-            title="Forward"
-          >
-            <Forward className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        {/* Mobile / touch: actions menu */}
-        <div
-          className={cn(
-            'mt-1 flex justify-end md:hidden',
-            isCurrentUser ? '' : 'justify-start'
-          )}
-        >
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="text-muted-foreground hover:text-foreground rounded-full p-1"
-                aria-label="Message actions"
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align={isCurrentUser ? 'end' : 'start'}
-              className="w-44"
-            >
-              <DropdownMenuItem
-                onSelect={() => {
-                  setReactionPickerPlacement('center');
-                  setReactionPickerPosition({
-                    top: window.innerHeight / 2,
-                    left: window.innerWidth / 2,
-                  });
-                  setShowReactionPicker(true);
-                }}
-              >
-                <Smile className="mr-2 h-4 w-4" />
-                React
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onReply?.(actionContext)}>
-                <Reply className="mr-2 h-4 w-4" />
-                Reply
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => onForward?.(actionContext)}>
-                <Forward className="mr-2 h-4 w-4" />
-                Forward
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        {showReactionPicker && (
-          <ReactionPicker
-            onSelect={handleReaction}
-            onClose={() => setShowReactionPicker(false)}
-            position={reactionPickerPosition}
-            placement={reactionPickerPlacement}
-          />
-        )}
-
         <div
           className={cn(
             'text-muted-foreground flex items-center gap-1 px-1 text-[10px]',
@@ -303,10 +175,7 @@ export function MessageBubble({
         >
           <span>{format(new Date(createdAt), 'HH:mm')}</span>
           {isCurrentUser && (
-            <span
-              className="flex items-center"
-              aria-label={isRead ? 'Read' : 'Sent'}
-            >
+            <span className="flex items-center" aria-label={isRead ? 'Read' : 'Sent'}>
               {isRead ? (
                 <CheckCheck className="h-3 w-3 text-blue-400" />
               ) : (
