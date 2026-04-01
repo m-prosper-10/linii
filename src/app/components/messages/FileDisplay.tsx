@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
+import { cn } from '@/app/components/ui/utils';
 import {
   Download,
   FileImage,
@@ -10,6 +11,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { FilePreviewModal } from './FilePreviewModal';
+import { downloadChatFile, fileNameFromUrl, resolveChatMediaUrl } from './mediaUtils';
 
 interface FileDisplayProps {
   files: string[];
@@ -34,57 +36,50 @@ export function FileDisplay({
     return FileText;
   };
 
-  const formatFileSize = (): string => {
-    // This is a placeholder - in a real app, you'd get file size from the API
-    return 'Unknown size';
-  };
-
-  const getFileName = (url: string): string => {
-    return url.split('/').pop() || 'Unknown file';
-  };
+  const resolvedFiles = files.map(resolveChatMediaUrl);
 
   const handlePreview = (index: number) => {
     setPreviewIndex(index);
     setIsPreviewOpen(true);
   };
 
-  const handleDownload = (url: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = getFileName(url);
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = (url: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    const name = fileNameFromUrl(url);
+    void downloadChatFile(url, name);
   };
 
-  // If it's an image message and there are files, display as images
   if (messageType === 'IMAGE') {
+    const gridClass =
+      resolvedFiles.length > 1 ? 'grid grid-cols-2 gap-2' : 'space-y-2';
+
     return (
       <>
-        <div className="mt-2 space-y-2">
-          {files.map((url, index) => (
-            <div key={index} className="group relative">
+        <div className={cn('mt-2', gridClass)}>
+          {resolvedFiles.map((url, index) => (
+            <div key={`${url}-${index}`} className="group relative">
               <div className="overflow-hidden rounded-lg">
+                {/* eslint-disable-next-line @next/next/no-img-element -- remote chat URLs */}
                 <img
                   src={url}
                   alt={`Image ${index + 1}`}
-                  className="h-auto max-w-full cursor-pointer object-cover"
+                  className="h-auto max-h-72 w-full cursor-pointer object-cover"
                   onClick={() => handlePreview(index)}
                 />
               </div>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
-                className="absolute right-2 top-2 h-6 w-6 bg-black/50 p-0 opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
-                onClick={() => handleDownload(url)}
+                className="absolute right-2 top-2 h-7 w-7 bg-black/50 p-0 opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+                onClick={e => handleDownload(files[index], e)}
               >
-                <Download className="h-3 w-3 text-white" />
+                <Download className="h-3.5 w-3.5 text-white" />
               </Button>
             </div>
           ))}
         </div>
-        
+
         <FilePreviewModal
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
@@ -97,16 +92,15 @@ export function FileDisplay({
     );
   }
 
-  // For video files
   if (messageType === 'VIDEO') {
     return (
       <>
         <div className="mt-2 space-y-2">
-          {files.map((url, index) => (
-            <div key={index} className="group relative">
+          {resolvedFiles.map((url, index) => (
+            <div key={`${url}-${index}`} className="group relative">
               <video
                 controls
-                className="h-auto max-w-full rounded-lg cursor-pointer"
+                className="max-h-80 w-full cursor-pointer rounded-lg"
                 preload="metadata"
                 onClick={() => handlePreview(index)}
               >
@@ -114,17 +108,18 @@ export function FileDisplay({
                 Your browser does not support the video tag.
               </video>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
-                className="absolute right-2 top-2 h-6 w-6 bg-black/50 p-0 opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
-                onClick={() => handleDownload(url)}
+                className="absolute right-2 top-2 h-7 w-7 bg-black/50 p-0 opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+                onClick={e => handleDownload(files[index], e)}
               >
-                <Download className="h-3 w-3 text-white" />
+                <Download className="h-3.5 w-3.5 text-white" />
               </Button>
             </div>
           ))}
         </div>
-        
+
         <FilePreviewModal
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
@@ -137,37 +132,34 @@ export function FileDisplay({
     );
   }
 
-  // For audio files
   if (messageType === 'AUDIO') {
     return (
       <>
         <div className="mt-2 space-y-2">
-          {files.map((url, index) => (
+          {resolvedFiles.map((url, index) => (
             <div
-              key={index}
-              className="bg-accent/50 flex items-center gap-2 rounded-lg p-2 cursor-pointer hover:bg-accent/70"
+              key={`${url}-${index}`}
+              className="bg-accent/50 hover:bg-accent/70 flex cursor-pointer items-center gap-2 rounded-lg p-2"
               onClick={() => handlePreview(index)}
             >
-              <FileAudio className="text-muted-foreground h-4 w-4" />
-              <audio controls className="flex-1" onClick={(e) => e.stopPropagation()}>
+              <FileAudio className="text-muted-foreground h-4 w-4 shrink-0" />
+              <audio controls className="min-w-0 flex-1" onClick={e => e.stopPropagation()}>
                 <source src={url} />
                 Your browser does not support the audio tag.
               </audio>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownload(url);
-                }}
+                className="h-7 w-7 shrink-0 p-0"
+                onClick={e => handleDownload(files[index], e)}
               >
-                <Download className="h-3 w-3" />
+                <Download className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
         </div>
-        
+
         <FilePreviewModal
           isOpen={isPreviewOpen}
           onClose={() => setIsPreviewOpen(false)}
@@ -180,50 +172,43 @@ export function FileDisplay({
     );
   }
 
-  // For other file types
   return (
     <>
       <div className="mt-2 space-y-2">
-        {files.map((url, index) => {
+        {resolvedFiles.map((url, index) => {
           const Icon = getFileIcon();
-          const fileName = getFileName(url);
+          const fileName = fileNameFromUrl(files[index]);
 
           return (
             <div
-              key={index}
-              className={`
-                flex items-center gap-3 rounded-lg border p-3 transition-colors cursor-pointer
-                ${
-                  isCurrentUser
-                    ? 'bg-primary/10 border-primary/20 hover:bg-primary/20'
-                    : 'bg-accent/50 border-accent hover:bg-accent/70'
-                }
-              `}
+              key={`${url}-${index}`}
+              className={cn(
+                'flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors',
+                isCurrentUser
+                  ? 'border-primary/20 bg-primary/10 hover:bg-primary/20'
+                  : 'border-border bg-accent/50 hover:bg-accent/70'
+              )}
               onClick={() => handlePreview(index)}
             >
               <Icon className="text-muted-foreground h-5 w-5 shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">{fileName}</p>
-                <p className="text-muted-foreground text-xs">
-                  {formatFileSize()}
-                </p>
+                <p className="text-muted-foreground text-xs">Attachment</p>
               </div>
               <Button
+                type="button"
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 shrink-0 p-0"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDownload(url);
-                }}
+                className="h-7 w-7 shrink-0 p-0"
+                onClick={e => handleDownload(files[index], e)}
               >
-                <Download className="h-3 w-3" />
+                <Download className="h-3.5 w-3.5" />
               </Button>
             </div>
           );
         })}
       </div>
-      
+
       <FilePreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}

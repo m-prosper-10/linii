@@ -10,7 +10,6 @@ import { PostHeader } from './PostHeader';
 import { PostActions } from './PostActions';
 import { PostCommentList } from './PostCommentList';
 import { PostCommentInput } from './PostCommentInput';
-import { EditPostDialog } from './EditPostDialog';
 
 interface PostCardProps {
   post: PostApiType;
@@ -30,7 +29,6 @@ export function PostCard({
   const [showComments, setShowComments] = useState(false);
   const [commentCount, setCommentCount] = useState(post.commentsCount);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
 
   const handleDelete = async () => {
     try {
