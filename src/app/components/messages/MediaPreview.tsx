@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from '@/app/components/ui/button';
+import { cn } from '@/app/components/ui/utils';
 import { chatService, UploadedFile } from '@/services/chat';
 import { X, Download, Play, Pause, Volume2 } from 'lucide-react';
 
@@ -21,13 +22,27 @@ export function MediaPreview({
 }: MediaPreviewProps) {
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const videoRefs = useRef<Map<string, HTMLVideoElement>>(new Map());
 
-  const handleVideoPlayPause = (fileId: string) => {
-    setPlayingVideo(prev => prev === fileId ? null : fileId);
+  const setVideoRef = useCallback((id: string, el: HTMLVideoElement | null) => {
+    if (el) videoRefs.current.set(id, el);
+    else videoRefs.current.delete(id);
+  }, []);
+
+  const toggleVideo = (fileId: string) => {
+    const video = videoRefs.current.get(fileId);
+    if (!video) return;
+    if (video.paused) void video.play();
+    else video.pause();
   };
 
-  const handleAudioPlayPause = (fileId: string) => {
-    setPlayingAudio(prev => prev === fileId ? null : fileId);
+  const toggleAudio = (fileId: string) => {
+    const audio = document.querySelector(
+      `audio[data-file-id="${fileId}"]`
+    ) as HTMLAudioElement | null;
+    if (!audio) return;
+    if (audio.paused) void audio.play();
+    else audio.pause();
   };
 
   const renderFilePreview = (file: UploadedFile) => {
@@ -67,30 +82,23 @@ export function MediaPreview({
       return (
         <div className="relative group">
           <video
+            ref={el => setVideoRef(file.id, el)}
+            data-file-id={file.id}
             src={fileUrl}
             className={cn(
-              "rounded-lg object-cover",
-              compact ? "h-16 w-16" : "h-32 w-32"
+              'rounded-lg object-cover',
+              compact ? 'h-16 w-16' : 'h-32 w-32'
             )}
-            onPlay={() => handleVideoPlayPause(file.id)}
+            onPlay={() => setPlayingVideo(file.id)}
             onPause={() => setPlayingVideo(null)}
           />
-          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-lg">
+          <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/40">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              onClick={() => {
-                const video = document.querySelector(`video[data-file-id="${file.id}"]`) as HTMLVideoElement;
-                if (video) {
-                  if (video.paused) {
-                    video.play();
-                  } else {
-                    video.pause();
-                  }
-                }
-              }}
-              className="h-8 w-8 rounded-full bg-white/20 hover:bg-white/30 text-white"
+              onClick={() => toggleVideo(file.id)}
+              className="h-8 w-8 rounded-full bg-white/20 text-white hover:bg-white/30"
             >
               {playingVideo === file.id ? (
                 <Pause className="h-4 w-4" />
@@ -140,16 +148,7 @@ export function MediaPreview({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => {
-              const audio = document.querySelector(`audio[data-file-id="${file.id}"]`) as HTMLAudioElement;
-              if (audio) {
-                if (audio.paused) {
-                  audio.play();
-                } else {
-                  audio.pause();
-                }
-              }
-            }}
+            onClick={() => toggleAudio(file.id)}
             className="h-8 w-8 rounded-full"
           >
             {playingAudio === file.id ? (
@@ -247,9 +246,4 @@ export function MediaPreview({
       )}
     </div>
   );
-}
-
-// Helper function for className conditional
-function cn(...classes: (string | undefined | null | false)[]): string {
-  return classes.filter(Boolean).join(' ');
 }

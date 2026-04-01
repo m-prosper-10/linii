@@ -1,7 +1,10 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
+import { cn } from '@/app/components/ui/utils';
 import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
+import { downloadChatFile, fileNameFromUrl, resolveChatMediaUrl } from './mediaUtils';
 
 interface FilePreviewModalProps {
   isOpen: boolean;
@@ -20,92 +23,110 @@ export function FilePreviewModal({
   messageType,
   onNavigate,
 }: FilePreviewModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const el = containerRef.current;
+    el?.focus({ preventScroll: true });
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (!onNavigate) return;
+      if (e.key === 'ArrowLeft' && currentIndex > 0) {
+        e.preventDefault();
+        onNavigate(currentIndex - 1);
+      }
+      if (e.key === 'ArrowRight' && currentIndex < files.length - 1) {
+        e.preventDefault();
+        onNavigate(currentIndex + 1);
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose, onNavigate, currentIndex, files.length]);
+
   if (!isOpen || files.length === 0) return null;
 
-  const currentFile = files[currentIndex];
-  const getFileName = (url: string): string => {
-    return url.split('/').pop() || 'Unknown file';
-  };
+  const rawUrl = files[currentIndex];
+  const currentFile = resolveChatMediaUrl(rawUrl);
+  const displayName = fileNameFromUrl(rawUrl);
 
-  const handleDownload = (url: string) => {
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = getFileName(url);
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = () => {
+    void downloadChatFile(rawUrl, displayName);
   };
 
   const handlePrevious = () => {
-    if (onNavigate && currentIndex > 0) {
-      onNavigate(currentIndex - 1);
-    }
+    if (onNavigate && currentIndex > 0) onNavigate(currentIndex - 1);
   };
 
   const handleNext = () => {
-    if (onNavigate && currentIndex < files.length - 1) {
-      onNavigate(currentIndex + 1);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') onClose();
-    if (e.key === 'ArrowLeft' && currentIndex > 0) handlePrevious();
-    if (e.key === 'ArrowRight' && currentIndex < files.length - 1) handleNext();
+    if (onNavigate && currentIndex < files.length - 1) onNavigate(currentIndex + 1);
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md"
+    <div
+      ref={containerRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Media preview"
+      tabIndex={-1}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm outline-none"
       onClick={onClose}
-      onKeyDown={handleKeyDown}
-      tabIndex={0}
     >
-      <div 
-        className="relative h-full w-full max-w-7xl max-h-full p-4 flex items-center justify-center"
-        onClick={(e) => e.stopPropagation()}
+      <div
+        className="relative flex h-full w-full max-h-full max-w-7xl items-center justify-center p-4"
+        onClick={e => e.stopPropagation()}
       >
-        {/* Close button */}
         <Button
+          type="button"
           size="sm"
           variant="ghost"
-          className="absolute top-4 right-1 z-10 p-4 rounded-full h-10 w-10 text-white hover:bg-white/20 pr-2"
+          className="absolute right-4 top-4 z-10 h-10 w-10 rounded-full p-0 text-white hover:bg-white/20"
           onClick={onClose}
         >
           <X className="size-6" />
         </Button>
 
-        {/* Download button */}
         <Button
+          type="button"
           size="sm"
           variant="ghost"
-          className="absolute top-4 right-12 z-10 p-4 rounded-full h-10 w-10 text-white hover:bg-white/20"
-          onClick={() => handleDownload(currentFile)}
+          className="absolute right-16 top-4 z-10 h-10 w-10 rounded-full p-0 text-white hover:bg-white/20"
+          onClick={handleDownload}
         >
           <Download className="size-6" />
         </Button>
 
-        {/* Navigation buttons */}
         {files.length > 1 && (
           <>
             <Button
+              type="button"
               size="sm"
               variant="ghost"
-              className={`absolute left-4 z-10 h-12 w-12 p-4 rounded-full text-white hover:bg-white/20 ${
-                currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={cn(
+                'absolute left-2 top-1/2 z-10 h-12 w-12 -translate-y-1/2 rounded-full p-0 text-white hover:bg-white/20 sm:left-4',
+                currentIndex === 0 && 'cursor-not-allowed opacity-40'
+              )}
               onClick={handlePrevious}
               disabled={currentIndex === 0}
             >
               <ChevronLeft className="size-8" />
             </Button>
             <Button
+              type="button"
               size="sm"
               variant="ghost"
-              className={`absolute right-4 z-10 h-8 w-8 p-0 text-white hover:bg-white/20 ${
-                currentIndex === files.length - 1 ? 'opacity-50 cursor-not-allowed' : ''
-              }`}
+              className={cn(
+                'absolute right-2 top-1/2 z-10 h-12 w-12 -translate-y-1/2 rounded-full p-0 text-white hover:bg-white/20 sm:right-4',
+                currentIndex === files.length - 1 && 'cursor-not-allowed opacity-40'
+              )}
               onClick={handleNext}
               disabled={currentIndex === files.length - 1}
             >
@@ -114,20 +135,19 @@ export function FilePreviewModal({
           </>
         )}
 
-        {/* File counter */}
         {files.length > 1 && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 text-white text-md bg-transparent backdrop-blur-sm px-4 py-2 rounded-full">
+          <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-full bg-black/40 px-4 py-2 text-sm text-white backdrop-blur-sm">
             {currentIndex + 1} / {files.length}
           </div>
         )}
 
-        {/* Content */}
-        <div className="max-w-full max-h-full flex items-center justify-center">
+        <div className="flex max-h-full max-w-full items-center justify-center">
           {messageType === 'IMAGE' && (
+            // eslint-disable-next-line @next/next/no-img-element -- fullscreen preview of arbitrary URLs
             <img
               src={currentFile}
               alt={`Preview ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className="max-h-[85vh] max-w-full object-contain"
             />
           )}
 
@@ -135,7 +155,7 @@ export function FilePreviewModal({
             <video
               src={currentFile}
               controls
-              className="max-w-full max-h-full"
+              className="max-h-[85vh] max-w-full"
               preload="metadata"
             >
               Your browser does not support the video tag.
@@ -143,11 +163,9 @@ export function FilePreviewModal({
           )}
 
           {messageType === 'AUDIO' && (
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 max-w-md w-full">
-              <div className="text-center text-white mb-4">
-                <p className="text-lg font-medium">{getFileName(currentFile)}</p>
-                <p className="text-sm opacity-75">Audio File</p>
-              </div>
+            <div className="w-full max-w-md rounded-lg bg-white/10 p-8 text-center text-white backdrop-blur-md">
+              <p className="mb-4 text-lg font-medium">{displayName}</p>
+              <p className="mb-4 text-sm opacity-75">Audio file</p>
               <audio controls className="w-full">
                 <source src={currentFile} />
                 Your browser does not support the audio tag.
@@ -156,15 +174,16 @@ export function FilePreviewModal({
           )}
 
           {messageType === 'FILE' && (
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-8 max-w-md w-full text-center text-white">
-              <p className="text-lg font-medium mb-2">{getFileName(currentFile)}</p>
-              <p className="text-sm opacity-75 mb-4">File Preview</p>
+            <div className="w-full max-w-md rounded-lg bg-white/10 p-8 text-center text-white backdrop-blur-md">
+              <p className="mb-2 text-lg font-medium">{displayName}</p>
+              <p className="mb-4 text-sm opacity-75">File preview</p>
               <Button
-                onClick={() => handleDownload(currentFile)}
-                className="bg-white/20 hover:bg-white/30 text-white"
+                type="button"
+                onClick={handleDownload}
+                className="bg-white/20 text-white hover:bg-white/30"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Download File
+                <Download className="mr-2 h-4 w-4" />
+                Download file
               </Button>
             </div>
           )}
