@@ -211,7 +211,7 @@ export function MessageBubble({
           className={cn(
             'absolute -top-1 z-10 hidden gap-1 md:flex',
             showControls ? 'opacity-100' : 'pointer-events-none opacity-0',
-            isCurrentUser ? '-left-[5.5rem]' : '-right-[5.5rem]'
+            isCurrentUser ? '-left-22' : '-right-22'
           )}
         >
           <button
