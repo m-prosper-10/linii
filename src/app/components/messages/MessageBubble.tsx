@@ -62,6 +62,9 @@ export function MessageBubble({
 }: MessageBubbleProps) {
   const [showControls, setShowControls] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const [reactionPickerPlacement, setReactionPickerPlacement] = useState<
+    'above-trigger' | 'center'
+  >('above-trigger');
   const [reactionPickerPosition, setReactionPickerPosition] = useState({
     top: 0,
     left: 0,
@@ -82,6 +85,7 @@ export function MessageBubble({
 
   const handleReactionButtonClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    setReactionPickerPlacement('above-trigger');
     const rect = e.currentTarget.getBoundingClientRect();
     setReactionPickerPosition({
       top: rect.top,
@@ -259,11 +263,12 @@ export function MessageBubble({
             >
               <DropdownMenuItem
                 onSelect={() => {
-                  setShowReactionPicker(true);
+                  setReactionPickerPlacement('center');
                   setReactionPickerPosition({
                     top: window.innerHeight / 2,
                     left: window.innerWidth / 2,
                   });
+                  setShowReactionPicker(true);
                 }}
               >
                 <Smile className="mr-2 h-4 w-4" />
@@ -286,6 +291,7 @@ export function MessageBubble({
             onSelect={handleReaction}
             onClose={() => setShowReactionPicker(false)}
             position={reactionPickerPosition}
+            placement={reactionPickerPlacement}
           />
         )}
 

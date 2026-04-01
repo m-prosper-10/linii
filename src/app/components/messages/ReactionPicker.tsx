@@ -8,6 +8,8 @@ interface ReactionPickerProps {
   onSelect: (emoji: string, type: string) => void;
   onClose: () => void;
   position: { top: number; left: number };
+  /** `center` is used when opening from mobile (no hover anchor). */
+  placement?: 'above-trigger' | 'center';
 }
 
 const REACTIONS = [
@@ -19,27 +21,44 @@ const REACTIONS = [
   { emoji: '😠', type: 'angry' },
 ];
 
-export function ReactionPicker({ onSelect, onClose, position }: ReactionPickerProps) {
+export function ReactionPicker({
+  onSelect,
+  onClose,
+  position,
+  placement = 'above-trigger',
+}: ReactionPickerProps) {
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
+
+  const positionStyle =
+    placement === 'center'
+      ? {
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)' as const,
+        }
+      : {
+          top: `${position.top}px`,
+          left: `${position.left}px`,
+          transform: 'translateX(-50%) translateY(calc(-100% - 8px))' as const,
+        };
 
   return (
     <div
-      className="fixed z-50 bg-background border border-border rounded-lg shadow-lg p-1 flex gap-1"
-      style={{
-        top: `${position.top}px`,
-        left: `${position.left}px`,
-        transform: 'translateX(-50%) translateY(-100%)',
-      }}
+      role="dialog"
+      aria-label="Choose a reaction"
+      className="border-border bg-background fixed z-50 flex gap-1 rounded-lg border p-1 shadow-lg"
+      style={positionStyle}
     >
       {REACTIONS.map(({ emoji, type }) => (
         <Button
           key={type}
+          type="button"
           variant="ghost"
           size="sm"
           className={cn(
-            "h-8 w-8 p-0 relative transition-all duration-200",
-            "hover:scale-125 hover:bg-accent/50",
-            hoveredReaction === type && "scale-125 bg-accent/50"
+            'relative h-8 w-8 p-0 transition-all duration-200',
+            'hover:scale-125 hover:bg-accent/50',
+            hoveredReaction === type && 'scale-125 bg-accent/50'
           )}
           onClick={() => {
             onSelect(emoji, type);
@@ -50,7 +69,7 @@ export function ReactionPicker({ onSelect, onClose, position }: ReactionPickerPr
         >
           <span className="text-lg">{emoji}</span>
           {hoveredReaction === type && (
-            <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-muted text-muted-foreground text-xs px-2 py-1 rounded whitespace-nowrap">
+            <div className="bg-muted text-muted-foreground absolute -top-8 left-1/2 -translate-x-1/2 transform whitespace-nowrap rounded px-2 py-1 text-xs">
               {type}
             </div>
           )}
