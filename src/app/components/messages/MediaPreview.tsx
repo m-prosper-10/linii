@@ -141,7 +141,7 @@ export function MediaPreview({
             src={fileUrl}
             className="hidden"
             data-file-id={file.id}
-            onPlay={() => handleAudioPlayPause(file.id)}
+            onPlay={() => setPlayingAudio(file.id)}
             onPause={() => setPlayingAudio(null)}
           />
           <Button
