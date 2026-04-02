@@ -192,6 +192,20 @@ export function MessagesView() {
       }
     };
 
+    const handleMessageReaction = (data: {
+      messageId: string;
+      conversationId: string;
+      reactions: Message['reactions'];
+    }) => {
+      if (data.conversationId === selectedConversationId) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg._id === data.messageId ? { ...msg, reactions: data.reactions } : msg
+          )
+        );
+      }
+    };
+
     const handleMessageError = (data: { error: string }) => {
       console.error('Message error:', data.error);
       toast.error(data.error || 'Message could not be sent');
@@ -200,12 +214,14 @@ export function MessagesView() {
     socket.onMessage(handleNewMessage);
     socket.onMessageRead(handleMessageRead);
     socket.onUserTyping(handleUserTyping);
+    socket.onMessageReaction(handleMessageReaction);
     socket.onMessageError(handleMessageError);
 
     return () => {
       socket.offMessage(handleNewMessage);
       socket.offMessageRead(handleMessageRead);
       socket.offUserTyping(handleUserTyping);
+      socket.offMessageReaction(handleMessageReaction);
       socket.offMessageError(handleMessageError);
     };
   }, [isConnected, currentUser, selectedConversationId, socket]);
@@ -338,10 +354,13 @@ export function MessagesView() {
   );
 
   const handleReact = useCallback(
-    async (_messageId: string, emoji: string, type: string) => {
-      toast.message('Reactions', {
-        description: `${emoji} (${type}) — reactions API not connected yet.`,
-      });
+    async (messageId: string, emoji: string, _type?: string) => {
+      try {
+        await chatService.reactToMessage(messageId, emoji);
+      } catch (err) {
+        console.error('Failed to react:', err);
+        toast.error('Could not update reaction');
+      }
     },
     []
   );
@@ -354,7 +373,7 @@ export function MessagesView() {
     });
   }, []);
 
-  const handleReportMessage = useCallback((_messageId: string) => {
+  const handleReportMessage = useCallback(() => {
     toast.message('Report message', {
       description:
         'Thanks for letting us know — full reporting is coming soon.',

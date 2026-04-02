@@ -34,7 +34,17 @@ interface MessageBubbleProps {
   onReact?: (messageId: string, emoji: string, type: string) => void;
   onDelete?: (messageId: string) => void | Promise<void>;
   onReport?: (messageId: string) => void | Promise<void>;
-  reactions?: Array<{ userId: string; emoji: string; type: string }>;
+  reactions?: Array<{
+    userId: string;
+    emoji: string;
+    createdAt: string;
+    user?: {
+      _id: string;
+      fullnames: string;
+      username: string;
+      email: string;
+    };
+  }>;
 }
 
 export function MessageBubble({
@@ -71,7 +81,7 @@ export function MessageBubble({
 
   const groupedReactions = reactions.reduce(
     (acc, reaction) => {
-      const key = reaction.type;
+      const key = reaction.emoji;
       if (!acc[key]) {
         acc[key] = { emoji: reaction.emoji, count: 0, users: [] };
       }
@@ -168,14 +178,14 @@ export function MessageBubble({
               isCurrentUser && 'justify-end'
             )}
           >
-            {Object.entries(groupedReactions).map(([type, reaction]) => (
+            {Object.entries(groupedReactions).map(([emoji, reaction]) => (
               <button
-                key={type}
+                key={emoji}
                 type="button"
                 className="border-border/50 bg-muted hover:bg-muted/80 flex items-center gap-1 rounded-full border px-2 py-1 text-xs transition-colors"
-                onClick={() => onReact?.(messageId, reaction.emoji, type)}
+                onClick={() => onReact?.(messageId, emoji, 'happy')}
               >
-                <span>{reaction.emoji}</span>
+                <span>{emoji}</span>
                 <span className="text-muted-foreground">{reaction.count}</span>
               </button>
             ))}
