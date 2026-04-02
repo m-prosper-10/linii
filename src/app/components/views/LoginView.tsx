@@ -25,7 +25,8 @@ export function LoginView() {
       await login(email, password);
       router.push('/home');
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'An unknown error occurred';
+      const errorMessage =
+        err instanceof Error ? err.message : 'An unknown error occurred';
       setError(errorMessage);
     } finally {
       setIsLoading(false);

@@ -29,7 +29,9 @@ export function AnalyticsView() {
 
       if (data.topPerformingPosts?.length > 0) {
         const results = await Promise.all(
-          data.topPerformingPosts.map(p => PostService.getPost(p.postId).catch(() => null))
+          data.topPerformingPosts.map(p =>
+            PostService.getPost(p.postId).catch(() => null)
+          )
         );
         setTopPosts(results.filter((p): p is PostApiType => p !== null));
       }
@@ -40,7 +42,9 @@ export function AnalyticsView() {
     }
   }, [currentUser?._id]);
 
-  useEffect(() => { fetchAnalytics(); }, [fetchAnalytics]);
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
 
   const handlePostDeleted = (id: string) => {
     setTopPosts(prev => prev.filter(p => p._id !== id));
@@ -50,7 +54,7 @@ export function AnalyticsView() {
 
   if (!analytics) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] items-center justify-center text-sm text-muted-foreground/60">
+      <div className="text-muted-foreground/60 flex h-[calc(100vh-4rem)] items-center justify-center text-sm">
         No analytics data available yet.
       </div>
     );
@@ -62,7 +66,7 @@ export function AnalyticsView() {
       <div className="bg-background/80 border-border/40 sticky top-0 z-10 border-b backdrop-blur-md">
         <div className="px-4 py-3">
           <h2 className="text-xl font-bold tracking-tight">Analytics</h2>
-          <p className="text-xs text-muted-foreground/60 font-medium">
+          <p className="text-muted-foreground/60 text-xs font-medium">
             Track your performance and audience growth
           </p>
         </div>

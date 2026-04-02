@@ -66,7 +66,9 @@ export function MessageBubbleToolbar({
     };
 
     document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown, { passive: true });
+    document.addEventListener('touchstart', handlePointerDown, {
+      passive: true,
+    });
     return () => {
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('touchstart', handlePointerDown);
@@ -128,7 +130,7 @@ export function MessageBubbleToolbar({
     <div
       className={cn(
         'flex max-w-[min(100vw-3rem,18rem)] shrink-0 flex-wrap items-center gap-1',
-        'opacity-100 max-md:opacity-100 max-md:pointer-events-auto',
+        'opacity-100 max-md:pointer-events-auto max-md:opacity-100',
         'md:pointer-events-none md:opacity-0 md:transition-opacity md:duration-200',
         'group-hover:pointer-events-auto group-hover:opacity-100'
       )}
@@ -147,7 +149,8 @@ export function MessageBubbleToolbar({
         onClick={toggleReactionPicker}
         className={cn(
           controlButtonClass,
-          reactionPickerOpen && 'bg-accent text-foreground ring-1 ring-primary/30'
+          reactionPickerOpen &&
+            'bg-accent text-foreground ring-primary/30 ring-1'
         )}
         title="React"
         aria-expanded={reactionPickerOpen}
@@ -157,20 +160,35 @@ export function MessageBubbleToolbar({
       </button>
 
       {onReply && (
-        <button type="button" onClick={handleReply} className={controlButtonClass} title="Reply">
+        <button
+          type="button"
+          onClick={handleReply}
+          className={controlButtonClass}
+          title="Reply"
+        >
           <Reply className="h-3.5 w-3.5" />
         </button>
       )}
 
       {onForward && (
-        <button type="button" onClick={handleForward} className={controlButtonClass} title="Forward">
+        <button
+          type="button"
+          onClick={handleForward}
+          className={controlButtonClass}
+          title="Forward"
+        >
           <Forward className="h-3.5 w-3.5" />
         </button>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button type="button" className={controlButtonClass} title="More" aria-label="More actions">
+          <button
+            type="button"
+            className={controlButtonClass}
+            title="More"
+            aria-label="More actions"
+          >
             <MoreHorizontal className="h-3.5 w-3.5" />
           </button>
         </DropdownMenuTrigger>
@@ -198,11 +216,15 @@ export function MessageBubbleToolbar({
             </DropdownMenuItem>
           )}
 
-          {(canCopy || onReply || onForward) &&
-            (onDelete || onReport) && <DropdownMenuSeparator />}
+          {(canCopy || onReply || onForward) && (onDelete || onReport) && (
+            <DropdownMenuSeparator />
+          )}
 
           {isCurrentUser && onDelete && (
-            <DropdownMenuItem variant="destructive" onSelect={() => void runDelete()}>
+            <DropdownMenuItem
+              variant="destructive"
+              onSelect={() => void runDelete()}
+            >
               <Trash2 className="mr-2 h-4 w-4" />
               Delete for you
             </DropdownMenuItem>

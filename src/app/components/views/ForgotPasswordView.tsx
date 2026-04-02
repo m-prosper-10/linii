@@ -81,7 +81,8 @@ export function ForgotPasswordView() {
                 </svg>
               </div>
               <p className="text-muted-foreground">
-                We&apos;ve sent a password reset link to <strong>{email}</strong>
+                We&apos;ve sent a password reset link to{' '}
+                <strong>{email}</strong>
               </p>
               {!isSubmitting ? (
                 <Button
