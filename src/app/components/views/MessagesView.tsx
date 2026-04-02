@@ -206,6 +206,11 @@ export function MessagesView() {
       }
     };
 
+    const handleMessageError = (data: { error: string }) => {
+      console.error('Message error:', data.error);
+      toast.error(data.error || 'Message could not be sent');
+    };
+
     socket.onMessage(handleNewMessage);
     socket.onMessageRead(handleMessageRead);
     socket.onUserTyping(handleUserTyping);
@@ -349,11 +354,9 @@ export function MessagesView() {
   );
 
   const handleReact = useCallback(
-    async (messageId: string, emoji: string, type: string) => {
+    async (messageId: string, emoji: string, _type?: string) => {
       try {
         await chatService.reactToMessage(messageId, emoji);
-        // Local state will be updated via socket event 'message-reaction'
-        // which the backend sends after saving to DB.
       } catch (err) {
         console.error('Failed to react:', err);
         toast.error('Could not update reaction');
@@ -370,7 +373,7 @@ export function MessagesView() {
     });
   }, []);
 
-  const handleReportMessage = useCallback((_messageId: string) => {
+  const handleReportMessage = useCallback(() => {
     toast.message('Report message', {
       description:
         'Thanks for letting us know — full reporting is coming soon.',

@@ -93,16 +93,6 @@ export function MessageBubbleToolbar({
     }
   };
 
-  const handleReply = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onReply?.(actionContext);
-  };
-
-  const handleForward = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onForward?.(actionContext);
-  };
-
   const toggleReactionPicker = (e: React.MouseEvent) => {
     e.stopPropagation();
     onReactionPickerOpenChange(!reactionPickerOpen);
@@ -158,28 +148,6 @@ export function MessageBubbleToolbar({
       >
         <Smile className="h-3.5 w-3.5" />
       </button>
-
-      {onReply && (
-        <button
-          type="button"
-          onClick={handleReply}
-          className={controlButtonClass}
-          title="Reply"
-        >
-          <Reply className="h-3.5 w-3.5" />
-        </button>
-      )}
-
-      {onForward && (
-        <button
-          type="button"
-          onClick={handleForward}
-          className={controlButtonClass}
-          title="Forward"
-        >
-          <Forward className="h-3.5 w-3.5" />
-        </button>
-      )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
