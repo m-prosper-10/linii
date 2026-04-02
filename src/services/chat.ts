@@ -25,6 +25,17 @@ export interface Message {
   isDeleted: boolean;
   deletedAt?: string;
   readBy: { userId: string; readAt: string }[];
+  reactions: {
+    userId: string;
+    emoji: string;
+    createdAt: string;
+    user?: {
+      _id: string;
+      fullnames: string;
+      username: string;
+      email: string;
+    };
+  }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -121,6 +132,13 @@ class ChatService {
     const response = await apiClient.post(`/messages/conversation/${conversationId}/read`, {});
     if (!response.success) {
       throw new Error(response.message || 'Failed to mark conversation as read');
+    }
+  }
+
+  async reactToMessage(messageId: string, emoji: string): Promise<void> {
+    const response = await apiClient.post(`/messages/${messageId}/react`, { emoji });
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to react to message');
     }
   }
 

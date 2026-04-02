@@ -16,6 +16,7 @@ export interface SocketEvents {
   'message-error': (data: { error: string }) => void;
   'new-message-notification': (data: { message: Message; conversationId: string }) => void;
   'joined-conversation': (data: { conversationId: string }) => void;
+  'message-reaction': (data: { messageId: string; conversationId: string; reactions: Message['reactions'] }) => void;
 }
 
 class SocketService {
@@ -198,6 +199,18 @@ class SocketService {
     }
   }
 
+  onMessageReaction(callback: (data: { messageId: string; conversationId: string; reactions: Message['reactions'] }) => void) {
+    if (this.socket) {
+      this.socket.on('message-reaction', callback);
+    }
+  }
+
+  offMessageReaction(callback: (data: { messageId: string; conversationId: string; reactions: Message['reactions'] }) => void) {
+    if (this.socket) {
+      this.socket.off('message-reaction', callback);
+    }
+  }
+
   // Generic event handlers
   on<K extends keyof SocketEvents>(event: K, callback: SocketEvents[K]) {
     if (this.socket) {
@@ -221,7 +234,6 @@ class SocketService {
     if (!this.socket) return 'disconnected';
     
     if (this.socket.connected) return 'connected';
-    if (this.socket.connecting) return 'connecting';
     if (this.reconnectAttempts > 0) return 'reconnecting';
     
     return 'disconnected';
