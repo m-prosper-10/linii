@@ -207,6 +207,12 @@ export function MessagesView() {
       }
     };
 
+    const handleMessageDelete = (data: { messageId: string; conversationId: string }) => {
+      if (data.conversationId === selectedConversationId) {
+        setMessages(prev => prev.filter(msg => msg._id !== data.messageId));
+      }
+    };
+
     const handleMessageError = (data: { error: string }) => {
       console.error('Message error:', data.error);
       toast.error(data.error || 'Message could not be sent');
@@ -216,6 +222,7 @@ export function MessagesView() {
     socket.onMessageRead(handleMessageRead);
     socket.onUserTyping(handleUserTyping);
     socket.onMessageReaction(handleMessageReaction);
+    socket.onMessageDelete(handleMessageDelete);
     socket.onMessageError(handleMessageError);
 
     return () => {
@@ -223,6 +230,7 @@ export function MessagesView() {
       socket.offMessageRead(handleMessageRead);
       socket.offUserTyping(handleUserTyping);
       socket.offMessageReaction(handleMessageReaction);
+      socket.offMessageDelete(handleMessageDelete);
       socket.offMessageError(handleMessageError);
     };
   }, [isConnected, currentUser, selectedConversationId, socket]);
@@ -366,12 +374,15 @@ export function MessagesView() {
     []
   );
 
-  const handleDeleteMessage = useCallback((messageId: string) => {
-    setMessages(prev => prev.filter(m => m._id !== messageId));
-    toast.success('Message removed on this device', {
-      description:
-        'Reloading the chat may show it again until delete is synced to the server.',
-    });
+  const handleDeleteMessage = useCallback(async (messageId: string) => {
+    try {
+      await chatService.deleteMessage(messageId);
+      setMessages(prev => prev.filter(m => m._id !== messageId));
+      toast.success('Message deleted');
+    } catch (err) {
+      console.error('Failed to delete message:', err);
+      toast.error('Could not delete message');
+    }
   }, []);
 
   const handleReportMessage = useCallback(() => {
@@ -400,10 +411,11 @@ export function MessagesView() {
   const filteredConversations = conversations.filter(conv => {
     const other = conv.participants.find(p => p._id !== currentUser?._id);
     const q = searchQuery.toLowerCase();
-    return (
-      other?.fullnames.toLowerCase().includes(q) ||
-      conv.lastMessage?.content.toLowerCase().includes(q)
-    );
+    
+    const nameMatch = other?.fullnames.toLowerCase().includes(q);
+    const messageMatch = conv.lastMessage?.content?.toLowerCase().includes(q) ?? false;
+    
+    return nameMatch || messageMatch;
   });
 
   return (
