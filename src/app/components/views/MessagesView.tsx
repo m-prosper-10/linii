@@ -40,7 +40,7 @@ export function MessagesView() {
 
   const params = useParams();
   const router = useRouter();
-  const selectedConversationId = params?.id as string | null;
+  const selectedConversationId = params?.conversationId as string | null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
