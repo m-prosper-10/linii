@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from '@/context/AppContext';
 import { chatService, Conversation, Message } from '@/services/chat';
 import { useSocket, TypingIndicator } from '@/services/socket';
+import { useParams, useRouter } from 'next/navigation';
 import { cn } from '@/app/components/ui/utils';
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
@@ -37,9 +38,9 @@ export function MessagesView() {
   const [newConvOpen, setNewConvOpen] = useState(false);
   const [showMobileChat, setShowMobileChat] = useState(false);
 
-  const [selectedConversationId, setSelectedConversationId] = useState<
-    string | null
-  >(null);
+  const params = useParams();
+  const router = useRouter();
+  const selectedConversationId = params?.conversationId as string | null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messageInput, setMessageInput] = useState('');
@@ -67,9 +68,6 @@ export function MessagesView() {
     try {
       const data = await chatService.getConversations();
       setConversations(data);
-      setSelectedConversationId(prev =>
-        prev === null && data.length > 0 ? data[0]._id : prev
-      );
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
       toast.error('Could not load conversations');
@@ -102,6 +100,9 @@ export function MessagesView() {
 
   useEffect(() => {
     setReplyDraft(null);
+    if (selectedConversationId) {
+      setShowMobileChat(true);
+    }
   }, [selectedConversationId]);
 
   useEffect(() => {
@@ -381,7 +382,7 @@ export function MessagesView() {
   }, []);
 
   const handleSelectConversation = (id: string) => {
-    setSelectedConversationId(id);
+    router.push(`/messages/${id}`);
     setShowMobileChat(true);
   };
 
@@ -389,7 +390,7 @@ export function MessagesView() {
     setConversations(prev =>
       prev.some(c => c._id === conv._id) ? prev : [conv, ...prev]
     );
-    setSelectedConversationId(conv._id);
+    router.push(`/messages/${conv._id}`);
     setShowMobileChat(true);
   };
 
@@ -525,7 +526,7 @@ export function MessagesView() {
                       onReact={handleReact}
                       onDelete={handleDeleteMessage}
                       onReport={handleReportMessage}
-                      reactions={[]}
+                      reactions={msg.reactions}
                     />
                   ))}
               <div ref={messagesEndRef} />
@@ -544,26 +545,27 @@ export function MessagesView() {
       ) : (
         <div
           className={cn(
-            'text-muted-foreground/50 flex flex-1 flex-col items-center justify-center gap-3',
+            'bg-background/50 flex flex-1 flex-col items-center justify-center gap-4 text-center px-6',
             !showMobileChat && 'hidden md:flex'
           )}
         >
-          <div className="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
-            <Send className="text-primary h-7 w-7" />
+          <div className="bg-primary/5 border-primary/10 flex h-24 w-24 items-center justify-center rounded-3xl border-2 shadow-sm">
+            <div className="bg-primary/10 flex h-16 w-16 items-center justify-center rounded-2xl">
+              <Send className="text-primary h-8 w-8" />
+            </div>
           </div>
-          <div className="text-center">
-            <p className="text-foreground/70 font-semibold">Your messages</p>
-            <p className="mt-0.5 text-sm">
-              Select a conversation to start chatting
+          <div className="max-w-xs space-y-2">
+            <h3 className="text-lg font-bold tracking-tight">Select a conversation</h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Choose an existing chat from the left sidebar or start a new conversation to connect with your friends.
             </p>
           </div>
           <Button
-            variant="outline"
-            size="sm"
-            className="mt-1 rounded-full px-5 text-xs font-semibold"
+            size="lg"
+            className="mt-2 rounded-2xl px-8 font-semibold shadow-lg shadow-primary/20 transition-all hover:scale-105"
             onClick={() => setNewConvOpen(true)}
           >
-            New message
+            Start new chat
           </Button>
         </div>
       )}
