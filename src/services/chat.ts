@@ -188,6 +188,13 @@ class ChatService {
     }
   }
 
+  async deleteMessage(messageId: string): Promise<void> {
+    const response = await apiClient.delete(`/messages/${messageId}`);
+    if (!response.success) {
+      throw new Error(response.message || 'Failed to delete message');
+    }
+  }
+
   async searchMessages(query: string, conversationId?: string, page: number = 1, limit: number = 20): Promise<{ messages: Message[]; pagination: Pagination }> {
     const params = new URLSearchParams({
       query,

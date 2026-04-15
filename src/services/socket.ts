@@ -17,6 +17,7 @@ export interface SocketEvents {
   'new-message-notification': (data: { message: Message; conversationId: string }) => void;
   'joined-conversation': (data: { conversationId: string }) => void;
   'message-reaction': (data: { messageId: string; conversationId: string; reactions: Message['reactions'] }) => void;
+  'message-delete': (data: { messageId: string; conversationId: string }) => void;
 }
 
 class SocketService {
@@ -205,9 +206,21 @@ class SocketService {
     }
   }
 
+  onMessageDelete(callback: (data: { messageId: string; conversationId: string }) => void) {
+    if (this.socket) {
+      this.socket.on('message-delete', callback);
+    }
+  }
+
   offMessageReaction(callback: (data: { messageId: string; conversationId: string; reactions: Message['reactions'] }) => void) {
     if (this.socket) {
       this.socket.off('message-reaction', callback);
+    }
+  }
+
+  offMessageDelete(callback: (data: { messageId: string; conversationId: string }) => void) {
+    if (this.socket) {
+      this.socket.off('message-delete', callback);
     }
   }
 
