@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Default: least-privilege read for all jobs
+permissions:
+  contents: read
+
 env:
   REGISTRY: registry.gitlab.com
   IMAGE_NAME: registry.gitlab.com/mugishaprosper/front.linii
@@ -57,9 +61,9 @@ jobs:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
-      security-events: write
-      actions: read
       contents: read
+      actions: read
+      security-events: write
 
     steps:
       - name: Checkout
