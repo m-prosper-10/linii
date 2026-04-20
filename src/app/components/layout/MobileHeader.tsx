@@ -57,21 +57,13 @@ export function MobileHeader() {
               )}
 
               <div className="space-y-1">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3"
-                  asChild
-                >
+                <Button variant="ghost" className="w-full justify-start gap-3" asChild>
                   <Link href="/analytics">
                     <BarChart3 className="h-5 w-5" />
                     Analytics
                   </Link>
                 </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-3"
-                  asChild
-                >
+                <Button variant="ghost" className="w-full justify-start gap-3" asChild>
                   <Link href="/settings">
                     <Settings className="h-5 w-5" />
                     Settings
@@ -89,11 +81,7 @@ export function MobileHeader() {
           <span className="font-semibold text-lg">Social</span>
         </Link>
 
-        <Button 
-          variant="ghost" 
-          size="sm"
-          asChild
-        >
+        <Button variant="ghost" size="sm" asChild>
           <Link href="/post/create">
             <PenSquare className="h-6 w-6" />
           </Link>

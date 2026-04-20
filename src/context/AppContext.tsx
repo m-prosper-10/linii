@@ -25,6 +25,8 @@ interface AppContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
+  isSidebarCollapsed: boolean;
+  setIsSidebarCollapsed: (value: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -36,6 +38,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<'light' | 'dark'>('dark');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [currentView, setCurrentView] = useState<string>('home');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     // Initial auth check
@@ -119,6 +122,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         register,
         logout,
         loading,
+        isSidebarCollapsed,
+        setIsSidebarCollapsed,
       }}
     >
       {children}

@@ -14,10 +14,12 @@ import {
 import { useApp } from '@/context/AppContext';
 import { authService } from '@/services/auth';
 import AIService from '@/services/ai';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
 export function EditProfileView() {
-  const { currentUser, loading, setCurrentUser, setCurrentView } = useApp();
+  const router = useRouter();
+  const { currentUser, loading, setCurrentUser } = useApp();
   const [formData, setFormData] = useState({
     displayName: '',
     username: '',
@@ -111,16 +113,17 @@ export function EditProfileView() {
       });
       setCurrentUser(updatedUser);
       toast.success('Profile updated successfully!');
-      setCurrentView('profile');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+      router.back();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleCancel = () => {
-    setCurrentView('profile');
+    router.back();
   };
 
   return (
@@ -151,11 +154,13 @@ export function EditProfileView() {
       <div className="space-y-6 p-4">
         {/* Cover Image */}
         <div className="bg-accent group relative h-48 overflow-hidden rounded-lg">
-          <img
-            src={coverPreview || formData.coverImage}
-            alt="Cover"
-            className="h-full w-full object-cover"
-          />
+          {(coverPreview || formData.coverImage) && (
+            <img
+              src={coverPreview || formData.coverImage}
+              alt="Cover"
+              className="h-full w-full object-cover"
+            />
+          )}
           <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
             <label className="cursor-pointer">
               <input

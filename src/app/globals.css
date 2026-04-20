@@ -2,3 +2,55 @@
 
 @import "../styles/theme.css";
 @import "../styles/font.css";
+
+/* ── Scrollbar utilities ─────────────────────────────────────────────────── */
+
+/* Thin scrollbar — popovers, modals, sidebars */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 99px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+}
+
+/* Standard scrollbar — full pages, large containers */
+.scrollbar-page::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.scrollbar-page::-webkit-scrollbar-track {
+    background: hsl(var(--muted) / 0.4);
+    border-radius: 99px;
+}
+
+.scrollbar-page::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 99px;
+}
+
+.scrollbar-page::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45);
+}
+
+/* Firefox */
+.scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+}
+
+.scrollbar-page {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.25) hsl(var(--muted) / 0.4);
+}
