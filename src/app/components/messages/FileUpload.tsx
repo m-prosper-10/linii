@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Progress } from '@/app/components/ui/progress';
-import { Paperclip, X, File, Image, Video, Music } from 'lucide-react';
+import { Paperclip, X, File, Image as ImageIcon, Video, Music } from 'lucide-react';
 import { chatService, UploadedFile } from '@/services/chat';
 
 interface FileUploadProps {
@@ -125,7 +125,7 @@ export function FileUpload({
   };
 
   const getFileIcon = (file: File) => {
-    if (chatService.isImageFile(file.type)) return <Image className="h-4 w-4" />;
+    if (chatService.isImageFile(file.type)) return <ImageIcon className="h-4 w-4" />;
     if (chatService.isVideoFile(file.type)) return <Video className="h-4 w-4" />;
     if (chatService.isAudioFile(file.type)) return <Music className="h-4 w-4" />;
     return <File className="h-4 w-4" />;

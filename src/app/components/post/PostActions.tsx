@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { Bookmark, Heart, MessageCircle, Repeat2 } from 'lucide-react';
 import { PostService } from '@/services/post';

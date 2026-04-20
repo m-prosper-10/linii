@@ -56,6 +56,8 @@ interface ChatSettingsProps {
   isMuted?: boolean;
 }
 
+type SettingsTab = 'general' | 'notifications' | 'privacy' | 'appearance' | 'media' | 'advanced';
+
 interface SettingsState {
   notifications: {
     messageNotifications: boolean;
@@ -106,7 +108,7 @@ export function ChatSettings({
   isMuted = false,
 }: ChatSettingsProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'general' | 'notifications' | 'privacy' | 'appearance' | 'media' | 'advanced'>('general');
+  const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   
   const [settings, setSettings] = useState<SettingsState>({
     notifications: {
@@ -156,7 +158,7 @@ export function ChatSettings({
     }));
   };
 
-  const tabs = [
+  const tabs: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
     { id: 'general', label: 'General', icon: Settings },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'privacy', label: 'Privacy', icon: Shield },
@@ -199,7 +201,7 @@ export function ChatSettings({
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id as any)}
+                onClick={() => setActiveTab(id)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap',
                   activeTab === id
