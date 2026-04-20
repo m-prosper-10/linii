@@ -61,10 +61,12 @@ export function FileUpload({
     }
 
     // Validate each file
-    const invalidFileError = files.find(file => validateFile(file));
-    if (invalidFileError) {
-      setError(invalidFileError);
-      return;
+    for (const file of files) {
+      const validationError = validateFile(file);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
     }
 
     setSelectedFiles(prev => [...prev, ...files]);
