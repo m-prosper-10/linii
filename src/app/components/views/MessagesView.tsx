@@ -121,6 +121,10 @@ export function MessagesView() {
             conversationId: message.conversationId,
             messageId: message._id,
           });
+          // Trigger AI smart reply suggestions for incoming messages
+          if (message.content?.trim()) {
+            void messageInputRef.current?.loadSmartReplies(message.content);
+          }
         }
       }
 

@@ -11,19 +11,14 @@ import {
 import Image from 'next/image';
 import { Button } from '@/app/components/ui/button';
 import { EmojiPicker } from '@/app/components/post/EmojiPicker';
-import { ChevronDown, ChevronUp, CornerDownRight, Paperclip, Send, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, CornerDownRight, Paperclip, Send, X, Loader2 } from 'lucide-react';
 import { cn } from '@/app/components/ui/utils';
+import AIService from '@/services/ai';
 import type { LocalFile } from './types';
-
-const QUICK_REPLIES = [
-  'Sounds good! 👍',
-  "Let's schedule a call 📅",
-  'Great idea! 💡',
-  'On my way! 🚀',
-];
 
 export interface MessageInputHandle {
   focus: () => void;
+  loadSmartReplies: (messageText: string, context?: string[]) => Promise<void>;
 }
 
 export interface MessageReplyDraft {
@@ -47,9 +42,27 @@ export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
     const [localFiles, setLocalFiles] = useState<LocalFile[]>([]);
     const [uploading, setUploading] = useState(false);
     const [quickOpen, setQuickOpen] = useState(false);
+    const [smartReplies, setSmartReplies] = useState<string[]>([]);
+    const [loadingReplies, setLoadingReplies] = useState(false);
 
     useImperativeHandle(ref, () => ({
       focus: () => textareaRef.current?.focus(),
+      loadSmartReplies: async (messageText: string, context?: string[]) => {
+        if (!messageText.trim()) return;
+        setLoadingReplies(true);
+        try {
+          const suggestions = await AIService.suggestReplies(messageText, context);
+          setSmartReplies(suggestions);
+          if (suggestions.length > 0) {
+            setQuickOpen(true);
+          }
+        } catch (error) {
+          console.error('Failed to load smart replies:', error);
+          setSmartReplies([]);
+        } finally {
+          setLoadingReplies(false);
+        }
+      },
     }));
 
     useEffect(() => {
@@ -122,6 +135,8 @@ export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
         await Promise.resolve(onSend(snapshot));
         setLocalFiles([]);
         onChange('');
+        // Clear smart replies after sending
+        setSmartReplies([]);
       } catch {
         // Parent may restore text; attachments stay until user clears or retries
       }
@@ -149,40 +164,51 @@ export const MessageInput = forwardRef<MessageInputHandle, MessageInputProps>(
           </div>
         )}
 
-        <div className="mb-2">
-          <button
-            type="button"
-            onClick={() => setQuickOpen(o => !o)}
-            className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium transition-colors"
-          >
-            Quick replies
-            {quickOpen ? (
-              <ChevronUp className="h-3.5 w-3.5" />
-            ) : (
-              <ChevronDown className="h-3.5 w-3.5" />
-            )}
-          </button>
-          <div
-            className={cn(
-              'scrollbar-thin mt-2 flex gap-1.5 overflow-x-auto pb-1 transition-all',
-              !quickOpen && 'hidden'
-            )}
-          >
-            {QUICK_REPLIES.map((reply, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => {
-                  onChange(reply);
-                  textareaRef.current?.focus();
-                }}
-                className="border-border/40 bg-accent/40 hover:bg-accent/70 shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
-              >
-                {reply}
-              </button>
-            ))}
+        {smartReplies.length > 0 && (
+          <div className="mb-2">
+            <button
+              type="button"
+              onClick={() => setQuickOpen(o => !o)}
+              className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs font-medium transition-colors"
+            >
+              {loadingReplies ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  Generating replies...
+                </>
+              ) : (
+                <>
+                  Smart replies
+                  {quickOpen ? (
+                    <ChevronUp className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  )}
+                </>
+              )}
+            </button>
+            <div
+              className={cn(
+                'scrollbar-thin mt-2 flex gap-1.5 overflow-x-auto pb-1 transition-all',
+                !quickOpen && 'hidden'
+              )}
+            >
+              {smartReplies.map((reply, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => {
+                    onChange(reply);
+                    textareaRef.current?.focus();
+                  }}
+                  className="border-border/40 bg-accent/40 hover:bg-accent/70 shrink-0 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                >
+                  {reply}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="flex items-end gap-2">
           <Button
