@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
 import {
@@ -44,8 +44,6 @@ export function VideoCall({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const [isMinimized, setIsMinimized] = useState(false);
-  const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   // Handle connecting simulation
   useEffect(() => {
@@ -69,13 +67,6 @@ export function VideoCall({
     return () => clearInterval(interval);
   }, [callStatus]);
 
-  // Simulate local video stream
-  useEffect(() => {
-    if (isVideoOn && localVideoRef.current) {
-      // In a real implementation, this would get the actual camera stream
-      // For now, we'll show a placeholder with the user avatar
-    }
-  }, [isVideoOn]);
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

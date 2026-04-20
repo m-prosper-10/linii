@@ -36,7 +36,7 @@ export function PostCard({
       await PostService.deletePost(post._id);
       toast.success('Post deleted');
       onDeleted?.(post._id);
-    } catch (_err) {
+    } catch {
       toast.error('Failed to delete post');
     } finally {
       setIsDeleting(false);
