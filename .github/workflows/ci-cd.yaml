@@ -12,7 +12,7 @@ permissions:
 
 env:
   REGISTRY: registry.gitlab.com
-  IMAGE_NAME: registry.gitlab.com/MugishaProsper/linii
+  IMAGE_NAME: registry.gitlab.com/mugishaprosper/linii
 
 jobs:
   # ── Code Quality & Security ─────────────────────────────────────────────────
