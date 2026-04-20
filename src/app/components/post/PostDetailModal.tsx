@@ -55,7 +55,7 @@ export function PostDetailModal({
       const data = await PostService.getPost(postId);
       setPost(data);
       setCommentCount(data.commentsCount);
-    } catch (_err) {
+    } catch {
       toast.error('Failed to load post details');
       onClose();
     } finally {
@@ -72,7 +72,7 @@ export function PostDetailModal({
       toast.success('Post deleted');
       onDeleted?.(post._id);
       onClose();
-    } catch (_err) {
+    } catch {
       toast.error('Failed to delete post');
     } finally {
       setIsDeleting(false);

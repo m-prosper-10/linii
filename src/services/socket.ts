@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/lib/api';
-import { Message } from './chat';
+import { Message, CreateMessageRequest } from './chat';
 
 export interface TypingIndicator {
   userId: string;
@@ -20,8 +20,17 @@ export interface SocketEvents {
   'message-delete': (data: { messageId: string; conversationId: string }) => void;
 }
 
+export interface ClientToServerEvents {
+  'join-conversation': (conversationId: string) => void;
+  'leave-conversation': (conversationId: string) => void;
+  'send-message': (messageData: CreateMessageRequest) => void;
+  'mark-read': (data: { conversationId: string; messageId?: string }) => void;
+  'typing-start': (data: { conversationId: string }) => void;
+  'typing-stop': (data: { conversationId: string }) => void;
+}
+
 class SocketService {
-  private socket: Socket | null = null;
+  private socket: Socket<SocketEvents, ClientToServerEvents> | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
@@ -41,7 +50,7 @@ class SocketService {
         rememberUpgrade: true,
         timeout: 20000,
         forceNew: true
-      });
+      }) as unknown as Socket<SocketEvents, ClientToServerEvents>;
 
       this.socket.on('connect', () => {
         console.log('Connected to socket server');
@@ -63,12 +72,12 @@ class SocketService {
         }
       });
 
-      this.socket.on('reconnect', (attemptNumber) => {
+      this.socket.io.on('reconnect', (attemptNumber) => {
         console.log(`Reconnected after ${attemptNumber} attempts`);
         this.reconnectAttempts = 0;
       });
 
-      this.socket.on('reconnect_error', (error) => {
+      this.socket.io.on('reconnect_error', (error) => {
         console.error('Reconnection error:', error);
         this.handleReconnect();
       });
@@ -114,7 +123,7 @@ class SocketService {
   }
 
   // Message operations
-  sendMessage(messageData: any) {
+  sendMessage(messageData: CreateMessageRequest) {
     if (this.socket) {
       this.socket.emit('send-message', messageData);
     }
@@ -227,13 +236,15 @@ class SocketService {
   // Generic event handlers
   on<K extends keyof SocketEvents>(event: K, callback: SocketEvents[K]) {
     if (this.socket) {
-      this.socket.on(event, callback);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.socket.on(event as any, callback as any);
     }
   }
 
   off<K extends keyof SocketEvents>(event: K, callback: SocketEvents[K]) {
     if (this.socket) {
-      this.socket.off(event, callback);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      this.socket.off(event as any, callback as any);
     }
   }
 
