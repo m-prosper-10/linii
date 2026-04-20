@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/app/components/ui/avatar';
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
 import {

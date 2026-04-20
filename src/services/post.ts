@@ -167,24 +167,24 @@ export class PostService {
       });
     }
 
-    if ((data as any).poll) {
-      formData.append('poll', JSON.stringify((data as any).poll));
+    if (data.poll) {
+      formData.append('poll', JSON.stringify(data.poll));
     }
 
-    if ((data as any).location) {
-      formData.append('location', JSON.stringify((data as any).location));
+    if (data.location) {
+      formData.append('location', JSON.stringify(data.location));
     }
 
-    if ((data as any).scheduledFor) {
-      formData.append('scheduledFor', (data as any).scheduledFor.toISOString());
+    if (data.scheduledFor) {
+      formData.append('scheduledFor', data.scheduledFor.toISOString());
     }
 
-    if ((data as any).mentions && (data as any).mentions.length > 0) {
-      formData.append('mentions', JSON.stringify((data as any).mentions));
+    if (data.mentions && data.mentions.length > 0) {
+      formData.append('mentions', JSON.stringify(data.mentions));
     }
 
-    if ((data as any).tags && (data as any).tags.length > 0) {
-      formData.append('tags', JSON.stringify((data as any).tags));
+    if (data.tags && data.tags.length > 0) {
+      formData.append('tags', JSON.stringify(data.tags));
     }
 
     // Since we are sending FormData, we should use apiClient.upload

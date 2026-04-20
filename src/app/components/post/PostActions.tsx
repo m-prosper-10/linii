@@ -37,22 +37,16 @@ export function PostActions({
   const [reposts, setReposts] = useState(post.sharesCount);
   const [isSaved, setIsSaved] = useState(post.userSaved ?? false);
 
-  useEffect(() => {
+  // Sync state with props when post changes
+  const [prevPostId, setPrevPostId] = useState(post._id);
+  if (post._id !== prevPostId) {
+    setPrevPostId(post._id);
     setIsLiked(likedFromServer);
-  }, [post._id, likedFromServer]);
-
-  useEffect(() => {
     setLikes(post.likesCount);
-  }, [post._id, post.likesCount]);
-
-  useEffect(() => {
     setIsReposted(post.userShared ?? false);
     setReposts(post.sharesCount);
-  }, [post._id, post.userShared, post.sharesCount]);
-
-  useEffect(() => {
     setIsSaved(post.userSaved ?? false);
-  }, [post._id, post.userSaved]);
+  }
 
   const handleLike = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -62,7 +56,7 @@ export function PostActions({
     setLikes(c => (prevLiked ? c - 1 : c + 1));
     try {
       await PostService.toggleReaction(post._id, 'LIKE');
-    } catch (_err) {
+    } catch {
       setIsLiked(prevLiked);
       setLikes(prevCount);
       toast.error('Failed to update like');
@@ -76,7 +70,7 @@ export function PostActions({
     setReposts(isReposted ? reposts - 1 : reposts + 1);
     try {
       await PostService.toggleRepost(post._id);
-    } catch (_err) {
+    } catch {
       setIsReposted(prev);
       setReposts(prev ? reposts : reposts - 1);
       toast.error('Failed to update repost');
@@ -90,7 +84,7 @@ export function PostActions({
     try {
       const { saved } = await PostService.toggleSavePost(post._id);
       setIsSaved(saved);
-    } catch (_err) {
+    } catch {
       setIsSaved(prev);
       toast.error('Failed to update bookmark');
     }

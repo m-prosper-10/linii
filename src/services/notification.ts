@@ -11,7 +11,7 @@ export interface Notification {
   message: string;
   isRead: boolean;
   actionUrl?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   createdAt: string;
 }
 

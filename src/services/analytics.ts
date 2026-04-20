@@ -43,8 +43,8 @@ class AnalyticsService {
     throw new Error(response.message || 'Failed to fetch user analytics');
   }
 
-  async getAccountInsights(): Promise<any> {
-    const response = await apiClient.get<{ insights: any }>('/analytics/account/insights');
+  async getAccountInsights(): Promise<Record<string, unknown>> {
+    const response = await apiClient.get<{ insights: Record<string, unknown> }>('/analytics/account/insights');
     if (response.success && response.data) {
       return response.data.insights;
     }

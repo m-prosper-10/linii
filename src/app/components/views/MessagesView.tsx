@@ -363,7 +363,7 @@ export function MessagesView() {
   );
 
   const handleReact = useCallback(
-    async (messageId: string, emoji: string, _type?: string) => {
+    async (messageId: string, emoji: string) => {
       try {
         await chatService.reactToMessage(messageId, emoji);
       } catch (err) {
