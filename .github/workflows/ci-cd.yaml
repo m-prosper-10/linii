@@ -2,7 +2,7 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: ["**"]
+    branches: ['**']
   pull_request:
     branches: [main, integration]
 
@@ -27,8 +27,8 @@ jobs:
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install pnpm
@@ -61,8 +61,8 @@ jobs:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      actions: read
+      contents: read, write
+      actions: read, write
       security-events: write
 
     steps:
@@ -81,7 +81,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: '/language:javascript-typescript'
 
   # ── Build & Push ────────────────────────────────────────────────────────────
   build-and-push:
