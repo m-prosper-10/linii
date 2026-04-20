@@ -11,7 +11,27 @@ export interface AISuggestionResult {
   suggestedBio?: string;
 }
 
+export interface AISmartRepliesResult {
+  suggestions: string[];
+}
+
 const AIService = {
+  /**
+   * Generate smart reply suggestions for a received message.
+   * @param message - The message to reply to
+   * @param context - Optional last few messages for tone context (alternating them/you)
+   */
+  async suggestReplies(message: string, context: string[] = []): Promise<string[]> {
+    const response = await apiClient.post<AISmartRepliesResult>('/ai/suggest-replies', {
+      message,
+      context,
+    });
+    if (response.success && response.data?.suggestions) {
+      return response.data.suggestions;
+    }
+    return [];
+  },
+
   /**
    * Request post enhancement from AI
    */
