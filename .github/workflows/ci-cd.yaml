@@ -52,8 +52,8 @@ jobs:
       - name: Build (validates no compile errors)
         run: pnpm build
         env:
-          NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
-          NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
+          NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ vars.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000' }}
           NEXT_TELEMETRY_DISABLED: 1
 
   # ── CodeQL Analysis ─────────────────────────────────────────────────────────
