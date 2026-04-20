@@ -114,8 +114,9 @@ export function EditProfileView() {
       setCurrentUser(updatedUser);
       toast.success('Profile updated successfully!');
       router.back();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to update profile';
+      toast.error(message);
     } finally {
       setIsSaving(false);
     }
