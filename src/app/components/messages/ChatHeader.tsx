@@ -8,6 +8,7 @@ import { User } from '@/services/auth';
 import { useRouter } from 'next/navigation';
 import { AudioCall } from './AudioCall';
 import { VideoCall } from './VideoCall';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface ChatHeaderProps {
   conversationId: string;
@@ -20,6 +21,7 @@ export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: Chat
   const router = useRouter();
   const [isAudioCallOpen, setIsAudioCallOpen] = useState(false);
   const [isVideoCallOpen, setIsVideoCallOpen] = useState(false);
+  const otherUserName = getUserDisplayName(otherUser);
   return (
     <div className="border-border/40 bg-card/60 sticky top-0 z-10 flex items-center justify-between border-b px-4 py-3 backdrop-blur-md">
       {/* Left: back + user info */}
@@ -35,9 +37,9 @@ export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: Chat
 
         <div className="relative">
           <Avatar className="h-9 w-9">
-            <AvatarImage src={otherUser.avatar} alt={otherUser.fullnames} />
+            <AvatarImage src={otherUser.avatar} alt={otherUserName} />
             <AvatarFallback className="text-sm font-bold">
-              {otherUser.fullnames?.[0]}
+              {getUserInitial(otherUser)}
             </AvatarFallback>
           </Avatar>
           {/* Online dot */}
@@ -45,7 +47,7 @@ export function ChatHeader({ conversationId, otherUser, isTyping, onBack }: Chat
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold leading-tight">{otherUser.fullnames}</p>
+          <p className="truncate text-sm font-semibold leading-tight">{otherUserName}</p>
           <div className="text-[11px] text-muted-foreground/60 font-medium h-4">
             {isTyping ? (
               <span className="flex items-center gap-1">

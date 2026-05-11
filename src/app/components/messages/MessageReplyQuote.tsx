@@ -3,6 +3,7 @@
 import { cn } from '@/app/components/ui/utils';
 import type { QuotedMessagePreview } from '@/services/chat';
 import { quotedPreviewText } from './replyPreviewText';
+import { getUserDisplayName } from '@/lib/user';
 
 interface MessageReplyQuoteProps {
   quote: QuotedMessagePreview;
@@ -16,7 +17,7 @@ export function MessageReplyQuote({
   onJumpToOriginal,
 }: MessageReplyQuoteProps) {
   const text = quotedPreviewText(quote);
-  const name = quote.sender?.fullnames || 'Unknown';
+  const name = getUserDisplayName(quote.sender);
 
   return (
     <button

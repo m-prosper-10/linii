@@ -43,6 +43,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface ChatSettingsProps {
   open: boolean;
@@ -108,6 +109,7 @@ export function ChatSettings({
   isMuted = false,
 }: ChatSettingsProps) {
   const router = useRouter();
+  const otherUserName = getUserDisplayName(otherUser);
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
   
   const [settings, setSettings] = useState<SettingsState>({
@@ -224,13 +226,13 @@ export function ChatSettings({
               {/* User info */}
               <div className="flex flex-col items-center gap-3">
                 <Avatar className="h-16 w-16">
-                  <AvatarImage src={otherUser.avatar} alt={otherUser.fullnames} />
+                  <AvatarImage src={otherUser.avatar} alt={otherUserName} />
                   <AvatarFallback className="text-lg font-bold">
-                    {otherUser.fullnames?.[0]}
+                    {getUserInitial(otherUser)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-center">
-                  <p className="font-semibold">{otherUser.fullnames}</p>
+                  <p className="font-semibold">{otherUserName}</p>
                   <p className="text-xs text-muted-foreground">@{otherUser.username}</p>
                 </div>
                 <Button
