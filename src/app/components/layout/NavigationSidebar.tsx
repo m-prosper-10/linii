@@ -23,6 +23,7 @@ const navigationItems = [
 export function NavigationSidebar() {
   const { currentUser, isSidebarCollapsed, setIsSidebarCollapsed } = useApp();
   const pathname = usePathname();
+  const displayName = currentUser?.displayName || currentUser?.fullnames || 'User';
 
   useEffect(() => {
     if (pathname?.startsWith('/messages')) {
@@ -157,14 +158,14 @@ export function NavigationSidebar() {
                       "h-12 w-12 border-2 border-transparent group-hover:border-primary/20 transition-all",
                       isSidebarCollapsed && "h-14 w-14"
                     )}>
-                      <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
+                      <AvatarImage src={currentUser.avatar} alt={displayName} />
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                        {currentUser.displayName?.[0] || 'U'}
+                        {displayName[0] || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     {!isSidebarCollapsed && (
                       <div className="flex-1 min-w-0">
-                        <div className="font-bold truncate text-sm">{currentUser.displayName}</div>
+                        <div className="font-bold truncate text-sm">{displayName}</div>
                         <div className="text-xs text-muted-foreground truncate font-medium">@{currentUser.username}</div>
                       </div>
                     )}
@@ -172,7 +173,7 @@ export function NavigationSidebar() {
                 </TooltipTrigger>
                 {isSidebarCollapsed && (
                   <TooltipContent side="right" className="p-3 bg-primary text-primary-foreground border-none">
-                    <div className="font-semibold text-md">{currentUser.displayName}</div>
+                    <div className="font-semibold text-md">{displayName}</div>
                     <div className="text-sm text-muted-foreground">@{currentUser.username}</div>
                   </TooltipContent>
                 )}

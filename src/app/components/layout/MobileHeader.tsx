@@ -15,6 +15,7 @@ import Link from 'next/link';
 
 export function MobileHeader() {
   const { currentUser } = useApp();
+  const displayName = currentUser?.displayName || currentUser?.fullnames || 'User';
 
   return (
     <div className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur-sm md:hidden">
@@ -38,11 +39,11 @@ export function MobileHeader() {
               {currentUser ? (
                 <div className="flex items-center gap-3 p-2">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={currentUser.avatar} alt={currentUser.displayName} />
-                    <AvatarFallback>{currentUser.displayName[0]}</AvatarFallback>
+                    <AvatarImage src={currentUser.avatar} alt={displayName} />
+                    <AvatarFallback>{displayName[0]}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{currentUser.displayName}</div>
+                    <div className="font-medium truncate">{displayName}</div>
                     <div className="text-sm text-muted-foreground truncate">@{currentUser.username}</div>
                   </div>
                 </div>

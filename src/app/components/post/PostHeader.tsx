@@ -56,6 +56,8 @@ export function PostHeader({
   onEdit,
 }: PostHeaderProps) {
   const isOwner = currentUserId === post.author._id;
+  const authorName = post.author.displayName || post.author.fullnames;
+  const isVerified = post.author.verified ?? post.author.isVerified;
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), {
     addSuffix: true,
   });
@@ -76,9 +78,9 @@ export function PostHeader({
               'ring-background z-20 shrink-0 ring-2'
             )}
           >
-            <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
+            <AvatarImage src={post.author.avatar} alt={authorName} />
             <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-              {post.author.fullnames[0]}
+              {authorName[0]}
             </AvatarFallback>
           </Avatar>
 
@@ -98,9 +100,9 @@ export function PostHeader({
                       i === 0 ? 'z-10' : 'z-0'
                     )}
                   >
-                    <AvatarImage src={mention.avatar} alt={mention.fullnames} />
+                    <AvatarImage src={mention.avatar} alt={mention.displayName || mention.fullnames} />
                     <AvatarFallback className="text-[10px]">
-                      {mention.fullnames[0]}
+                      {(mention.displayName || mention.fullnames)[0]}
                     </AvatarFallback>
                   </Avatar>
                 ))}
@@ -118,9 +120,9 @@ export function PostHeader({
                 onUserClick?.(post.author._id);
               }}
             >
-              {post.author.fullnames}
+              {authorName}
             </span>
-            {post.author.isVerified && (
+            {isVerified && (
               <>
                 <span className="text-muted-foreground text-xs font-normal">
                   ·
@@ -163,12 +165,12 @@ export function PostHeader({
                             <Avatar className="ring-border/10 h-6 w-6 ring-1">
                               <AvatarImage src={mention.avatar} />
                               <AvatarFallback className="text-[10px] font-bold">
-                                {mention.fullnames[0]}
+                                {(mention.displayName || mention.fullnames)[0]}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                               <span className="text-[11px] font-bold leading-none">
-                                {mention.fullnames}
+                                {mention.displayName || mention.fullnames}
                               </span>
                               <span className="text-muted-foreground/70 text-[9px] leading-none">
                                 @{mention.username || 'collab'}
