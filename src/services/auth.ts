@@ -16,9 +16,11 @@ export interface User {
   bio: string;
   coverImage: string;
   verified: boolean;
+  isVerified?: boolean;
   followers: number;
   followersCount?: number;
   following: number;
+  followingCount?: number;
   postsCount: number;
   website?: string;
   location?: string;

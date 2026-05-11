@@ -27,12 +27,16 @@ import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface SuggestedUser {
   _id: string;
+  id?: string;
   fullnames: string;
+  displayName?: string;
   username: string;
   avatar: string;
   bio?: string;
   followersCount?: number;
   isFollowing?: boolean;
+  verified?: boolean;
+  isVerified?: boolean;
 }
 
 export function ExploreView() {

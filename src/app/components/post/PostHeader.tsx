@@ -57,6 +57,8 @@ export function PostHeader({
   onEdit,
 }: PostHeaderProps) {
   const isOwner = currentUserId === post.author._id;
+  const authorName = post.author.displayName || post.author.fullnames;
+  const isVerified = post.author.verified ?? post.author.isVerified;
   const timeAgo = formatDistanceToNow(new Date(post.createdAt), {
     addSuffix: true,
   });

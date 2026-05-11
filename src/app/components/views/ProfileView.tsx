@@ -176,6 +176,8 @@ export function ProfileView() {
   const mediaPosts = posts.filter(p => p.media?.length > 0);
   const likedPosts = posts.filter(p => p.userReaction?.reactionType === 'LIKE');
   const visibleTabs = TABS.filter(t => !t.ownOnly || isOwnProfile);
+  const displayName = user.displayName || user.fullnames;
+  const isVerified = user.verified ?? user.isVerified;
 
   const tabContent: Record<TabId, PostApiType[]> = {
     posts: posts,

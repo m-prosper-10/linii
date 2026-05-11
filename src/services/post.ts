@@ -4,10 +4,13 @@ export interface PostApiType {
   _id: string;
   author: {
     _id: string;
+    id?: string;
     fullnames: string;
+    displayName?: string;
     username: string;
     email: string;
     avatar?: string;
+    verified?: boolean;
     isVerified?: boolean;
   };
   content: string;
@@ -21,10 +24,13 @@ export interface PostApiType {
     _id: string;
     author: {
       _id: string;
+      id?: string;
       fullnames: string;
+      displayName?: string;
       username: string;
       email: string;
       avatar?: string;
+      verified?: boolean;
       isVerified?: boolean;
     };
     content: string;
@@ -38,10 +44,13 @@ export interface PostApiType {
   tags: string[];
   mentions: Array<string | { 
     _id: string; 
+    id?: string;
     fullnames: string; 
+    displayName?: string;
     username: string; 
     email: string; 
     avatar?: string;
+    verified?: boolean;
     isVerified?: boolean;
   }>;
   likesCount: number;

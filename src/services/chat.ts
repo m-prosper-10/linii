@@ -31,9 +31,14 @@ export interface Message {
     createdAt: string;
     user?: {
       _id: string;
+      id?: string;
       fullnames: string;
+      displayName?: string;
       username: string;
       email: string;
+      avatar?: string;
+      verified?: boolean;
+      isVerified?: boolean;
     };
   }[];
   createdAt: string;

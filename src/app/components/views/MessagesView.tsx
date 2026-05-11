@@ -81,15 +81,24 @@ export function MessagesView() {
     setMessagesLoading(true);
     try {
       const data = await chatService.getMessages(conversationId);
-      setMessages(data.reverse());
+      const ordered = data.reverse();
+      setMessages(ordered);
       await chatService.markAsRead(conversationId);
+
+      // Suggest replies for the last message received from the other person
+      const lastIncoming = [...ordered]
+        .reverse()
+        .find(m => m.sender._id !== currentUser?._id);
+      if (lastIncoming?.content?.trim()) {
+        void messageInputRef.current?.loadSmartReplies(lastIncoming.content);
+      }
     } catch (err) {
       console.error('Failed to fetch messages:', err);
       toast.error('Could not load messages');
     } finally {
       setMessagesLoading(false);
     }
-  }, []);
+  }, [currentUser]);
 
   useEffect(() => {
     void fetchConversations();
@@ -122,6 +131,10 @@ export function MessagesView() {
             conversationId: message.conversationId,
             messageId: message._id,
           });
+          // Trigger AI smart reply suggestions for incoming messages
+          if (message.content?.trim()) {
+            void messageInputRef.current?.loadSmartReplies(message.content);
+          }
         }
       }
 

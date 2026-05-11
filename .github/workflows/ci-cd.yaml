@@ -2,17 +2,17 @@ name: Frontend CI/CD
 
 on:
   push:
-    branches: ["**"]
+    branches: ['**']
   pull_request:
-    branches: [main, develop]
+    branches: [main, integration]
 
-# Default: least-privilege read for all jobs
 permissions:
   contents: read
+  packages: write
 
 env:
-  REGISTRY: registry.gitlab.com
-  IMAGE_NAME: registry.gitlab.com/mugishaprosper/front.linii
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/linii-frontend
 
 jobs:
   # ── Code Quality & Security ─────────────────────────────────────────────────
@@ -27,8 +27,8 @@ jobs:
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
-          cache: "npm"
+          node-version: '22'
+          cache: 'npm'
           cache-dependency-path: pnpm-lock.yaml
 
       - name: Install pnpm
@@ -52,8 +52,8 @@ jobs:
       - name: Build (validates no compile errors)
         run: pnpm build
         env:
-          NEXT_PUBLIC_BACKEND_URL: http://localhost:3000
-          NEXT_PUBLIC_SOCKET_URL: http://localhost:3000
+          NEXT_PUBLIC_BACKEND_URL: ${{ vars.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_SOCKET_URL: ${{ vars.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000' }}
           NEXT_TELEMETRY_DISABLED: 1
 
   # ── CodeQL Analysis ─────────────────────────────────────────────────────────
@@ -61,8 +61,9 @@ jobs:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       actions: read
+      contents: read
+      pull-requests: read
       security-events: write
 
     steps:
@@ -81,7 +82,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: '/language:javascript-typescript'
 
   # ── Build & Push ────────────────────────────────────────────────────────────
   build-and-push:
@@ -97,12 +98,12 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitLab Registry
+      - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
-          username: ${{ secrets.GITLAB_REGISTRY_USER }}
-          password: ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract Docker metadata
         id: meta
@@ -145,8 +146,8 @@ jobs:
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script: |
             docker login ${{ env.REGISTRY }} \
-              -u ${{ secrets.GITLAB_REGISTRY_USER }} \
-              -p ${{ secrets.GITLAB_REGISTRY_TOKEN }}
+              -u ${{ github.actor }} \
+              -p ${{ secrets.GITHUB_TOKEN }}
             docker pull ${{ env.IMAGE_NAME }}:latest
             docker stop linii-frontend || true
             docker rm linii-frontend || true

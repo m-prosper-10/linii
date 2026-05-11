@@ -4,12 +4,15 @@ import { User } from "./auth";
 /** Matches backend `SuggestedUser` for discovery / who to follow. */
 export interface SuggestedUser {
   _id: string;
+  id?: string;
   fullnames: string;
+  displayName?: string;
   username: string;
   email?: string;
   avatar?: string;
   bio?: string;
   verified?: boolean;
+  isVerified?: boolean;
   suggestionLabel?: string;
   mutualFollowsCount?: number;
 }
