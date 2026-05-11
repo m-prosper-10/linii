@@ -122,11 +122,13 @@ export function PostCreationTextInput({
 
   const characterCount = content.length;
   const isOverLimit = characterCount > maxCharacters;
+  const remaining = maxCharacters - characterCount;
+  const hashtagCount = (content.match(/#[\w\u0080-\uFFFF]+/g) || []).length;
 
   return (
     <div className="flex flex-col rounded-2xl border border-border/50 bg-accent/5 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-primary/10 focus-within:border-primary/30">
       {/* Markdown Toolbar */}
-      <div className="flex items-center gap-1 px-3 py-2 border-b border-border/40 bg-accent/10">
+      <div className="sticky top-0 z-10 flex items-center gap-1 border-b border-border/40 bg-accent/10 px-3 py-2 backdrop-blur-sm">
         <TooltipProvider delayDuration={400}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -199,6 +201,26 @@ export function PostCreationTextInput({
         </TooltipProvider>
       </div>
       
+      <div className="border-b border-border/30 bg-background/40 px-4 py-2">
+        <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+          <Badge
+            variant="secondary"
+            className="rounded-full border border-border/40 bg-background/70 px-2 py-0.5 text-[10px]"
+          >
+            Markdown enabled
+          </Badge>
+          <Badge
+            variant="secondary"
+            className="rounded-full border border-border/40 bg-background/70 px-2 py-0.5 text-[10px]"
+          >
+            {hashtagCount} hashtags
+          </Badge>
+          <span className="text-muted-foreground/50">
+            Type `#` for trending suggestions
+          </span>
+        </div>
+      </div>
+
       {/* Input Area */}
       <div className="relative">
         {isPreviewMode ? (
@@ -266,6 +288,18 @@ export function PostCreationTextInput({
             
             {/* Embedded Character Counter (Optional/Simplified) */}
             <div className="absolute bottom-3 right-4 flex items-center gap-3">
+              <span
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-widest',
+                  isOverLimit
+                    ? 'text-destructive'
+                    : remaining <= 20
+                      ? 'text-orange-500'
+                      : 'text-muted-foreground/50'
+                )}
+              >
+                {remaining}
+              </span>
               <div className="relative flex items-center justify-center pointer-events-none">
                 <svg className="h-7 w-7 -rotate-90 transform opacity-60">
                   <circle

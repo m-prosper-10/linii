@@ -27,7 +27,7 @@ export function PostCreationHeader({
   onRemoveMention
 }: PostCreationHeaderProps) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-4">
+    <div className="mb-4 flex items-start justify-between gap-3 rounded-2xl border border-border/40 bg-accent/5 p-3.5">
       <div className="flex flex-row items-center justify-start gap-3 w-full">
         <div className="flex -space-x-2 overflow-hidden">
           <Avatar className="h-10 w-10 border-2 border-background ring-1 ring-border/20 shrink-0">
@@ -54,15 +54,28 @@ export function PostCreationHeader({
         </div>
 
         <div className="flex flex-row items-center justify-between w-full">
-          <div className="flex items-center gap-1.5">
-            <span className="font-bold text-[15px] leading-tight flex items-center gap-1">
+          <div className="min-w-0">
+            <span className="flex items-center gap-1 text-[15px] font-bold leading-tight">
               {user.displayName}
               {mentions.length > 0 && (
-                <span className="text-muted-foreground font-medium text-sm">
+                <span className="text-muted-foreground text-sm font-medium">
                   and {mentions.length === 1 ? mentions[0].name : `${mentions.length} others`}
                 </span>
               )}
             </span>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-widest">
+                Audience
+              </span>
+              {mentions.length > 0 && (
+                <span className="text-muted-foreground/50 text-[10px] font-bold uppercase tracking-widest">
+                  {mentions.length} collaborator{mentions.length === 1 ? '' : 's'}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5">
             <UserSearchPicker
               selectedUsers={mentions}
               onSelect={onSelectMention}

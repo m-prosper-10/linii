@@ -71,7 +71,9 @@ export function PostPollCreator({
       <div className="space-y-4">
         <div className="flex items-center justify-between px-1">
           <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Choices</span>
-          <span className="text-[10px] text-muted-foreground/40 font-medium">{options.length}/4 used</span>
+          <span className="text-[10px] text-muted-foreground/40 font-medium">
+            {options.filter(option => option.trim()).length} ready · {options.length}/4 used
+          </span>
         </div>
         
         <div className="grid grid-cols-1 gap-3">
@@ -107,6 +109,14 @@ export function PostPollCreator({
           expiresAt={expiresAt}
           setExpiresAt={setExpiresAt}
         />
+
+        <div className="mt-4 rounded-2xl border border-border/30 bg-background/50 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+            <span>{allowMultiple ? 'Multiple answers allowed' : 'Single answer only'}</span>
+            <span className="opacity-30">•</span>
+            <span>Expires in {expiresAt}</span>
+          </div>
+        </div>
         
         <div className="mt-6 flex justify-end">
           <Button
