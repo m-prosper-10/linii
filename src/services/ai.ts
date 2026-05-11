@@ -37,9 +37,8 @@ const AIService = {
    */
   async suggestPostEnhancement(content: string): Promise<string> {
     const response = await apiClient.post<AISuggestionResult>('/ai/suggest-enhancement', { content });
-    const suggestedText = response.data?.suggestedText ?? (response as AISuggestionResult).suggestedText;
-    if (response.success && suggestedText) {
-      return suggestedText;
+    if (response.success && response.data?.suggestedText) {
+      return response.data.suggestedText;
     }
     throw new Error(response.message || "Failed to get AI suggestion");
   },
@@ -53,9 +52,8 @@ const AIService = {
       display_name: displayName, 
       current_bio: currentBio 
     });
-    const suggestedBio = response.data?.suggestedBio ?? (response as AISuggestionResult).suggestedBio;
-    if (response.success && suggestedBio) {
-      return suggestedBio;
+    if (response.success && response.data?.suggestedBio) {
+      return response.data.suggestedBio;
     }
     throw new Error(response.message || "Failed to get bio suggestion");
   },
