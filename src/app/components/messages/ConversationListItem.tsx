@@ -11,6 +11,7 @@ import { Message } from '@/services/chat';
 import { User } from '@/services/auth';
 import { Verified } from 'lucide-react';
 import { format } from 'date-fns';
+import { getUserDisplayName, getUserInitial, isUserVerified } from '@/lib/user';
 
 interface ConversationListItemProps {
   otherUser: User;
@@ -29,6 +30,8 @@ export function ConversationListItem({
   isOnline = true,
   onClick,
 }: ConversationListItemProps) {
+  const displayName = getUserDisplayName(otherUser);
+  const verified = isUserVerified(otherUser);
   return (
     <div
       onClick={onClick}
@@ -43,7 +46,7 @@ export function ConversationListItem({
         <div className="relative shrink-0">
           <Avatar className="hover:ring-primary/20 h-12 w-12 ring-2 ring-transparent transition-all duration-200">
             <AvatarImage src={otherUser.avatar} />
-            <AvatarFallback>{otherUser.fullnames?.[0]}</AvatarFallback>
+            <AvatarFallback>{getUserInitial(otherUser)}</AvatarFallback>
           </Avatar>
           {isOnline && (
             <div className="border-background absolute bottom-0 right-0 h-3.5 w-3.5 animate-pulse rounded-full border-2 bg-green-500" />
@@ -60,9 +63,9 @@ export function ConversationListItem({
                   unreadCount > 0 && 'text-foreground font-semibold'
                 )}
               >
-                {otherUser.fullnames}
+                {displayName}
               </span>
-              {otherUser.verified && (
+              {verified && (
                 <Verified className="h-4 w-4 fill-blue-600" />
               )}
             </div>

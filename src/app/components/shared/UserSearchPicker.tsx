@@ -10,6 +10,7 @@ import { User } from '@/services/auth';
 import { toast } from 'sonner';
 import { Skeleton } from '@/app/components/ui/skeleton';
 import { useApp } from '@/context/AppContext';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface UserSearchPickerProps {
   selectedUsers: Array<{ id: string; name: string; avatar?: string }>;
@@ -111,7 +112,7 @@ export function UserSearchPicker({
                     } else {
                       onSelect({
                         id: user._id!,
-                        name: user.fullnames || user.username || 'Unknown',
+                        name: getUserDisplayName(user),
                         avatar: user.avatar
                       });
                     }
@@ -119,13 +120,13 @@ export function UserSearchPicker({
                   className="flex items-center gap-3 p-3 cursor-pointer hover:bg-accent/50 transition-colors rounded-xl mx-1"
                 >
                   <Avatar className="h-8 w-8 shrink-0">
-                    <AvatarImage src={user.avatar} alt={user.fullnames} />
+                    <AvatarImage src={user.avatar} alt={getUserDisplayName(user)} />
                     <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
-                      {(user.fullnames || 'U').charAt(0)}
+                      {getUserInitial(user)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col min-w-0 flex-1">
-                    <span className="text-sm font-bold truncate">{user.fullnames}</span>
+                    <span className="text-sm font-bold truncate">{getUserDisplayName(user)}</span>
                     <span className="text-[10px] text-muted-foreground truncate">@{user.username}</span>
                   </div>
                   {isSelected(user._id!) && (
