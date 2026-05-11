@@ -150,6 +150,10 @@ export function DiscoverySidebar() {
                     People
                   </div>
                   {searchResults.map(user => (
+                    (() => {
+                      const displayName = user.displayName || user.fullnames || 'Unknown';
+                      const isVerified = user.verified ?? user.isVerified;
+                      return (
                     <div
                       key={user._id}
                       onClick={() => handleUserClick(user._id!)}
@@ -158,15 +162,15 @@ export function DiscoverySidebar() {
                       <Avatar className="border-border/5 group-hover:border-primary/20 h-9 w-9 border transition-colors">
                         <AvatarImage src={user.avatar} />
                         <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
-                          {(user.fullnames || 'U').charAt(0)}
+                          displayName.charAt(0)
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex min-w-0 flex-col">
                         <div className="flex items-center gap-1">
                           <span className="group-hover:text-primary truncate text-sm font-bold transition-colors">
-                            {user.fullnames}
+                            {displayName}
                           </span>
-                          {user.verified && (
+                          {isVerified && (
                             <Badge
                               variant="secondary"
                               className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
@@ -180,6 +184,8 @@ export function DiscoverySidebar() {
                         </span>
                       </div>
                     </div>
+                      );
+                    })()
                   ))}
                 </div>
               ) : (
@@ -254,15 +260,19 @@ export function DiscoverySidebar() {
               <UserSkeleton />
             ) : suggestedUsers.length > 0 ? (
               suggestedUsers.map(user => (
+                (() => {
+                  const displayName = user.displayName || user.fullnames || 'Unknown';
+                  const isVerified = user.verified ?? user.isVerified;
+                  return (
                 <div key={user._id} className="group flex items-center gap-3">
                   <div
                     className="cursor-pointer transition-transform hover:scale-105"
                     onClick={() => handleUserClick(user._id!)}
                   >
                     <Avatar className="border-border/10 h-10 w-10 border">
-                      <AvatarImage src={user.avatar} alt={user.fullnames} />
+                      <AvatarImage src={user.avatar} alt={displayName} />
                       <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                        {(user.fullnames || 'U').charAt(0)}
+                        displayName.charAt(0)
                       </AvatarFallback>
                     </Avatar>
                   </div>
@@ -272,9 +282,9 @@ export function DiscoverySidebar() {
                       onClick={() => handleUserClick(user._id!)}
                     >
                       <span className="truncate text-sm font-bold">
-                        {user.fullnames}
+                        {displayName}
                       </span>
-                      {user.verified && (
+                      {isVerified && (
                         <Badge
                           variant="secondary"
                           className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
@@ -309,6 +319,8 @@ export function DiscoverySidebar() {
                     {followingIds.has(user._id!) ? 'Following' : 'Follow'}
                   </Button>
                 </div>
+                  );
+                })()
               ))
             ) : (
               <p className="text-muted-foreground py-2 text-center text-xs">

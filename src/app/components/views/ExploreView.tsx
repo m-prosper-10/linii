@@ -26,12 +26,16 @@ import { toast } from 'sonner';
 
 interface SuggestedUser {
   _id: string;
+  id?: string;
   fullnames: string;
+  displayName?: string;
   username: string;
   avatar: string;
   bio?: string;
   followersCount?: number;
   isFollowing?: boolean;
+  verified?: boolean;
+  isVerified?: boolean;
 }
 
 export function ExploreView() {
@@ -198,6 +202,10 @@ export function ExploreView() {
               Suggested for you
             </h3>
             {suggestedUsers.map(user => (
+              (() => {
+                const displayName = user.displayName || user.fullnames;
+                const isVerified = user.verified ?? user.isVerified;
+                return (
               <div
                 key={user._id}
                 className="hover:bg-accent/30 group flex items-center justify-between rounded-xl p-3 transition-all"
@@ -207,13 +215,13 @@ export function ExploreView() {
                   onClick={() => handleUserClick(user._id)}
                 >
                   <Avatar className="group-hover:border-primary/20 h-12 w-12 border-2 border-transparent transition-all">
-                    <AvatarImage src={user.avatar} alt={user.fullnames} />
+                    <AvatarImage src={user.avatar} alt={displayName} />
                     <AvatarFallback className="font-bold">
-                      {user.fullnames?.[0] || user.username?.[0]}
+                      {displayName?.[0] || user.username?.[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="text-sm font-bold">{user.fullnames}</div>
+                    <div className="text-sm font-bold">{displayName}</div>
                     <div className="text-muted-foreground text-xs font-medium">
                       @{user.username}
                     </div>
@@ -231,6 +239,8 @@ export function ExploreView() {
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </Button>
               </div>
+                );
+              })()
             ))}
           </div>
         </TabsContent>
