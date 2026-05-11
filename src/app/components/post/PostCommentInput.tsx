@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { useApp } from '@/context/AppContext';
 import { EmojiPicker } from '@/app/components/post/EmojiPicker';
 import { cn } from '@/app/components/ui/utils';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface PostCommentInputProps {
   postId: string;
@@ -70,12 +71,13 @@ export function PostCommentInput({
   };
 
   const canSubmit = !!value.trim() && !loading;
+  const currentUserName = getUserDisplayName(currentUser);
 
   return (
     <div className={cn('flex items-start gap-2.5', className)}>
       <Avatar className="h-12 w-12 shrink-0 mt-1">
-        <AvatarImage src={currentUser?.avatar} alt={currentUser?.fullnames} />
-        <AvatarFallback className="text-xs">{currentUser?.fullnames?.[0]}</AvatarFallback>
+        <AvatarImage src={currentUser?.avatar} alt={currentUserName} />
+        <AvatarFallback className="text-xs">{getUserInitial(currentUser)}</AvatarFallback>
       </Avatar>
 
       <div className={cn(

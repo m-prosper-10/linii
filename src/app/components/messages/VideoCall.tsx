@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 import {
   PhoneOff,
   Mic,
@@ -37,6 +38,7 @@ export function VideoCall({
   onDecline,
   onEnd,
 }: VideoCallProps) {
+  const otherUserName = getUserDisplayName(otherUser);
   const [callStatus, setCallStatus] = useState<'incoming' | 'connecting' | 'connected' | 'ended'>(isIncoming ? 'incoming' : 'connecting');
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(true);
@@ -124,12 +126,12 @@ export function VideoCall({
               {otherUser.avatar ? (
                 <img 
                   src={otherUser.avatar} 
-                  alt={otherUser.fullnames}
+                  alt={otherUserName}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <span className="text-4xl font-bold text-white">
-                  {otherUser.fullnames?.[0]}
+                  {getUserInitial(otherUser)}
                 </span>
               )}
             </div>
@@ -168,12 +170,12 @@ export function VideoCall({
                 {otherUser.avatar ? (
                   <img 
                     src={otherUser.avatar} 
-                    alt={otherUser.fullnames}
+                    alt={otherUserName}
                     className="h-full w-full object-cover"
                   />
                 ) : (
                   <span className="text-5xl font-bold text-white">
-                    {otherUser.fullnames?.[0]}
+                    {getUserInitial(otherUser)}
                   </span>
                 )}
               </div>
@@ -185,12 +187,12 @@ export function VideoCall({
                   {otherUser.avatar ? (
                     <img 
                       src={otherUser.avatar} 
-                      alt={otherUser.fullnames}
+                      alt={otherUserName}
                       className="h-full w-full object-cover"
                     />
                   ) : (
                     <span className="text-4xl font-bold text-white">
-                      {otherUser.fullnames?.[0]}
+                      {getUserInitial(otherUser)}
                     </span>
                   )}
                 </div>
@@ -213,7 +215,7 @@ export function VideoCall({
                 )}
               </div>
               <div className="text-center text-white">
-                <h2 className="text-2xl font-semibold">{otherUser.fullnames}</h2>
+                <h2 className="text-2xl font-semibold">{otherUserName}</h2>
                 <p className="text-white/70 mt-1">
                   {callStatus === 'incoming' && 'Incoming video call...'}
                   {callStatus === 'connecting' && 'Calling...'}

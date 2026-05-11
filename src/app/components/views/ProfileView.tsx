@@ -32,6 +32,7 @@ import ProfileSkeleton from '@/app/components/skeletons/ProfileSkeleton';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { cn } from '@/app/components/ui/utils';
+import { getUserInitial } from '@/lib/user';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -228,7 +229,7 @@ export function ProfileView() {
             <Avatar className="border-background h-28 w-28 border-4 shadow-lg">
               <AvatarImage src={user.avatar} alt={displayName} />
               <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
-                {displayName?.[0] ?? user.username?.[0] ?? '?'}
+                {getUserInitial(user)}
               </AvatarFallback>
             </Avatar>
             {/* Online indicator — placeholder, could be wired to socket */}

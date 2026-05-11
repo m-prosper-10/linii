@@ -5,6 +5,7 @@ import { Heart, Reply, ChevronDown } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/app/components/ui/utils';
 import type { PostApiType } from '@/services/post';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 type Comment = PostApiType['comments'][number];
 
@@ -42,13 +43,20 @@ export function PostCommentList({
     <div className={cn('space-y-3', className)}>
       {visible.map(comment => (
         <div key={comment._id} className="flex gap-2.5 group/comment">
+          {(() => {
+            const authorName = getUserDisplayName(comment.author);
+            return (
+              <>
           <Avatar
             className="h-7 w-7 shrink-0 mt-0.5 cursor-pointer ring-2 ring-transparent hover:ring-primary/20 transition-all"
             onClick={() => onUserClick?.(comment.author._id)}
           >
-            <AvatarImage src={comment.author.avatar} alt={comment.author.fullnames} />
-            <AvatarFallback className="text-[10px]">{comment.author.fullnames[0]}</AvatarFallback>
+            <AvatarImage src={comment.author.avatar} alt={authorName} />
+            <AvatarFallback className="text-[10px]">{getUserInitial(comment.author)}</AvatarFallback>
           </Avatar>
+              </>
+            );
+          })()}
 
           <div className="min-w-0 flex-1">
             <div className="inline-block max-w-full rounded-2xl rounded-tl-sm bg-muted/40 px-3.5 py-2.5">
@@ -56,7 +64,7 @@ export function PostCommentList({
                 className="text-xs font-semibold text-foreground/90 hover:text-primary transition-colors mb-0.5 block"
                 onClick={() => onUserClick?.(comment.author._id)}
               >
-                {comment.author.fullnames}
+                {getUserDisplayName(comment.author)}
               </button>
               <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap wrap-break-word">
                 {comment.content}

@@ -15,6 +15,7 @@ import { FileDisplay } from './FileDisplay';
 import { MessageBubbleToolbar } from './MessageBubbleToolbar';
 import { MessageReplyQuote } from './MessageReplyQuote';
 import type { MessageActionContext } from './types';
+import { getUserInitial } from '@/lib/user';
 
 interface MessageBubbleProps {
   messageId: string;
@@ -109,7 +110,7 @@ export function MessageBubble({
       {showAvatar ? (
         <Avatar className="h-8 w-8 shrink-0">
           <AvatarImage src={sender.avatar} />
-          <AvatarFallback>{sender.fullnames?.[0]}</AvatarFallback>
+          <AvatarFallback>{getUserInitial(sender)}</AvatarFallback>
         </Avatar>
       ) : (
         <div className="w-8 shrink-0" aria-hidden />

@@ -23,6 +23,7 @@ import { PostService, PostApiType } from '@/services/post';
 import { socialService } from '@/services/social';
 import { analyticsService, TrendingTopic } from '@/services/analytics';
 import { toast } from 'sonner';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface SuggestedUser {
   _id: string;
@@ -203,8 +204,7 @@ export function ExploreView() {
             </h3>
             {suggestedUsers.map(user => (
               (() => {
-                const displayName = user.displayName || user.fullnames;
-                const isVerified = user.verified ?? user.isVerified;
+                const displayName = getUserDisplayName(user);
                 return (
               <div
                 key={user._id}
@@ -217,7 +217,7 @@ export function ExploreView() {
                   <Avatar className="group-hover:border-primary/20 h-12 w-12 border-2 border-transparent transition-all">
                     <AvatarImage src={user.avatar} alt={displayName} />
                     <AvatarFallback className="font-bold">
-                      {displayName?.[0] || user.username?.[0]}
+                      {getUserInitial(user)}
                     </AvatarFallback>
                   </Avatar>
                   <div>

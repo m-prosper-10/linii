@@ -24,6 +24,7 @@ import { cn } from '@/app/components/ui/utils';
 import { useEffect, useState, useCallback } from 'react';
 import { notificationService, Notification } from '@/services/notification';
 import { socialService } from '@/services/social';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import NotificationSkeleton from '../skeletons/NotificationSkeleton';
@@ -299,6 +300,7 @@ function NotificationItem({
   const senderId = n.sender._id;
   const isFollowing = followedBack.has(senderId);
   const isPending = followingInProgress.has(senderId);
+  const senderName = getUserDisplayName(n.sender);
 
   return (
     <div
@@ -317,9 +319,9 @@ function NotificationItem({
       {/* Avatar + icon badge */}
       <div className="relative shrink-0">
         <Avatar className="h-11 w-11">
-          <AvatarImage src={n.sender.avatar} alt={n.sender.fullnames} />
+          <AvatarImage src={n.sender.avatar} alt={senderName} />
           <AvatarFallback className="text-sm font-bold">
-            {n.sender.fullnames?.[0] ?? 'U'}
+            {getUserInitial(n.sender)}
           </AvatarFallback>
         </Avatar>
         {/* Type icon badge */}
@@ -337,7 +339,7 @@ function NotificationItem({
       <div className="min-w-0 flex-1">
         <p className="text-sm leading-snug">
           <span className="text-foreground font-semibold">
-            {n.sender.fullnames}
+            {senderName}
           </span>{' '}
           <span className="text-muted-foreground">{n.message}</span>
         </p>

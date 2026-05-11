@@ -13,6 +13,7 @@ import {
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { cn } from '@/app/components/ui/utils';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 import { toast } from 'sonner';
 import {
   ArrowLeft,
@@ -100,6 +101,7 @@ export function ConversationSettingsView() {
   const otherUser = conversation.participants.find(
     p => p._id !== currentUser?._id
   );
+  const otherUserName = getUserDisplayName(otherUser);
 
   const handleSaveName = async () => {
     if (!groupName.trim()) return;
@@ -203,7 +205,7 @@ export function ConversationSettingsView() {
               <AvatarFallback className="text-xl font-bold">
                 {isGroup
                   ? (conversation.name?.[0] ?? 'G')
-                  : otherUser?.fullnames?.[0]}
+                  : getUserInitial(otherUser)}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
@@ -252,7 +254,7 @@ export function ConversationSettingsView() {
                     <p className="truncate font-semibold">
                       {isGroup
                         ? (conversation.name ?? 'Unnamed group')
-                        : otherUser?.fullnames}
+                        : otherUserName}
                     </p>
                     {isGroup && (isAdmin || isCreator) && (
                       <button
@@ -365,13 +367,13 @@ export function ConversationSettingsView() {
                     <Avatar className="h-9 w-9 shrink-0">
                       <AvatarImage src={participant.avatar} />
                       <AvatarFallback className="text-xs font-bold">
-                        {participant.fullnames?.[0]}
+                        {getUserInitial(participant)}
                       </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className="truncate text-sm font-medium">
-                          {participant.fullnames}
+                          {getUserDisplayName(participant)}
                         </span>
                         {pIsCreator && (
                           <Crown className="h-3 w-3 shrink-0 text-amber-500" />
@@ -513,7 +515,13 @@ function AddMembersDialog({
 }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<
-    { _id?: string; fullnames?: string; username?: string; avatar?: string }[]
+    {
+      _id?: string;
+      fullnames?: string;
+      displayName?: string;
+      username?: string;
+      avatar?: string;
+    }[]
   >([]);
   const [searching, setSearching] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
@@ -593,12 +601,12 @@ function AddMembersDialog({
                 <Avatar className="h-9 w-9 shrink-0">
                   <AvatarImage src={user.avatar} />
                   <AvatarFallback className="text-xs">
-                    {user.fullnames?.[0]}
+                    {getUserInitial(user)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">
-                    {user.fullnames}
+                    {getUserDisplayName(user)}
                   </p>
                   <p className="text-muted-foreground/50 text-xs">
                     @{user.username}
