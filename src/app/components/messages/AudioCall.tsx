@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { cn } from '@/app/components/ui/utils';
 import { User } from '@/services/auth';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 import {
   Phone,
   PhoneOff,
@@ -36,6 +37,7 @@ export function AudioCall({
   onDecline,
   onEnd,
 }: AudioCallProps) {
+  const otherUserName = getUserDisplayName(otherUser);
   const [callStatus, setCallStatus] = useState<'incoming' | 'connecting' | 'connected' | 'ended'>(isIncoming ? 'incoming' : 'connecting');
   const [isMuted, setIsMuted] = useState(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState(false);
@@ -126,12 +128,12 @@ export function AudioCall({
               {otherUser.avatar ? (
                 <img 
                   src={otherUser.avatar} 
-                  alt={otherUser.fullnames}
+                  alt={otherUserName}
                   className="h-full w-full object-cover"
                 />
               ) : (
                 <span className="text-4xl font-bold text-muted-foreground">
-                  {otherUser.fullnames?.[0]}
+                  {getUserInitial(otherUser)}
                 </span>
               )}
             </div>
@@ -155,7 +157,7 @@ export function AudioCall({
           </div>
 
           <div className="text-center">
-            <h2 className="text-2xl font-semibold">{otherUser.fullnames}</h2>
+            <h2 className="text-2xl font-semibold">{otherUserName}</h2>
             <p className="text-muted-foreground mt-1">
               {callStatus === 'incoming' && 'Incoming call...'}
               {callStatus === 'connecting' && 'Connecting...'}

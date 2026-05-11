@@ -23,6 +23,7 @@ import { PostService, PostApiType } from '@/services/post';
 import { socialService } from '@/services/social';
 import { analyticsService, TrendingTopic } from '@/services/analytics';
 import { toast } from 'sonner';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 
 interface SuggestedUser {
   _id: string;
@@ -198,6 +199,9 @@ export function ExploreView() {
               Suggested for you
             </h3>
             {suggestedUsers.map(user => (
+              (() => {
+                const displayName = getUserDisplayName(user);
+                return (
               <div
                 key={user._id}
                 className="hover:bg-accent/30 group flex items-center justify-between rounded-xl p-3 transition-all"
@@ -207,13 +211,13 @@ export function ExploreView() {
                   onClick={() => handleUserClick(user._id)}
                 >
                   <Avatar className="group-hover:border-primary/20 h-12 w-12 border-2 border-transparent transition-all">
-                    <AvatarImage src={user.avatar} alt={user.fullnames} />
+                    <AvatarImage src={user.avatar} alt={displayName} />
                     <AvatarFallback className="font-bold">
-                      {user.fullnames?.[0] || user.username?.[0]}
+                      {getUserInitial(user)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="text-sm font-bold">{user.fullnames}</div>
+                    <div className="text-sm font-bold">{displayName}</div>
                     <div className="text-muted-foreground text-xs font-medium">
                       @{user.username}
                     </div>
@@ -231,6 +235,8 @@ export function ExploreView() {
                   {user.isFollowing ? 'Following' : 'Follow'}
                 </Button>
               </div>
+                );
+              })()
             ))}
           </div>
         </TabsContent>

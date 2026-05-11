@@ -10,6 +10,7 @@ import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Search, Send, SquarePen, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { getUserDisplayName } from '@/lib/user';
 
 import { ConversationListItem } from '@/app/components/messages/ConversationListItem';
 import { MessageBubble } from '@/app/components/messages/MessageBubble';
@@ -345,10 +346,7 @@ export function MessagesView() {
   const handleReply = useCallback((messageToReply: MessageActionContext) => {
     setReplyDraft({
       messageId: messageToReply.messageId,
-      senderLabel:
-        messageToReply.sender.fullnames ||
-        messageToReply.sender.username ||
-        'User',
+      senderLabel: getUserDisplayName(messageToReply.sender),
       preview: replyPreviewLabel(messageToReply),
     });
     queueMicrotask(() => messageInputRef.current?.focus());
@@ -412,7 +410,7 @@ export function MessagesView() {
     const other = conv.participants.find(p => p._id !== currentUser?._id);
     const q = searchQuery.toLowerCase();
     
-    const nameMatch = other?.fullnames.toLowerCase().includes(q);
+    const nameMatch = getUserDisplayName(other).toLowerCase().includes(q);
     const messageMatch = conv.lastMessage?.content?.toLowerCase().includes(q) ?? false;
     
     return nameMatch || messageMatch;
