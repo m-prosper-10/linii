@@ -33,7 +33,7 @@ export function PostCreationHeader({
           <Avatar className="h-10 w-10 border-2 border-background ring-1 ring-border/20 shrink-0">
             <AvatarImage src={user.avatar} alt={user.displayName} />
             <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-              {user.displayName.charAt(0)}
+              {user.displayName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
           
@@ -41,7 +41,7 @@ export function PostCreationHeader({
             <Avatar key={mention.id} className="h-10 w-10 border-2 border-background ring-1 ring-border/20 shrink-0">
               <AvatarImage src={mention.avatar} alt={mention.name} />
               <AvatarFallback className="bg-accent text-[10px] font-bold">
-                {mention.name.charAt(0)}
+                {mention.name.charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           ))}

@@ -9,6 +9,7 @@ import { chatService, Conversation } from '@/services/chat';
 import { useApp } from '@/context/AppContext';
 import { User } from '@/services/auth';
 import { cn } from '@/app/components/ui/utils';
+import { getUserDisplayName, getUserInitial } from '@/lib/user';
 import { toast } from 'sonner';
 
 interface NewConversationDialogProps {
@@ -115,11 +116,11 @@ export function NewConversationDialog({
                 )}
               >
                 <Avatar className="h-10 w-10 shrink-0">
-                  <AvatarImage src={user.avatar} alt={user.fullnames} />
-                  <AvatarFallback className="text-sm">{user.fullnames?.[0]}</AvatarFallback>
+                  <AvatarImage src={user.avatar} alt={getUserDisplayName(user)} />
+                  <AvatarFallback className="text-sm">{getUserInitial(user)}</AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium truncate">{user.fullnames}</p>
+                  <p className="text-sm font-medium truncate">{getUserDisplayName(user)}</p>
                   <p className="text-xs text-muted-foreground/60 truncate">@{user.username}</p>
                 </div>
                 {startingWith === user._id ? (

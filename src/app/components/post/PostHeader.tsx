@@ -34,6 +34,7 @@ import {
 import { cn } from '@/app/components/ui/utils';
 import type { PostApiType } from '@/services/post';
 import { useRouter } from 'next/navigation';
+import { getUserDisplayName, getUserInitial, isUserVerified } from '@/lib/user';
 
 interface PostHeaderProps {
   post: PostApiType;
@@ -60,6 +61,8 @@ export function PostHeader({
     addSuffix: true,
   });
   const router = useRouter();
+  const authorName = getUserDisplayName(post.author);
+  const authorVerified = isUserVerified(post.author);
   return (
     <div className="flex items-center justify-between gap-3">
       <div
@@ -76,9 +79,9 @@ export function PostHeader({
               'ring-background z-20 shrink-0 ring-2'
             )}
           >
-            <AvatarImage src={post.author.avatar} alt={post.author.fullnames} />
+            <AvatarImage src={post.author.avatar} alt={authorName} />
             <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-              {post.author.fullnames[0]}
+              {getUserInitial(post.author)}
             </AvatarFallback>
           </Avatar>
 
@@ -90,6 +93,9 @@ export function PostHeader({
                   (m): m is Exclude<typeof m, string> => typeof m !== 'string'
                 )
                 .map((mention, i) => (
+                  (() => {
+                    const mentionName = getUserDisplayName(mention);
+                    return (
                   <Avatar
                     key={mention._id}
                     className={cn(
@@ -98,11 +104,13 @@ export function PostHeader({
                       i === 0 ? 'z-10' : 'z-0'
                     )}
                   >
-                    <AvatarImage src={mention.avatar} alt={mention.fullnames} />
+                    <AvatarImage src={mention.avatar} alt={mentionName} />
                     <AvatarFallback className="text-[10px]">
-                      {mention.fullnames[0]}
+                      {getUserInitial(mention)}
                     </AvatarFallback>
                   </Avatar>
+                    );
+                  })()
                 ))}
             </div>
           )}
@@ -118,9 +126,9 @@ export function PostHeader({
                 onUserClick?.(post.author._id);
               }}
             >
-              {post.author.fullnames}
+              {authorName}
             </span>
-            {post.author.isVerified && (
+            {authorVerified && (
               <>
                 <span className="text-muted-foreground text-xs font-normal">
                   ·
@@ -152,6 +160,9 @@ export function PostHeader({
                             typeof m !== 'string'
                         )
                         .map(mention => (
+                          (() => {
+                            const mentionName = getUserDisplayName(mention);
+                            return (
                           <div
                             key={mention._id}
                             className="hover:bg-primary-foreground/10 flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1 transition-colors"
@@ -163,18 +174,20 @@ export function PostHeader({
                             <Avatar className="ring-border/10 h-6 w-6 ring-1">
                               <AvatarImage src={mention.avatar} />
                               <AvatarFallback className="text-[10px] font-bold">
-                                {mention.fullnames[0]}
+                                {getUserInitial(mention)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                               <span className="text-[11px] font-bold leading-none">
-                                {mention.fullnames}
+                                {mentionName}
                               </span>
                               <span className="text-muted-foreground/70 text-[9px] leading-none">
                                 @{mention.username || 'collab'}
                               </span>
                             </div>
                           </div>
+                            );
+                          })()
                         ))}
                     </TooltipContent>
                   </Tooltip>
