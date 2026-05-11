@@ -71,9 +71,9 @@ export const socialService = {
    * Get follow status between current user and target user
    */
   async getFollowStatus(userId: string): Promise<FollowStatus> {
-    const response = await apiClient.get<FollowStatus>(`/social/${userId}/status`);
+    const response = await apiClient.get<{ status: FollowStatus }>(`/social/${userId}/status`);
     if (response.success && response.data) {
-      return response.data;
+      return response.data.status;
     }
     throw new Error(response.message || 'Failed to get follow status');
   },
@@ -82,9 +82,9 @@ export const socialService = {
    * Get user statistics
    */
   async getUserStats(userId: string): Promise<UserStats> {
-    const response = await apiClient.get<UserStats>(`/social/${userId}/stats`);
+    const response = await apiClient.get<{ stats: UserStats }>(`/social/${userId}/stats`);
     if (response.success && response.data) {
-      return response.data;
+      return response.data.stats;
     }
     throw new Error(response.message || 'Failed to get user stats');
   },
@@ -106,11 +106,14 @@ export const socialService = {
    * Search for users by query
    */
   async searchUsers(query: string, page: number = 1, limit: number = 20): Promise<{ users: Partial<User>[], total: number }> {
-    const response = await apiClient.get<{ users: Partial<User>[], total: number }>(`/social/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
+    const response = await apiClient.get<{
+      users: Partial<User>[];
+      pagination?: { total?: number };
+    }>(`/social/search?query=${encodeURIComponent(query)}&page=${page}&limit=${limit}`);
     if (response.success && response.data) {
       return {
         users: response.data.users,
-        total: response.data.total
+        total: response.data.pagination?.total ?? response.data.users.length
       };
     }
     throw new Error(response.message || 'Search failed');

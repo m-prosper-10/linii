@@ -32,6 +32,7 @@ import ProfileSkeleton from '@/app/components/skeletons/ProfileSkeleton';
 import { useApp } from '@/context/AppContext';
 import { toast } from 'sonner';
 import { cn } from '@/app/components/ui/utils';
+import { getUserInitial } from '@/lib/user';
 import { format } from 'date-fns';
 import {
   DropdownMenu,
@@ -196,7 +197,7 @@ export function ProfileView() {
           </button>
           <div className="min-w-0">
             <h2 className="truncate text-base font-bold leading-tight">
-              {user.fullnames}
+              {displayName}
             </h2>
             <p className="text-muted-foreground/60 text-[11px] font-medium">
               {(user.postsCount || 0).toLocaleString()} posts
@@ -224,9 +225,9 @@ export function ProfileView() {
         <div className="-mt-14 mb-3 flex items-end justify-between">
           <div className="relative">
             <Avatar className="border-background h-28 w-28 border-4 shadow-lg">
-              <AvatarImage src={user.avatar} alt={user.fullnames} />
+              <AvatarImage src={user.avatar} alt={displayName} />
               <AvatarFallback className="bg-primary/10 text-primary text-3xl font-bold">
-                {user.fullnames?.[0] ?? user.username?.[0] ?? '?'}
+                {getUserInitial(user)}
               </AvatarFallback>
             </Avatar>
             {/* Online indicator — placeholder, could be wired to socket */}
@@ -316,9 +317,9 @@ export function ProfileView() {
         <div className="mb-2">
           <div className="flex items-center gap-1.5">
             <h1 className="text-xl font-bold tracking-tight">
-              {user.fullnames}
+              {displayName}
             </h1>
-            {user.verified && (
+            {isVerified && (
               <CheckCircle2 className="text-primary h-6 w-6 fill-blue-600" />
             )}
           </div>
