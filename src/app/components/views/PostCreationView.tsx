@@ -24,6 +24,9 @@ import {
   Sparkles,
   Loader2,
   TrendingUp,
+  Clock3,
+  Eye,
+  FileText,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import React, { useState, useCallback, useEffect, useRef } from 'react';
@@ -73,6 +76,9 @@ export function PostCreationView() {
   const [mentions, setMentions] = useState<
     Array<{ id: string; name: string; avatar?: string }>
   >([]);
+  const [draftState, setDraftState] = useState<'idle' | 'saving' | 'saved'>(
+    'idle'
+  );
   /** Remount markdown textarea after submit/clear so value and DOM stay in sync. */
   const [editorResetNonce, setEditorResetNonce] = useState(0);
   const draftSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -143,13 +149,16 @@ export function PostCreationView() {
     }
     draftSaveTimeoutRef.current = setTimeout(() => {
       draftSaveTimeoutRef.current = null;
+      setDraftState('saving');
       if (content.trim()) {
         localStorage.setItem(
           'linii_post_draft',
           JSON.stringify({ content, visibility })
         );
+        setDraftState('saved');
       } else {
         localStorage.removeItem('linii_post_draft');
+        setDraftState('idle');
       }
     }, 1000);
     return () => {
@@ -329,6 +338,12 @@ export function PostCreationView() {
 
   const characterCount = content.length;
   const isOverLimit = characterCount > maxCharacters;
+  const remainingCharacters = maxCharacters - characterCount;
+  const selectedToolsCount =
+    selectedMediaFiles.length +
+    (isPollMode ? 1 : 0) +
+    (locationName ? 1 : 0) +
+    (scheduledDate ? 1 : 0);
   const canPost =
     (content.trim().length > 0 ||
       selectedMediaFiles.length > 0 ||
@@ -438,6 +453,64 @@ export function PostCreationView() {
         ) : (
           <div className="flex gap-4">
             <div className="flex-1 space-y-6">
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-border/40 bg-accent/5 px-4 py-3">
+                  <div className="text-muted-foreground/60 mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                    <FileText className="h-3.5 w-3.5" />
+                    Writing
+                  </div>
+                  <div className="text-sm font-semibold">
+                    {characterCount > 0
+                      ? `${characterCount}/${maxCharacters} characters`
+                      : 'Start with a clear hook'}
+                  </div>
+                  <div
+                    className={cn(
+                      'mt-1 text-xs',
+                      isOverLimit
+                        ? 'text-destructive'
+                        : 'text-muted-foreground/60'
+                    )}
+                  >
+                    {isOverLimit
+                      ? `${Math.abs(remainingCharacters)} over the suggested limit`
+                      : `${remainingCharacters} remaining`}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border/40 bg-accent/5 px-4 py-3">
+                  <div className="text-muted-foreground/60 mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    Draft
+                  </div>
+                  <div className="text-sm font-semibold">
+                    {draftState === 'saving'
+                      ? 'Saving draft...'
+                      : draftState === 'saved'
+                        ? 'Draft saved locally'
+                        : 'Nothing saved yet'}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground/60">
+                    Autosaves while you write
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border/40 bg-accent/5 px-4 py-3">
+                  <div className="text-muted-foreground/60 mb-1 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+                    <Clock3 className="h-3.5 w-3.5" />
+                    Setup
+                  </div>
+                  <div className="text-sm font-semibold">
+                    {selectedToolsCount > 0
+                      ? `${selectedToolsCount} extras configured`
+                      : 'No extras yet'}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground/60">
+                    Media, poll, location, schedule
+                  </div>
+                </div>
+              </div>
+
               <PostCreationHeader
                 user={{
                   displayName: currentUser.displayName,
@@ -512,6 +585,22 @@ export function PostCreationView() {
 
               <PostMediaPreview media={selectedMedia} onRemove={removeMedia} />
 
+              <div className="rounded-2xl border border-border/40 bg-accent/5 p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-sm font-semibold">Publishing tools</h3>
+                    <p className="text-muted-foreground/60 text-xs">
+                      Add context and tighten the final post before publishing.
+                    </p>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="rounded-full border border-border/40 bg-background/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest"
+                  >
+                    {visibility}
+                  </Badge>
+                </div>
+
               <div className="border-border mt-4 flex items-center justify-between border-t pt-5">
                 <TooltipProvider delayDuration={400}>
                   <div className="flex flex-wrap items-center gap-1.5">
@@ -531,7 +620,11 @@ export function PostCreationView() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-primary hover:bg-primary/10 h-10 w-10 shrink-0 cursor-pointer rounded-full transition-all hover:scale-110"
+                              className={cn(
+                                'text-primary hover:bg-primary/10 h-10 w-10 shrink-0 cursor-pointer rounded-full transition-all hover:scale-110',
+                                selectedMediaFiles.length > 0 &&
+                                  'bg-primary/10 ring-1 ring-primary/15'
+                              )}
                               asChild
                             >
                               <span>
@@ -551,7 +644,7 @@ export function PostCreationView() {
                             className={cn(
                               'h-10 w-10 shrink-0 rounded-full',
                               isPollMode
-                                ? 'text-primary bg-primary/10'
+                                ? 'text-primary bg-primary/10 ring-1 ring-primary/15'
                                 : 'text-primary hover:bg-primary/10'
                             )}
                             onClick={() => setIsPollMode(!isPollMode)}
@@ -570,6 +663,7 @@ export function PostCreationView() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-10 w-10 shrink-0 rounded-full text-rose-500 hover:bg-rose-500/10"
+                                aria-pressed={Boolean(locationName)}
                               >
                                 <MapPin className="h-5 w-5" />
                               </Button>
@@ -605,7 +699,7 @@ export function PostCreationView() {
                                 className={cn(
                                   'h-10 w-10 shrink-0 rounded-full',
                                   scheduledDate
-                                    ? 'bg-orange-500/10 text-orange-500'
+                                    ? 'bg-orange-500/10 text-orange-500 ring-1 ring-orange-500/20'
                                     : 'text-orange-500 hover:bg-orange-500/10'
                                 )}
                               >
@@ -665,11 +759,20 @@ export function PostCreationView() {
                 </TooltipProvider>
 
                 <div className="flex items-center gap-3">
-                  {content.trim() && (
-                    <span className="text-muted-foreground/50 hidden animate-pulse text-[10px] font-bold uppercase tracking-widest md:inline-block">
-                      Draft saved
-                    </span>
-                  )}
+                  <div className="hidden items-center gap-2 md:flex">
+                    <Badge
+                      variant="secondary"
+                      className="rounded-full border border-border/40 bg-background/70 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest"
+                    >
+                      <Eye className="mr-1 h-3 w-3" />
+                      {isPreviewMode ? 'Previewing text' : 'Editing text'}
+                    </Badge>
+                    {draftState !== 'idle' && (
+                      <span className="text-muted-foreground/50 text-[10px] font-bold uppercase tracking-widest">
+                        {draftState === 'saving' ? 'Saving draft' : 'Draft saved'}
+                      </span>
+                    )}
+                  </div>
                   {isOverLimit && (
                     <Badge
                       variant="destructive"
@@ -679,6 +782,7 @@ export function PostCreationView() {
                     </Badge>
                   )}
                 </div>
+              </div>
               </div>
             </div>
           </div>
