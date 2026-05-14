@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/app/components/ui/card';
-import { Eye, Heart, MessageCircle, TrendingUp, Users } from 'lucide-react';
+import { Eye, Heart, MessageCircle, Repeat2, TrendingUp, Users, FileText } from 'lucide-react';
 import type { UserAnalytics } from '@/services/analytics';
 
 interface StatCardsProps {
@@ -11,7 +11,13 @@ const STATS = (a: UserAnalytics) => [
     label: 'Total Posts',
     value: a.totalPosts.toLocaleString(),
     sub: 'Lifetime content',
-    icon: Eye,
+    icon: FileText,
+  },
+  {
+    label: 'Stories',
+    value: a.totalStories.toLocaleString(),
+    sub: 'Published stories',
+    icon: FileText,
   },
   {
     label: 'Total Views',
@@ -32,6 +38,12 @@ const STATS = (a: UserAnalytics) => [
     icon: MessageCircle,
   },
   {
+    label: 'Shares',
+    value: a.totalSharesReceived.toLocaleString(),
+    sub: 'Reposts and shares',
+    icon: Repeat2,
+  },
+  {
     label: 'Followers',
     value: a.totalFollowers.toLocaleString(),
     sub: null,
@@ -42,7 +54,7 @@ const STATS = (a: UserAnalytics) => [
 
 export function StatCards({ analytics }: StatCardsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
       {STATS(analytics).map(({ label, value, sub, icon: Icon, badge }) => (
         <Card key={label} className="border-border/50 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 pt-4 px-4">
