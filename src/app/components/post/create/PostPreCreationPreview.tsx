@@ -3,7 +3,7 @@
 import React from 'react';
 import { PostContent } from '../PostContent';
 import { PostHeader } from '../PostHeader';
-import { Heart, MessageCircle, Share2 } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Clock3, Globe2 } from 'lucide-react';
 import { PostApiType } from '@/services/post';
 
 interface PostPreCreationPreviewProps {
@@ -85,6 +85,19 @@ export function PostPreCreationPreview({
 
       <div className="rounded-3xl border border-primary/10 bg-card overflow-hidden shadow-2xl shadow-primary/5 transition-all animate-in fade-in zoom-in-95 duration-500">
         <div className="p-4 sm:p-5">
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-accent/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+              <Globe2 className="h-3 w-3" />
+              {visibility}
+            </span>
+            {poll && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-border/40 bg-accent/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/70">
+                <Clock3 className="h-3 w-3" />
+                Poll live until {new Date(poll.expiresAt).toLocaleDateString()}
+              </span>
+            )}
+          </div>
+
           {/* Real Post Header Component for perfect preview */}
           <div className="mb-4">
             <PostHeader 
