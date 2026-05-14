@@ -150,52 +150,43 @@ export function DiscoverySidebar() {
                   <div className="text-muted-foreground px-3 py-2 text-[10px] font-bold uppercase tracking-widest">
                     People
                   </div>
-                  {searchResults.map(user => (
-                    (() => {
-                      const displayName = user.displayName || user.fullnames || 'Unknown';
-                      const isVerified = user.verified ?? user.isVerified;
-                      return (
-                    <div
-                      key={user._id}
-                      onClick={() => handleUserClick(user._id!)}
-                      className="hover:bg-accent/50 group flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-colors"
-                    >
-                      {(() => {
-                        const displayName = getUserDisplayName(user);
-                        const verified = isUserVerified(user);
-                        return (
-                          <>
-                      <Avatar className="border-border/5 group-hover:border-primary/20 h-9 w-9 border transition-colors">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
-                          displayName.charAt(0)
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex min-w-0 flex-col">
-                        <div className="flex items-center gap-1">
-                          <span className="group-hover:text-primary truncate text-sm font-bold transition-colors">
-                            {displayName}
+                  {searchResults.map(user => {
+                    const displayName = getUserDisplayName(user);
+                    const verified = isUserVerified(user);
+
+                    return (
+                      <div
+                        key={user._id}
+                        onClick={() => handleUserClick(user._id!)}
+                        className="hover:bg-accent/50 group flex cursor-pointer items-center gap-3 rounded-xl p-3 transition-colors"
+                      >
+                        <Avatar className="border-border/5 group-hover:border-primary/20 h-9 w-9 border transition-colors">
+                          <AvatarImage src={user.avatar} alt={displayName} />
+                          <AvatarFallback className="bg-primary/5 text-primary text-[10px] font-bold">
+                            {displayName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex min-w-0 flex-col">
+                          <div className="flex items-center gap-1">
+                            <span className="group-hover:text-primary truncate text-sm font-bold transition-colors">
+                              {displayName}
+                            </span>
+                            {verified && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
+                              >
+                                <Check className="text-primary h-2 w-2 stroke-[4px]" />
+                              </Badge>
+                            )}
+                          </div>
+                          <span className="text-muted-foreground truncate text-[10px] font-medium">
+                            @{user.username}
                           </span>
-                          {isVerified && (
-                            <Badge
-                              variant="secondary"
-                              className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
-                            >
-                              <Check className="text-primary h-2 w-2 stroke-[4px]" />
-                            </Badge>
-                          )}
                         </div>
-                        <span className="text-muted-foreground truncate text-[10px] font-medium">
-                          @{user.username}
-                        </span>
                       </div>
-                          </>
-                        );
-                      })()}
-                    </div>
-                      );
-                    })()
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="bg-accent/5 rounded-xl py-8 text-center">
@@ -268,77 +259,68 @@ export function DiscoverySidebar() {
             {loading ? (
               <UserSkeleton />
             ) : suggestedUsers.length > 0 ? (
-              suggestedUsers.map(user => (
-                (() => {
-                  const displayName = user.displayName || user.fullnames || 'Unknown';
-                  const isVerified = user.verified ?? user.isVerified;
-                  return (
-                <div key={user._id} className="group flex items-center gap-3">
-                  {(() => {
-                    const displayName = getUserDisplayName(user);
-                    const verified = isUserVerified(user);
-                    return (
-                      <>
-                  <div
-                    className="cursor-pointer transition-transform hover:scale-105"
-                    onClick={() => handleUserClick(user._id!)}
-                  >
-                    <Avatar className="border-border/10 h-10 w-10 border">
-                      <AvatarImage src={user.avatar} alt={displayName} />
-                      <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
-                        {getUserInitial(user)}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
-                  <div className="min-w-0 flex-1">
+              suggestedUsers.map(user => {
+                const displayName = getUserDisplayName(user);
+                const verified = isUserVerified(user);
+
+                return (
+                  <div key={user._id} className="group flex items-center gap-3">
                     <div
-                      className="group-hover:text-primary flex cursor-pointer items-center gap-1 transition-colors hover:underline"
+                      className="cursor-pointer transition-transform hover:scale-105"
                       onClick={() => handleUserClick(user._id!)}
                     >
-                      <span className="truncate text-sm font-bold">
-                        {displayName}
-                      </span>
-                      {verified && (
-                        <Badge
-                          variant="secondary"
-                          className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
-                        >
-                          <Check className="text-primary h-2 w-2 stroke-[4px]" />
-                        </Badge>
+                      <Avatar className="border-border/10 h-10 w-10 border">
+                        <AvatarImage src={user.avatar} alt={displayName} />
+                        <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                          {getUserInitial(user)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="group-hover:text-primary flex cursor-pointer items-center gap-1 transition-colors hover:underline"
+                        onClick={() => handleUserClick(user._id!)}
+                      >
+                        <span className="truncate text-sm font-bold">
+                          {displayName}
+                        </span>
+                        {verified && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-primary/10 flex h-3 w-3 shrink-0 items-center justify-center rounded-full border-none p-0"
+                          >
+                            <Check className="text-primary h-2 w-2 stroke-[4px]" />
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-muted-foreground truncate text-[10px] font-medium">
+                        @{user.username}
+                      </div>
+                      {user.suggestionLabel && (
+                        <div className="text-primary/80 mt-0.5 line-clamp-2 text-[10px] font-medium leading-snug">
+                          {user.suggestionLabel}
+                        </div>
                       )}
                     </div>
-                    <div className="text-muted-foreground truncate text-[10px] font-medium">
-                      @{user.username}
-                    </div>
-                    {user.suggestionLabel && (
-                      <div className="text-primary/80 mt-0.5 line-clamp-2 text-[10px] font-medium leading-snug">
-                        {user.suggestionLabel}
-                      </div>
-                    )}
+                    <Button
+                      size="sm"
+                      variant={
+                        followingIds.has(user._id!) ? 'secondary' : 'default'
+                      }
+                      className={cn(
+                        'h-8 rounded-full px-3 text-[10px] font-bold transition-all',
+                        followingIds.has(user._id!)
+                          ? 'opacity-60'
+                          : 'shadow-primary/10 hover:shadow-primary/20 shadow-lg'
+                      )}
+                      onClick={() => handleFollow(user._id!)}
+                      disabled={followingIds.has(user._id!)}
+                    >
+                      {followingIds.has(user._id!) ? 'Following' : 'Follow'}
+                    </Button>
                   </div>
-                  <Button
-                    size="sm"
-                    variant={
-                      followingIds.has(user._id!) ? 'secondary' : 'default'
-                    }
-                    className={cn(
-                      'h-8 rounded-full px-3 text-[10px] font-bold transition-all',
-                      followingIds.has(user._id!)
-                        ? 'opacity-60'
-                        : 'shadow-primary/10 hover:shadow-primary/20 shadow-lg'
-                    )}
-                    onClick={() => handleFollow(user._id!)}
-                    disabled={followingIds.has(user._id!)}
-                  >
-                    {followingIds.has(user._id!) ? 'Following' : 'Follow'}
-                  </Button>
-                      </>
-                    );
-                  })()}
-                </div>
-                  );
-                })()
-              ))
+                );
+              })
             ) : (
               <p className="text-muted-foreground py-2 text-center text-xs">
                 Find friends on Linii
