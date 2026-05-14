@@ -4,7 +4,11 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/app/components/ui/button';
 import { cn } from '@/app/components/ui/utils';
 import { X, Download, ChevronLeft, ChevronRight } from 'lucide-react';
-import { downloadChatFile, fileNameFromUrl, resolveChatMediaUrl } from './mediaUtils';
+import {
+  downloadChatFile,
+  fileNameFromUrl,
+  resolveChatMediaUrl,
+} from './mediaUtils';
 
 interface FilePreviewModalProps {
   isOpen: boolean;
@@ -67,7 +71,8 @@ export function FilePreviewModal({
   };
 
   const handleNext = () => {
-    if (onNavigate && currentIndex < files.length - 1) onNavigate(currentIndex + 1);
+    if (onNavigate && currentIndex < files.length - 1)
+      onNavigate(currentIndex + 1);
   };
 
   return (
@@ -77,11 +82,11 @@ export function FilePreviewModal({
       aria-modal="true"
       aria-label="Media preview"
       tabIndex={-1}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm outline-none"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 outline-none backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="relative flex h-full w-full max-h-full max-w-7xl items-center justify-center p-4"
+        className="relative flex h-full max-h-full w-full max-w-7xl items-center justify-center p-4"
         onClick={e => e.stopPropagation()}
       >
         <Button
@@ -125,7 +130,8 @@ export function FilePreviewModal({
               variant="ghost"
               className={cn(
                 'absolute right-2 top-1/2 z-10 h-12 w-12 -translate-y-1/2 rounded-full p-0 text-white hover:bg-white/20 sm:right-4',
-                currentIndex === files.length - 1 && 'cursor-not-allowed opacity-40'
+                currentIndex === files.length - 1 &&
+                  'cursor-not-allowed opacity-40'
               )}
               onClick={handleNext}
               disabled={currentIndex === files.length - 1}
@@ -143,7 +149,6 @@ export function FilePreviewModal({
 
         <div className="flex max-h-full max-w-full items-center justify-center">
           {messageType === 'IMAGE' && (
-            // eslint-disable-next-line @next/next/no-img-element -- fullscreen preview of arbitrary URLs
             <img
               src={currentFile}
               alt={`Preview ${currentIndex + 1}`}
