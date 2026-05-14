@@ -11,7 +11,11 @@ import {
   FileText,
 } from 'lucide-react';
 import { FilePreviewModal } from './FilePreviewModal';
-import { downloadChatFile, fileNameFromUrl, resolveChatMediaUrl } from './mediaUtils';
+import {
+  downloadChatFile,
+  fileNameFromUrl,
+  resolveChatMediaUrl,
+} from './mediaUtils';
 
 interface FileDisplayProps {
   files: string[];
@@ -59,7 +63,6 @@ export function FileDisplay({
           {resolvedFiles.map((url, index) => (
             <div key={`${url}-${index}`} className="group relative">
               <div className="overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element -- remote chat URLs */}
                 <img
                   src={url}
                   alt={`Image ${index + 1}`}
@@ -143,7 +146,11 @@ export function FileDisplay({
               onClick={() => handlePreview(index)}
             >
               <FileAudio className="text-muted-foreground h-4 w-4 shrink-0" />
-              <audio controls className="min-w-0 flex-1" onClick={e => e.stopPropagation()}>
+              <audio
+                controls
+                className="min-w-0 flex-1"
+                onClick={e => e.stopPropagation()}
+              >
                 <source src={url} />
                 Your browser does not support the audio tag.
               </audio>
